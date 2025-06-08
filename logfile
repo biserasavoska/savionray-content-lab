@@ -1,0 +1,41 @@
+2025-06-08 10:17:21.990 CEST [59183] LOG:  starting PostgreSQL 17.5 on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.6), 64-bit
+2025-06-08 10:17:21.996 CEST [59183] LOG:  could not bind IPv6 address "::1": Address already in use
+2025-06-08 10:17:21.996 CEST [59183] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2025-06-08 10:17:21.996 CEST [59183] LOG:  could not bind IPv4 address "127.0.0.1": Address already in use
+2025-06-08 10:17:21.996 CEST [59183] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2025-06-08 10:17:21.996 CEST [59183] WARNING:  could not create listen socket for "localhost"
+2025-06-08 10:17:21.996 CEST [59183] FATAL:  could not create any TCP/IP sockets
+2025-06-08 10:17:21.996 CEST [59183] LOG:  database system is shut down
+2025-06-08 10:17:56.574 CEST [59254] LOG:  starting PostgreSQL 17.5 on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.6), 64-bit
+2025-06-08 10:17:56.577 CEST [59254] LOG:  could not bind IPv6 address "::1": Address already in use
+2025-06-08 10:17:56.577 CEST [59254] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2025-06-08 10:17:56.577 CEST [59254] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-06-08 10:17:56.577 CEST [59254] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-06-08 10:17:56.582 CEST [59257] LOG:  database system was shut down at 2025-06-08 10:17:17 CEST
+2025-06-08 10:17:56.587 CEST [59254] LOG:  database system is ready to accept connections
+2025-06-08 10:17:56.706 CEST [59266] FATAL:  role "postgres" does not exist
+2025-06-08 10:17:57.357 CEST [59267] FATAL:  role "postgres" does not exist
+2025-06-08 10:22:56.578 CEST [59255] LOG:  checkpoint starting: time
+2025-06-08 10:23:35.554 CEST [59254] LOG:  received smart shutdown request
+2025-06-08 10:23:35.556 CEST [59283] FATAL:  terminating connection due to administrator command
+2025-06-08 10:23:35.558 CEST [59254] LOG:  background worker "logical replication launcher" (PID 59260) exited with exit code 1
+2025-06-08 10:23:35.651 CEST [59255] LOG:  checkpoint complete: wrote 1011 buffers (6.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=39.048 s, sync=0.018 s, total=39.075 s; sync files=361, longest=0.002 s, average=0.001 s; distance=4832 kB, estimate=4832 kB; lsn=0/19BFAC8, redo lsn=0/19BFA38
+2025-06-08 10:23:35.653 CEST [59255] LOG:  shutting down
+2025-06-08 10:23:35.669 CEST [59255] LOG:  checkpoint starting: shutdown immediate
+2025-06-08 10:23:35.671 CEST [59255] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.018 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=4349 kB; lsn=0/19BFB40, redo lsn=0/19BFB40
+2025-06-08 10:23:35.674 CEST [59254] LOG:  database system is shut down
+2025-06-08 10:24:46.213 CEST [60171] LOG:  starting PostgreSQL 17.5 on x86_64-apple-darwin23.6.0, compiled by Apple clang version 16.0.0 (clang-1600.0.26.6), 64-bit
+2025-06-08 10:24:46.216 CEST [60171] LOG:  listening on IPv6 address "::1", port 5432
+2025-06-08 10:24:46.216 CEST [60171] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-06-08 10:24:46.217 CEST [60171] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-06-08 10:24:46.224 CEST [60174] LOG:  database system was shut down at 2025-06-08 10:24:42 CEST
+2025-06-08 10:24:46.227 CEST [60171] LOG:  database system is ready to accept connections
+2025-06-08 10:24:47.336 CEST [60185] FATAL:  role "postgres" does not exist
+2025-06-08 10:24:47.343 CEST [60186] FATAL:  role "postgres" does not exist
+2025-06-08 10:24:51.342 CEST [60187] FATAL:  role "postgres" does not exist
+2025-06-08 10:24:52.300 CEST [60190] FATAL:  role "postgres" does not exist
+2025-06-08 10:24:52.306 CEST [60191] FATAL:  role "postgres" does not exist
+2025-06-08 10:25:28.401 CEST [60220] FATAL:  database "USER" does not exist
+2025-06-08 10:27:43.994 CEST [60349] LOG:  could not receive data from client: Connection reset by peer
+2025-06-08 10:29:46.219 CEST [60172] LOG:  checkpoint starting: time
+2025-06-08 10:31:29.596 CEST [60172] LOG:  checkpoint complete: wrote 1020 buffers (6.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=103.358 s, sync=0.012 s, total=103.379 s; sync files=361, longest=0.001 s, average=0.001 s; distance=4899 kB, estimate=4899 kB; lsn=0/19D0368, redo lsn=0/19D02D8

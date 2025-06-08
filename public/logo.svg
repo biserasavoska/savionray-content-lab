@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="32" viewBox="0 0 120 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M20.5 8C14.1487 8 9 13.1487 9 19.5C9 25.8513 14.1487 31 20.5 31C26.8513 31 32 25.8513 32 19.5C32 13.1487 26.8513 8 20.5 8ZM20.5 29C15.2533 29 11 24.7467 11 19.5C11 14.2533 15.2533 10 20.5 10C25.7467 10 30 14.2533 30 19.5C30 24.7467 25.7467 29 20.5 29Z" fill="#FF3B30"/>
+  <path d="M44 12V28H46V12H44ZM52 12V28H54V12H52Z" fill="#1C1C1E"/>
+  <text x="62" y="24" font-family="Arial" font-size="16" font-weight="bold" fill="#1C1C1E">Savion Ray</text>
+</svg> 
