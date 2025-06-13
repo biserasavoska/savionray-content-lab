@@ -37,16 +37,16 @@ build:
   stage: build
   script:
     - npm run build
+    - cp -r .next/out public
   artifacts:
     paths:
-      - .next/
+      - public
     expire_in: 1 week
 
 pages:
   stage: deploy
   script:
     - echo "Deploying to GitLab Pages"
-    - cp -r .next/out public
   artifacts:
     paths:
       - public
