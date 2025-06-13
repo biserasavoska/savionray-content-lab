@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
-import { isCreative, isAdmin, isClient } from '@/lib/auth'
+import { isClient, isAdmin } from '@/lib/auth'
+import { IdeaStatus } from '@prisma/client'
 
 export async function GET(
   req: NextRequest,
@@ -24,11 +25,43 @@ export async function GET(
             email: true,
           },
         },
+        comments: {
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
         contentDrafts: {
-          select: {
-            id: true,
-            status: true,
-            updatedAt: true,
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+            feedbacks: {
+              include: {
+                createdBy: {
+                  select: {
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
       },
@@ -38,15 +71,13 @@ export async function GET(
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 })
     }
 
-    // Check if user has access to this idea
-    if (isCreative(session) && idea.createdById !== session.user.id) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
-    }
-
     return NextResponse.json(idea)
   } catch (error) {
     console.error('Failed to fetch idea:', error)
-    return NextResponse.json({ error: 'Failed to fetch idea' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch idea' },
+      { status: 500 }
+    )
   }
 }
 
@@ -61,26 +92,49 @@ export async function PUT(
   }
 
   try {
+    const { status, ...updateData } = await req.json()
+
+    // Check if the idea exists
     const idea = await prisma.idea.findUnique({
       where: { id: params.id },
+      include: {
+        createdBy: {
+          select: {
+            email: true,
+          },
+        },
+      },
     })
 
     if (!idea) {
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 })
     }
 
-    // Only creator or admin can update the idea content
-    if (!isAdmin(session) && idea.createdById !== session.user.id) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+    // Only allow status updates by clients or admins
+    if (status && !isClient(session) && !isAdmin(session)) {
+      return NextResponse.json(
+        { error: 'Only clients can update idea status' },
+        { status: 403 }
+      )
     }
 
-    const { title, description } = await req.json()
+    // Only allow content updates by creators or admins
+    if (
+      Object.keys(updateData).length > 0 &&
+      session.user.id !== idea.createdById &&
+      !isAdmin(session)
+    ) {
+      return NextResponse.json(
+        { error: 'Only creators can update idea content' },
+        { status: 403 }
+      )
+    }
 
     const updatedIdea = await prisma.idea.update({
       where: { id: params.id },
       data: {
-        ...(title && { title }),
-        ...(description && { description }),
+        ...(status && { status: status as IdeaStatus }),
+        ...updateData,
       },
       include: {
         createdBy: {
@@ -95,7 +149,10 @@ export async function PUT(
     return NextResponse.json(updatedIdea)
   } catch (error) {
     console.error('Failed to update idea:', error)
-    return NextResponse.json({ error: 'Failed to update idea' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to update idea' },
+      { status: 500 }
+    )
   }
 }
 
@@ -118,9 +175,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 })
     }
 
-    // Only creator or admin can delete the idea
-    if (!isAdmin(session) && idea.createdById !== session.user.id) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+    // Only allow deletion by creators or admins
+    if (session.user.id !== idea.createdById && !isAdmin(session)) {
+      return NextResponse.json(
+        { error: 'Only creators can delete ideas' },
+        { status: 403 }
+      )
     }
 
     await prisma.idea.delete({
@@ -130,6 +190,9 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to delete idea:', error)
-    return NextResponse.json({ error: 'Failed to delete idea' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to delete idea' },
+      { status: 500 }
+    )
   }
 } 

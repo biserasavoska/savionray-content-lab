@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
 }
 
 datasource db {
@@ -53,27 +54,39 @@ model User {
   // Content management relations
   ideas         Idea[]
   feedbacks     Feedback[]
+  ideaComments  IdeaComment[]
   contentDrafts ContentDraft[]
   media         Media[]
+  deliveryPlans ContentDeliveryPlan[]
+  visualDrafts  VisualDraft[]
 }
 
 model Idea {
   id          String      @id @default(cuid())
   title       String
   description String      @db.Text
-  status      IdeaStatus  @default(PENDING)
+  status      IdeaStatus  @default(PENDING_CLIENT_APPROVAL)
+  publishingDateTime DateTime?
+  savedForLater Boolean   @default(false)
+  mediaType    MediaType?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   createdBy   User        @relation(fields: [createdById], references: [id])
   createdById String
+  contentType ContentType?
 
   // Content management relations
   contentDrafts ContentDraft[]
+  comments     IdeaComment[]
+  deliveryItem  ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
+  deliveryItemId String?
+  visualDrafts VisualDraft[]
 }
 
 model ContentDraft {
   id          String      @id @default(cuid())
-  status      DraftStatus @default(PENDING_FEEDBACK)
+  status      DraftStatus @default(PENDING_FIRST_REVIEW)
+  contentType ContentType
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   createdBy   User        @relation(fields: [createdById], references: [id])
@@ -88,15 +101,19 @@ model ContentDraft {
 }
 
 model Feedback {
-  id        String   @id @default(cuid())
-  comment   String   @db.Text
-  createdAt DateTime @default(now())
+  id            String      @id @default(cuid())
+  comment       String
+  createdAt     DateTime    @default(now())
+  contentDraftId String?
+  visualDraftId String?
+  createdById   String
+  contentDraft  ContentDraft? @relation(fields: [contentDraftId], references: [id])
+  visualDraft   VisualDraft? @relation(fields: [visualDraftId], references: [id])
+  createdBy     User        @relation(fields: [createdById], references: [id])
 
-  // Relations
-  contentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
-  contentDraftId String
-  createdBy      User        @relation(fields: [createdById], references: [id])
-  createdById    String
+  @@index([contentDraftId])
+  @@index([visualDraftId])
+  @@index([createdById])
 }
 
 model Media {
@@ -134,15 +151,17 @@ enum UserRole {
 }
 
 enum IdeaStatus {
-  PENDING
+  PENDING_CLIENT_APPROVAL
   APPROVED_BY_CLIENT
   REJECTED_BY_CLIENT
 }
 
 enum DraftStatus {
-  PENDING_FEEDBACK
-  AWAITING_FINAL_APPROVAL
-  APPROVED
+  PENDING_FIRST_REVIEW // Initial draft waiting for client review
+  NEEDS_REVISION // Client provided feedback, needs changes
+  PENDING_FINAL_APPROVAL // Updated draft after feedback, waiting for final approval
+  APPROVED_FOR_PUBLISHING // Final approval given, ready to publish
+  REJECTED // Client rejected the content
 }
 
 enum ScheduleStatus {
@@ -151,10 +170,107 @@ enum ScheduleStatus {
   FAILED
 }
 
+enum MediaType {
+  PHOTO
+  GRAPH_OR_INFOGRAPHIC
+  VIDEO
+  SOCIAL_CARD
+  POLL
+  CAROUSEL
+}
+
+enum ContentType {
+  NEWSLETTER
+  BLOG_POST
+  SOCIAL_MEDIA_POST
+  WEBSITE_COPY
+  EMAIL_CAMPAIGN
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model ContentDeliveryPlan {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  targetMonth DateTime // The month this content is intended for
+  isArchived  Boolean  @default(false) // Simple flag for archived content
+  status      DeliveryPlanStatus @default(DRAFT)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  client      User     @relation(fields: [clientId], references: [id])
+  clientId    String
+  items       ContentDeliveryItem[]
+}
+
+model ContentDeliveryItem {
+  id          String   @id @default(cuid())
+  contentType ContentType
+  quantity    Int
+  dueDate     DateTime
+  status      DeliveryItemStatus @default(PENDING)
+  priority    Int      @default(0)
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  plan        ContentDeliveryPlan @relation(fields: [planId], references: [id])
+  planId      String
+  ideas       Idea[]
+}
+
+enum DeliveryPlanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryItemStatus {
+  PENDING
+  IN_PROGRESS
+  REVIEW
+  APPROVED
+  DELIVERED
+}
+
+model IdeaComment {
+  id        String   @id @default(cuid())
+  comment   String   @db.Text
+  createdAt DateTime @default(now())
+
+  // Relations
+  idea        Idea   @relation(fields: [ideaId], references: [id])
+  ideaId      String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+}
+
+model VisualDraft {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      String
+  imageUrl    String
+  metadata    Json
+  ideaId      String
+  createdById String
+
+  idea        Idea     @relation(fields: [ideaId], references: [id])
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  feedback    Feedback[]
+
+  @@index([ideaId])
+  @@index([createdById])
 }

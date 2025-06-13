@@ -39,3 +39,29 @@
 2025-06-08 10:27:43.994 CEST [60349] LOG:  could not receive data from client: Connection reset by peer
 2025-06-08 10:29:46.219 CEST [60172] LOG:  checkpoint starting: time
 2025-06-08 10:31:29.596 CEST [60172] LOG:  checkpoint complete: wrote 1020 buffers (6.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=103.358 s, sync=0.012 s, total=103.379 s; sync files=361, longest=0.001 s, average=0.001 s; distance=4899 kB, estimate=4899 kB; lsn=0/19D0368, redo lsn=0/19D02D8
+2025-06-09 14:50:14.939 CEST [60172] LOG:  checkpoint starting: time
+2025-06-09 14:50:19.132 CEST [60172] LOG:  checkpoint complete: wrote 42 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=4.182 s, sync=0.001 s, total=4.195 s; sync files=14, longest=0.001 s, average=0.001 s; distance=47 kB, estimate=4413 kB; lsn=0/19DC2E0, redo lsn=0/19DC288
+2025-06-09 14:53:55.124 CEST [93807] LOG:  could not receive data from client: Connection reset by peer
+2025-06-09 14:53:55.733 CEST [93810] FATAL:  terminating connection due to administrator command
+2025-06-09 14:53:55.838 CEST [60172] LOG:  checkpoint starting: immediate force wait
+2025-06-09 14:53:55.860 CEST [60172] LOG:  checkpoint complete: wrote 12 buffers (0.1%); 1 WAL file(s) added, 0 removed, 0 recycled; write=0.004 s, sync=0.001 s, total=0.023 s; sync files=11, longest=0.001 s, average=0.001 s; distance=4543 kB, estimate=4543 kB; lsn=0/1E4C250, redo lsn=0/1E4C1F8
+2025-06-09 14:53:56.024 CEST [60172] LOG:  checkpoint starting: immediate force wait
+2025-06-09 14:53:56.026 CEST [60172] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.001 s, sync=0.001 s, total=0.003 s; sync files=7, longest=0.001 s, average=0.001 s; distance=4545 kB, estimate=4545 kB; lsn=0/22BC668, redo lsn=0/22BC610
+2025-06-09 14:53:56.137 CEST [93812] FATAL:  terminating connection due to administrator command
+2025-06-09 14:53:56.239 CEST [60172] LOG:  checkpoint starting: immediate force wait
+2025-06-09 14:53:56.242 CEST [60172] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.002 s, sync=0.001 s, total=0.004 s; sync files=7, longest=0.001 s, average=0.001 s; distance=4546 kB, estimate=4546 kB; lsn=0/272D160, redo lsn=0/272D108
+2025-06-09 14:53:56.364 CEST [60172] LOG:  checkpoint starting: immediate force wait
+2025-06-09 14:53:56.368 CEST [60172] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.002 s, sync=0.001 s, total=0.004 s; sync files=7, longest=0.001 s, average=0.001 s; distance=4548 kB, estimate=4548 kB; lsn=0/2B9E360, redo lsn=0/2B9E308
+2025-06-09 14:56:12.540 CEST [94051] LOG:  could not receive data from client: Connection reset by peer
+2025-06-09 14:56:12.599 CEST [94053] ERROR:  table "_prisma_migrations" does not exist
+2025-06-09 14:56:12.599 CEST [94053] STATEMENT:  DROP TABLE _prisma_migrations
+2025-06-09 14:58:56.365 CEST [60172] LOG:  checkpoint starting: time
+2025-06-09 14:59:11.352 CEST [60172] LOG:  checkpoint complete: wrote 148 buffers (0.9%); 0 WAL file(s) added, 0 removed, 0 recycled; write=14.963 s, sync=0.010 s, total=14.989 s; sync files=107, longest=0.001 s, average=0.001 s; distance=843 kB, estimate=4178 kB; lsn=0/2C712D0, redo lsn=0/2C71240
+2025-06-09 15:08:56.347 CEST [60172] LOG:  checkpoint starting: time
+2025-06-09 15:08:57.177 CEST [60172] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.823 s, sync=0.002 s, total=0.833 s; sync files=9, longest=0.001 s, average=0.001 s; distance=3 kB, estimate=3760 kB; lsn=0/2C72180, redo lsn=0/2C720F0
+2025-06-09 15:18:08.181 CEST [60171] LOG:  received smart shutdown request
+2025-06-09 15:18:08.184 CEST [60171] LOG:  background worker "logical replication launcher" (PID 60177) exited with exit code 1
+2025-06-09 15:18:08.185 CEST [60172] LOG:  shutting down
+2025-06-09 15:18:08.186 CEST [60172] LOG:  checkpoint starting: shutdown immediate
+2025-06-09 15:18:08.197 CEST [60172] LOG:  checkpoint complete: wrote 0 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.005 s, sync=0.001 s, total=0.013 s; sync files=0, longest=0.000 s, average=0.000 s; distance=0 kB, estimate=3384 kB; lsn=0/2C72230, redo lsn=0/2C72230
+2025-06-09 15:18:08.215 CEST [60171] LOG:  database system is shut down

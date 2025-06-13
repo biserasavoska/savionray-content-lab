@@ -1,9 +1,12 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdmin } from '@/lib/auth'
 import DraftsList from '@/components/drafts/DraftsList'
+import { DraftMetadata, DraftWithRelations } from '@/types/draft'
+import { ContentDraft, DraftStatus } from '@prisma/client'
+import { format } from 'date-fns'
 
 interface DraftsPageProps {
   params: {
@@ -30,12 +33,36 @@ export async function generateMetadata({ params }: DraftsPageProps): Promise<Met
 
 export default async function DraftsPage({ params }: DraftsPageProps) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return null
+  if (!session?.user?.id) {
+    redirect('/auth/signin')
+  }
 
   const idea = await prisma.idea.findUnique({
     where: { id: params.id },
     include: {
-      contentDrafts: {
+      createdBy: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  })
+
+  if (!idea) {
+    redirect('/ready-content')
+  }
+
+  const drafts = await prisma.contentDraft.findMany({
+    where: { ideaId: params.id },
+    include: {
+      createdBy: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      feedbacks: {
         include: {
           createdBy: {
             select: {
@@ -45,30 +72,37 @@ export default async function DraftsPage({ params }: DraftsPageProps) {
           },
         },
         orderBy: {
-          updatedAt: 'desc',
+          createdAt: 'desc',
         },
       },
     },
+    orderBy: {
+      createdAt: 'desc',
+    },
   })
-
-  if (!idea) {
-    notFound()
-  }
 
   return (
     <div className="py-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">{idea.title} - Drafts</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Content Drafts</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              For idea: {idea.title}
+              <br />
+              Created by {idea.createdBy.name || idea.createdBy.email} on{' '}
+              {format(new Date(idea.createdAt), 'MMM d, yyyy')}
+            </p>
+          </div>
           <a
             href={`/ideas/${idea.id}/drafts/new`}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
           >
-            New Draft
+            Create New Draft
           </a>
         </div>
         <div className="mt-8">
-          <DraftsList drafts={idea.contentDrafts} ideaId={idea.id} />
+          <DraftsList drafts={drafts} ideaId={params.id} />
         </div>
       </div>
     </div>

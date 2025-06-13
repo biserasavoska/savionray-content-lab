@@ -3,37 +3,62 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ContentDraft, DraftStatus, User } from '@prisma/client'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, format } from 'date-fns'
+import { DraftMetadata } from '@/types/draft'
+import DraftActions from './DraftActions'
 
-interface DraftMetadata {
-  contentType: 'social-media' | 'blog' | 'newsletter'
-}
-
-interface DraftsListProps {
-  drafts: (ContentDraft & {
-    createdBy: Pick<User, 'name' | 'email'>
-    metadata?: DraftMetadata | null
-  })[]
+interface Draft {
+  id: string
+  status: DraftStatus
+  createdAt: Date
   ideaId: string
-  onDelete?: (draftId: string) => void
+  createdBy: {
+    name: string | null
+    email: string | null
+  }
+  feedbacks: {
+    id: string
+    comment: string
+    createdAt: Date
+    createdBy: {
+      name: string | null
+      email: string | null
+    }
+  }[]
 }
 
 const STATUS_COLORS: Record<DraftStatus, { bg: string; text: string; label: string }> = {
-  PENDING_FEEDBACK: {
+  PENDING_FIRST_REVIEW: {
     bg: 'bg-yellow-100',
     text: 'text-yellow-800',
-    label: 'Pending Feedback'
+    label: 'Pending First Review',
   },
-  AWAITING_FINAL_APPROVAL: {
+  NEEDS_REVISION: {
+    bg: 'bg-orange-100',
+    text: 'text-orange-800',
+    label: 'Needs Revision',
+  },
+  PENDING_FINAL_APPROVAL: {
     bg: 'bg-blue-100',
     text: 'text-blue-800',
-    label: 'Awaiting Approval'
+    label: 'Pending Final Approval',
   },
-  APPROVED: {
+  APPROVED_FOR_PUBLISHING: {
     bg: 'bg-green-100',
     text: 'text-green-800',
-    label: 'Approved'
-  }
+    label: 'Approved for Publishing',
+  },
+  REJECTED: {
+    bg: 'bg-red-100',
+    text: 'text-red-800',
+    label: 'Rejected',
+  },
+}
+
+interface DraftsListProps {
+  drafts: Draft[]
+  ideaId: string
+  onDelete?: (draftId: string) => void
 }
 
 export default function DraftsList({ drafts, ideaId, onDelete }: DraftsListProps) {
@@ -78,61 +103,53 @@ export default function DraftsList({ drafts, ideaId, onDelete }: DraftsListProps
   }
 
   return (
-    <div className="overflow-hidden bg-white shadow sm:rounded-md">
-      <ul role="list" className="divide-y divide-gray-200">
-        {drafts.map((draft) => {
-          const statusConfig = STATUS_COLORS[draft.status]
-          
-          return (
-            <li key={draft.id}>
-              <div className="px-4 py-4 sm:px-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <p className="truncate text-sm font-medium text-red-600">
-                      {draft.metadata?.contentType || 'Unknown Type'}
-                    </p>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}
-                    >
-                      {statusConfig.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => router.push(`/ideas/${ideaId}/drafts/${draft.id}/edit`)}
-                      className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(draft.id)}
-                      disabled={isDeleting === draft.id}
-                      className="inline-flex items-center px-3 py-1 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 disabled:opacity-50"
-                    >
-                      {isDeleting === draft.id ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-2 sm:flex sm:justify-between">
-                  <div className="sm:flex">
-                    <p className="flex items-center text-sm text-gray-500">
-                      By {draft.createdBy.name || draft.createdBy.email}
-                    </p>
-                  </div>
-                  <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                    <p>
-                      Last updated {formatDistanceToNow(new Date(draft.updatedAt), { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-900 line-clamp-2">{draft.body}</p>
+    <div className="space-y-6">
+      {drafts.map((draft) => (
+        <div key={draft.id} className="bg-white shadow sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium leading-6 text-gray-900">
+                  Draft by {draft.createdBy.name || draft.createdBy.email}
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Created on {format(new Date(draft.createdAt), 'MMM d, yyyy')}
+                </p>
+              </div>
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  STATUS_COLORS[draft.status].bg
+                } ${STATUS_COLORS[draft.status].text}`}
+              >
+                {STATUS_COLORS[draft.status].label}
+              </span>
+            </div>
+
+            <div className="mt-6">
+              <DraftActions draftId={draft.id} currentStatus={draft.status} ideaId={draft.ideaId} />
+            </div>
+
+            {draft.feedbacks.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-sm font-medium text-gray-900">Feedback History</h4>
+                <div className="mt-2 space-y-4">
+                  {draft.feedbacks.map((feedback) => (
+                    <div key={feedback.id} className="text-sm text-gray-700">
+                      <p className="font-medium">
+                        {feedback.createdBy.name || feedback.createdBy.email}
+                      </p>
+                      <p className="mt-1">{feedback.comment}</p>
+                      <p className="mt-1 text-gray-500">
+                        {format(new Date(feedback.createdAt), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </li>
-          )
-        })}
-      </ul>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   )
 } 

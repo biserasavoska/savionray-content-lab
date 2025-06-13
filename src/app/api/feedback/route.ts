@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
+import { DraftStatus } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user?.id) {
+  if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -20,19 +21,18 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check if the draft exists
     const draft = await prisma.contentDraft.findUnique({
       where: { id: contentDraftId },
+      include: {
+        idea: true,
+      },
     })
 
     if (!draft) {
-      return NextResponse.json(
-        { error: 'Content draft not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
     }
 
-    // Create the feedback
+    // Create feedback
     const feedback = await prisma.feedback.create({
       data: {
         comment,
@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
     })
 
     // Update draft status if needed
-    if (draft.status === 'PENDING_FEEDBACK') {
+    if (draft.status === DraftStatus.NEEDS_REVISION) {
       await prisma.contentDraft.update({
         where: { id: contentDraftId },
         data: {
-          status: 'AWAITING_FINAL_APPROVAL',
+          status: DraftStatus.PENDING_FIRST_REVIEW,
         },
       })
     }
@@ -62,10 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(feedback)
   } catch (error) {
     console.error('Failed to create feedback:', error)
-    return NextResponse.json(
-      { error: 'Failed to create feedback' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to create feedback' }, { status: 500 })
   }
 }
 

@@ -30,6 +30,9 @@ interface Idea {
   title: string
   description: string
   status: IdeaStatus
+  publishingDateTime: Date | null
+  savedForLater: boolean
+  mediaType: string | null
   createdAt: Date
   createdBy: Creator
   contentDrafts: ContentDraft[]
@@ -42,7 +45,7 @@ interface ReviewListProps {
 export default function ReviewList({ initialIdeas }: ReviewListProps) {
   const [ideas, setIdeas] = useState<Idea[]>(initialIdeas)
   const [expandedIdea, setExpandedIdea] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
 
   const getLatestFeedbacks = (idea: Idea) => {
     const latestDraft = idea.contentDrafts[0]
@@ -50,7 +53,13 @@ export default function ReviewList({ initialIdeas }: ReviewListProps) {
   }
 
   const handleStatusUpdate = async (ideaId: string, status: IdeaStatus) => {
-    setIsSubmitting(true)
+    setIsSubmitting(ideaId)
+    
+    // Optimistically update the UI
+    setIdeas(ideas.map(idea => 
+      idea.id === ideaId ? { ...idea, status } : idea
+    ))
+
     try {
       const response = await fetch(`/api/ideas/${ideaId}/status`, {
         method: 'PATCH',
@@ -64,13 +73,15 @@ export default function ReviewList({ initialIdeas }: ReviewListProps) {
         throw new Error('Failed to update status')
       }
 
-      setIdeas(ideas.map(idea => 
-        idea.id === ideaId ? { ...idea, status } : idea
-      ))
+      // No need to update state here since we already did it optimistically
     } catch (error) {
       console.error('Error updating status:', error)
+      // Revert the optimistic update on error
+      setIdeas(ideas.map(idea => 
+        idea.id === ideaId ? { ...idea, status: 'PENDING' } : idea
+      ))
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(null)
     }
   }
 
@@ -131,17 +142,17 @@ export default function ReviewList({ initialIdeas }: ReviewListProps) {
                 <div className="flex space-x-4">
                   <button
                     onClick={() => handleStatusUpdate(idea.id, 'APPROVED_BY_CLIENT')}
-                    disabled={isSubmitting || idea.status === 'APPROVED_BY_CLIENT'}
+                    disabled={isSubmitting === idea.id || idea.status === 'APPROVED_BY_CLIENT'}
                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Approve
+                    {isSubmitting === idea.id ? 'Updating...' : 'Approve'}
                   </button>
                   <button
                     onClick={() => handleStatusUpdate(idea.id, 'REJECTED_BY_CLIENT')}
-                    disabled={isSubmitting || idea.status === 'REJECTED_BY_CLIENT'}
+                    disabled={isSubmitting === idea.id || idea.status === 'REJECTED_BY_CLIENT'}
                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Reject
+                    {isSubmitting === idea.id ? 'Updating...' : 'Reject'}
                   </button>
                 </div>
 

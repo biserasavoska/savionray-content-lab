@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import FeedbackForm from '@/components/feedback/FeedbackForm'
 import FeedbackList from '@/components/feedback/FeedbackList'
+import DraftActions from '@/components/drafts/DraftActions'
 import { DraftWithMetadata } from '@/types/draft'
 
 interface DraftDetailsPageProps {
@@ -117,6 +118,12 @@ export default async function DraftDetailsPage({ params }: DraftDetailsPageProps
           </div>
 
           <div className="col-span-1 space-y-6">
+            <DraftActions
+              draftId={draft.id}
+              currentStatus={draft.status}
+              ideaId={draft.idea.id}
+            />
+
             <div className="bg-white shadow sm:rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Feedback</h3>

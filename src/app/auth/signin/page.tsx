@@ -13,17 +13,24 @@ function SignInForm() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-      callbackUrl,
-    })
+    setError('')
 
-    if (result?.error) {
-      setError('Invalid email or password')
-    } else if (result?.url) {
-      window.location.href = result.url
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+        callbackUrl,
+      })
+
+      if (result?.error) {
+        setError('Invalid email or password')
+      } else if (result?.url) {
+        window.location.href = result.url
+      }
+    } catch (error) {
+      console.error('Sign in error:', error)
+      setError('An error occurred during sign in')
     }
   }
 
@@ -126,6 +133,15 @@ function SignInForm() {
             </button>
           </div>
         </form>
+
+        <div className="text-center text-sm text-gray-600">
+          <p>For testing, use one of these accounts:</p>
+          <ul className="mt-2 space-y-1">
+            <li>creative@savionray.com</li>
+            <li>client@savionray.com</li>
+            <li>admin@savionray.com</li>
+          </ul>
+        </div>
       </div>
     </div>
   )

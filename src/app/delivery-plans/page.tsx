@@ -1,0 +1,66 @@
+import { Metadata } from 'next'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { redirect } from 'next/navigation'
+import { isAdmin } from '@/lib/auth'
+import DeliveryPlansList from '@/components/delivery/DeliveryPlansList'
+
+export const metadata: Metadata = {
+  title: 'Content Delivery Plans',
+  description: 'Manage your content delivery plans and schedules',
+}
+
+export default async function DeliveryPlansPage() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
+    redirect('/auth/signin')
+  }
+
+  if (!isAdmin(session)) {
+    redirect('/ready-content')
+  }
+
+  const plans = await prisma.contentDeliveryPlan.findMany({
+    include: {
+      client: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      items: {
+        include: {
+          ideas: {
+            include: {
+              contentDrafts: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      targetMonth: 'desc',
+    },
+  })
+
+  return (
+    <div className="py-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-gray-900">Content Delivery Plans</h1>
+          <a
+            href="/delivery-plans/new"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            Create New Plan
+          </a>
+        </div>
+
+        <div className="mt-8">
+          <DeliveryPlansList plans={plans} />
+        </div>
+      </div>
+    </div>
+  )
+} 

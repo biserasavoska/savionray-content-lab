@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { isClient, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import ReviewList from './ReviewList'
+import { IdeaStatus } from '@prisma/client'
+import IdeaCard from '@/components/ideas/IdeaCard'
 
 export default async function ReviewIdeasPage() {
   const session = await getServerSession(authOptions)
@@ -19,7 +20,7 @@ export default async function ReviewIdeasPage() {
   // Fetch initial ideas pending review
   const ideas = await prisma.idea.findMany({
     where: {
-      status: 'PENDING',
+      status: IdeaStatus.PENDING_CLIENT_APPROVAL,
     },
     include: {
       createdBy: {
@@ -71,7 +72,11 @@ export default async function ReviewIdeasPage() {
           </p>
         </div>
 
-        <ReviewList initialIdeas={ideas} />
+        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {ideas.map((idea) => (
+            <IdeaCard key={idea.id} idea={idea} />
+          ))}
+        </div>
       </div>
     </div>
   )

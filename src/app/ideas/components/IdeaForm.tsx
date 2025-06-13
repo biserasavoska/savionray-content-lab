@@ -3,11 +3,27 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Idea } from '@prisma/client'
+import { Idea, IdeaStatus, ContentType } from '@prisma/client'
+
+type MediaType = 'PHOTO' | 'GRAPH_OR_INFOGRAPHIC' | 'VIDEO' | 'SOCIAL_CARD' | 'POLL' | 'CAROUSEL'
 
 interface IdeaFormProps {
-  idea?: Idea
+  idea?: Idea & {
+    publishingDateTime: Date | null
+    savedForLater: boolean
+    mediaType: MediaType | null
+    contentType: ContentType | null
+  }
   onSuccess?: () => void
+}
+
+interface FormData {
+  title: string
+  description: string
+  publishingDateTime: string
+  savedForLater: boolean
+  mediaType: MediaType | undefined
+  contentType: ContentType | undefined
 }
 
 export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
@@ -15,10 +31,31 @@ export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: idea?.title || '',
     description: idea?.description || '',
+    publishingDateTime: idea?.publishingDateTime ? new Date(idea.publishingDateTime).toISOString().slice(0, 16) : '',
+    savedForLater: idea?.savedForLater || false,
+    mediaType: idea?.mediaType as MediaType | undefined,
+    contentType: idea?.contentType as ContentType | undefined,
   })
+
+  const mediaTypes = [
+    { value: 'PHOTO' as MediaType, label: 'Photo' },
+    { value: 'GRAPH_OR_INFOGRAPHIC' as MediaType, label: 'Graph or Infographic' },
+    { value: 'VIDEO' as MediaType, label: 'Video' },
+    { value: 'SOCIAL_CARD' as MediaType, label: 'Social Card' },
+    { value: 'POLL' as MediaType, label: 'Poll' },
+    { value: 'CAROUSEL' as MediaType, label: 'Carousel' },
+  ]
+
+  const contentTypes = [
+    { value: 'NEWSLETTER' as ContentType, label: 'Newsletter' },
+    { value: 'BLOG_POST' as ContentType, label: 'Blog Post' },
+    { value: 'SOCIAL_MEDIA_POST' as ContentType, label: 'Social Media Post' },
+    { value: 'WEBSITE_COPY' as ContentType, label: 'Website Copy' },
+    { value: 'EMAIL_CAMPAIGN' as ContentType, label: 'Email Campaign' },
+  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +70,10 @@ export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          publishingDateTime: formData.publishingDateTime ? new Date(formData.publishingDateTime).toISOString() : null,
+        }),
       })
 
       if (!response.ok) {
@@ -105,6 +145,101 @@ export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
           />
         </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="contentType"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Content Type
+        </label>
+        <div className="mt-1">
+          <select
+            id="contentType"
+            name="contentType"
+            required
+            value={formData.contentType || ''}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, contentType: (e.target.value || undefined) as ContentType | undefined }))
+            }
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+          >
+            <option value="">Select a content type</option>
+            {contentTypes.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="publishingDateTime"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Date & Time of Publishing
+        </label>
+        <div className="mt-1">
+          <input
+            type="datetime-local"
+            id="publishingDateTime"
+            name="publishingDateTime"
+            value={formData.publishingDateTime}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, publishingDateTime: e.target.value }))
+            }
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="mediaType"
+          className="block text-sm font-medium text-gray-700"
+        >
+          Media Type
+        </label>
+        <div className="mt-1">
+          <select
+            id="mediaType"
+            name="mediaType"
+            value={formData.mediaType || ''}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, mediaType: (e.target.value || undefined) as MediaType | undefined }))
+            }
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+          >
+            <option value="">Select a media type</option>
+            {mediaTypes.map((type) => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="savedForLater"
+          name="savedForLater"
+          checked={formData.savedForLater}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, savedForLater: e.target.checked }))
+          }
+          className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+        />
+        <label
+          htmlFor="savedForLater"
+          className="ml-2 block text-sm text-gray-700"
+        >
+          Save for later
+        </label>
       </div>
 
       <div className="flex justify-end space-x-3">

@@ -42,7 +42,7 @@ export async function PUT(
       data: {
         body,
         metadata: {
-          contentType,
+          contentType: contentType || 'social-media',
         },
       },
       include: {

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin } from '@/lib/auth'
+import { ContentType } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -12,40 +13,32 @@ export async function POST(req: NextRequest) {
   }
 
   if (!isCreative(session) && !isAdmin(session)) {
-    return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+    return NextResponse.json({ error: 'Only creatives and admins can create drafts' }, { status: 403 })
   }
 
   try {
-    const { body, ideaId, contentType } = await req.json()
+    const { body, ideaId, contentType, metadata } = await req.json()
 
-    if (!body || !ideaId) {
-      return NextResponse.json(
-        { error: 'Content body and idea ID are required' },
-        { status: 400 }
-      )
+    if (!body) {
+      return NextResponse.json({ error: 'Content body is required' }, { status: 400 })
     }
 
-    // Check if the idea exists and user has access
-    const idea = await prisma.idea.findUnique({
-      where: { id: ideaId },
-    })
-
-    if (!idea) {
-      return NextResponse.json({ error: 'Idea not found' }, { status: 404 })
+    if (!ideaId) {
+      return NextResponse.json({ error: 'Idea ID is required' }, { status: 400 })
     }
 
-    if (!isAdmin(session) && idea.createdById !== session.user.id) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+    if (!contentType || !Object.values(ContentType).includes(contentType)) {
+      return NextResponse.json({ error: 'Valid content type is required' }, { status: 400 })
     }
 
     const draft = await prisma.contentDraft.create({
       data: {
         body,
         ideaId,
+        contentType,
         createdById: session.user.id,
-        metadata: {
-          contentType,
-        },
+        metadata: metadata || {},
+        status: 'PENDING_FIRST_REVIEW',
       },
       include: {
         createdBy: {
@@ -60,10 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(draft)
   } catch (error) {
     console.error('Failed to create draft:', error)
-    return NextResponse.json(
-      { error: 'Failed to create draft' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to create draft' }, { status: 500 })
   }
 }
 

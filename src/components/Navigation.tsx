@@ -15,7 +15,7 @@ export default function Navigation() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50">
       {/* Top Navigation */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,19 +48,9 @@ export default function Navigation() {
                 <div className="relative group">
                   <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100">
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      {session.user.image ? (
-                        <Image
-                          src={session.user.image}
-                          alt={session.user.name || ''}
-                          width={32}
-                          height={32}
-                          className="h-8 w-8 rounded-full"
-                        />
-                      ) : (
-                        <span className="text-sm font-medium text-gray-600">
-                          {session.user.name?.[0] || session.user.email?.[0] || '?'}
-                        </span>
-                      )}
+                      <span className="text-sm font-medium text-gray-600">
+                        {session.user.name?.[0] || session.user.email?.[0] || '?'}
+                      </span>
                     </div>
                     <div className="text-sm text-left">
                       <p className="font-medium text-gray-700">{session.user.name || 'User'}</p>
@@ -69,7 +59,7 @@ export default function Navigation() {
                   </button>
 
                   {/* Dropdown Menu */}
-                  <div className="absolute right-0 w-48 mt-2 py-2 bg-white rounded-lg shadow-lg hidden group-hover:block">
+                  <div className="absolute right-0 w-48 mt-2 py-2 bg-white rounded-lg shadow-lg invisible group-hover:visible hover:visible transition-all duration-150 z-50">
                     <Link
                       href="/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -77,7 +67,7 @@ export default function Navigation() {
                       Profile Settings
                     </Link>
                     <button
-                      onClick={() => signOut({ callbackUrl: '/' })}
+                      onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       Sign out

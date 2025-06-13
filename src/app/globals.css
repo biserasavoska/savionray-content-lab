@@ -2,6 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom ReactQuill Styles */
+.ql-editor {
+  padding: 0 !important;
+}
+
+.ql-editor p {
+  margin: 0 !important;
+}
+
+.ql-editor .generated-content {
+  margin-top: 1rem;
+}
+
+.ql-editor .generated-content h2 {
+  margin: 0 0 1rem 0 !important;
+}
+
+.ql-editor .generated-content > div {
+  margin-bottom: 1rem !important;
+}
+
+.ql-editor .generated-content > div:last-child {
+  margin-bottom: 0 !important;
+}
+
+.ql-toolbar.ql-snow {
+  border: 1px solid #e5e7eb !important;
+  border-bottom: none !important;
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+}
+
+.ql-container.ql-snow {
+  border: 1px solid #e5e7eb !important;
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+}
+
 :root {
   --foreground: #171717;
   --background: #ffffff;

@@ -12,9 +12,15 @@ export default function RootClientWrapper({
   session: Session | null
 }) {
   return (
-    <SessionProvider session={session} refetchInterval={0} refetchOnWindowFocus={false}>
-      <Navigation />
-      {children}
+    <SessionProvider session={session}>
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <main className="py-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
     </SessionProvider>
   )
 } 

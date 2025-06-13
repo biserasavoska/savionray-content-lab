@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-type DraftStatus = 'PENDING_FEEDBACK' | 'AWAITING_FINAL_APPROVAL' | 'APPROVED'
+type DraftStatus = 'PENDING_FIRST_REVIEW' | 'NEEDS_REVISION' | 'PENDING_FINAL_APPROVAL' | 'APPROVED_FOR_PUBLISHING' | 'REJECTED'
 
 interface Creator {
   name: string | null
@@ -30,6 +30,9 @@ interface Idea {
   id: string
   title: string
   description: string
+  publishingDateTime: Date | null
+  savedForLater: boolean
+  mediaType: string | null
   createdAt: Date
   createdBy: Creator
   contentDrafts: ContentDraft[]
@@ -48,12 +51,16 @@ export default function ContentList({ ideas }: ContentListProps) {
 
   const getDraftStatusColor = (status: DraftStatus) => {
     switch (status) {
-      case 'PENDING_FEEDBACK':
+      case 'PENDING_FIRST_REVIEW':
         return 'bg-yellow-100 text-yellow-800'
-      case 'AWAITING_FINAL_APPROVAL':
+      case 'NEEDS_REVISION':
+        return 'bg-orange-100 text-orange-800'
+      case 'PENDING_FINAL_APPROVAL':
         return 'bg-blue-100 text-blue-800'
-      case 'APPROVED':
+      case 'APPROVED_FOR_PUBLISHING':
         return 'bg-green-100 text-green-800'
+      case 'REJECTED':
+        return 'bg-red-100 text-red-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }

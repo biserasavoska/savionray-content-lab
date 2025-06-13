@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin, isClient } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 
-type IdeaStatus = 'PENDING' | 'APPROVED_BY_CLIENT' | 'REJECTED_BY_CLIENT'
+type IdeaStatus = 'PENDING_CLIENT_APPROVAL' | 'APPROVED_BY_CLIENT' | 'REJECTED_BY_CLIENT'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -15,21 +15,37 @@ export async function POST(req: NextRequest) {
   }
 
   if (!isCreative(session) && !isAdmin(session)) {
-    return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+    return NextResponse.json({ error: 'Only creatives and admins can create ideas' }, { status: 403 })
   }
 
   try {
-    const { title, description } = await req.json()
+    const { title, description, publishingDateTime, savedForLater, mediaType, contentType } = await req.json()
 
     if (!title || !description) {
       return NextResponse.json({ error: 'Title and description are required' }, { status: 400 })
+    }
+
+    if (!contentType) {
+      return NextResponse.json({ error: 'Content type is required' }, { status: 400 })
     }
 
     const idea = await prisma.idea.create({
       data: {
         title,
         description,
+        publishingDateTime: publishingDateTime ? new Date(publishingDateTime) : null,
+        savedForLater: savedForLater || false,
+        mediaType: mediaType || null,
+        contentType,
         createdById: session.user.id,
+      },
+      include: {
+        createdBy: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
     })
 
@@ -47,23 +63,45 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { searchParams } = new URL(req.url)
-  const statusParam = searchParams.get('status')
-  const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '10')
+  try {
+    const url = new URL(req.url)
+    const page = parseInt(url.searchParams.get('page') || '1')
+    const limit = parseInt(url.searchParams.get('limit') || '10')
   const skip = (page - 1) * limit
 
-  try {
-    const where = {
-      ...(statusParam && ['PENDING', 'APPROVED_BY_CLIENT', 'REJECTED_BY_CLIENT'].includes(statusParam as IdeaStatus)
-        ? { status: statusParam as IdeaStatus }
-        : {}),
-      ...(isCreative(session) ? { createdById: session.user.id } : {}),
-    }
+    const totalCount = await prisma.idea.count({
+      where: {},
+    })
 
-    const [ideas, total] = await Promise.all([
-      prisma.idea.findMany({
-        where,
+    const ideas = await prisma.idea.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip,
+      take: limit,
+      include: {
+        createdBy: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        comments: {
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        contentDrafts: {
+          include: {
+            feedbacks: {
         include: {
           createdBy: {
             select: {
@@ -75,23 +113,26 @@ export async function GET(req: NextRequest) {
         orderBy: {
           createdAt: 'desc',
         },
-        skip,
-        take: limit,
-      }),
-      prisma.idea.count({ where }),
-    ])
+            },
+          },
+        },
+      },
+    })
 
     return NextResponse.json({
       ideas,
       pagination: {
-        total,
-        pages: Math.ceil(total / limit),
-        page,
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit),
+        current: page,
         limit,
       },
     })
   } catch (error) {
     console.error('Failed to fetch ideas:', error)
-    return NextResponse.json({ error: 'Failed to fetch ideas' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch ideas' },
+      { status: 500 }
+    )
   }
 } 

@@ -5,6 +5,7 @@ import { NextAuthOptions } from "next-auth"
 import { prisma } from "./prisma"
 import CredentialsProvider from "next-auth/providers/credentials"
 import LinkedInProvider from "next-auth/providers/linkedin"
+import { UserRole } from '@prisma/client'
 
 export function isCreative(session: Session | null): boolean {
   return session?.user?.role === 'CREATIVE'
@@ -26,21 +27,24 @@ export function hasRole(session: Session | null, roles: string[]): boolean {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
   callbacks: {
-    session: async ({ session, token }) => {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role as UserRole
+      }
+      return token
+    },
+    async session({ session, token }) {
       if (session?.user) {
         session.user.id = token.sub as string
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub },
-          select: { role: true }
-        })
-        session.user.role = dbUser?.role
+        session.user.role = token.role as UserRole
       }
       return session
     }
@@ -51,7 +55,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: 'openid profile email w_member_social'
+          scope: 'openid profile w_member_social email'
         }
       }
     }),
@@ -62,37 +66,48 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null
-        
-        // Find user by email
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
-
-        // For testing purposes, we'll allow any of our seeded users to login with any password
-        if (user) {
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role
-          }
+        if (!credentials?.email) {
+          throw new Error('Email is required')
         }
+        
+        try {
+          // Find user by email
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
 
-        // If email doesn't exist, create a new user
-        const newUser = await prisma.user.create({
-          data: {
-            email: credentials.email,
-            name: credentials.email.split('@')[0],
-            role: 'CREATIVE'
+          // If user exists, return their data
+          if (user) {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role
+            }
           }
-        })
 
-        return {
-          id: newUser.id,
-          email: newUser.email,
-          name: newUser.name,
-          role: newUser.role
+          // Determine role based on email domain
+          const emailDomain = credentials.email.split('@')[1]
+          const role = emailDomain === 'savionray.com' ? 'CLIENT' : 'CREATIVE'
+
+          // Create new user with appropriate role
+          const newUser = await prisma.user.create({
+            data: {
+              email: credentials.email,
+              name: credentials.email.split('@')[0],
+              role: role as UserRole
+            }
+          })
+
+          return {
+            id: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+            role: newUser.role
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
+          return null
         }
       }
     })

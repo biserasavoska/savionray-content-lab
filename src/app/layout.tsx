@@ -24,11 +24,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <main className="min-h-screen bg-gray-50">
-          <RootClientWrapper session={session}>
-            {children}
-          </RootClientWrapper>
-        </main>
+        <RootClientWrapper session={session}>
+          {children}
+        </RootClientWrapper>
       </body>
     </html>
   )

@@ -76,7 +76,7 @@ export default function ProfilePage() {
         body: JSON.stringify({
           clientId: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID,
           redirectUri: `${window.location.origin}/api/auth/linkedin/callback`,
-          scope: 'r_liteprofile w_member_social',
+          scope: 'openid profile w_member_social email',
         }),
       })
 

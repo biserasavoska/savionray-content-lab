@@ -1,84 +1,113 @@
 'use client'
 
-import { Idea, IdeaStatus, User } from '@prisma/client'
+import { Idea, IdeaStatus, User, Feedback } from '@prisma/client'
 import { formatDistanceToNow } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { isClient, isAdmin } from '@/lib/auth'
+import IdeaFeedbackPanel from './IdeaFeedbackPanel'
 
 type IdeaWithCreator = Idea & {
   createdBy: Pick<User, 'name' | 'email'>
+  feedbacks?: (Feedback & {
+    createdBy: Pick<User, 'name' | 'email'>
+  })[]
 }
 
 interface IdeaCardProps {
   idea: IdeaWithCreator
-  onStatusChange?: (id: string, status: IdeaStatus) => Promise<void>
+  onStatusChange?: (id: string, status: IdeaStatus) => void
   onEdit?: (idea: IdeaWithCreator) => void
-  onDelete?: (id: string) => Promise<void>
+  onDelete?: (id: string) => void
 }
 
 export default function IdeaCard({ idea, onStatusChange, onEdit, onDelete }: IdeaCardProps) {
   const { data: session } = useSession()
-  const canModify = session?.user?.id === idea.createdById || isAdmin(session)
-  const canChangeStatus = isClient(session) || isAdmin(session)
+  const isCreator = session?.user?.id === idea.createdById
 
-  const statusColors = {
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    APPROVED_BY_CLIENT: 'bg-green-100 text-green-800',
-    REJECTED_BY_CLIENT: 'bg-red-100 text-red-800',
+  const handleDelete = async () => {
+    if (!onDelete) return
+    if (window.confirm('Are you sure you want to delete this idea?')) {
+      onDelete(idea.id)
+    }
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-4">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">{idea.title}</h3>
-          <p className="text-sm text-gray-500">
-            By {idea.createdBy.name || idea.createdBy.email} •{' '}
+    <div className="bg-white shadow rounded-lg p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <h3 className="text-lg font-medium text-gray-900">{idea.title}</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            by {idea.createdBy.name || idea.createdBy.email} •{' '}
             {formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true })}
           </p>
         </div>
-        {canModify && (
-          <div className="flex space-x-2">
-            <button
-              onClick={() => onEdit?.(idea)}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => onDelete?.(idea.id)}
-              className="text-sm text-red-600 hover:text-red-900"
-            >
-              Delete
-            </button>
-          </div>
-        )}
-      </div>
-
-      <p className="text-gray-600">{idea.description}</p>
-
-      <div className="flex justify-between items-center pt-4">
-        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[idea.status]}`}>
-          {idea.status.replace('_', ' ')}
+        <div className="ml-4 flex-shrink-0">
+          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+            ${idea.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+              idea.status === 'APPROVED_BY_CLIENT' ? 'bg-green-100 text-green-800' : 
+              'bg-red-100 text-red-800'}`}>
+            {idea.status.replace(/_/g, ' ')}
+          </span>
         </div>
+      </div>
 
-        {canChangeStatus && idea.status === 'PENDING' && (
-          <div className="flex space-x-2">
-            <button
-              onClick={() => onStatusChange?.(idea.id, 'APPROVED_BY_CLIENT')}
-              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-            >
-              Approve
-            </button>
-            <button
-              onClick={() => onStatusChange?.(idea.id, 'REJECTED_BY_CLIENT')}
-              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-            >
-              Reject
-            </button>
+      <p className="mt-3 text-sm text-gray-600">{idea.description}</p>
+
+      {/* Additional idea details */}
+      <div className="mt-4 grid grid-cols-2 gap-4">
+        {idea.publishingDateTime && (
+          <div>
+            <span className="text-sm font-medium text-gray-500">Publishing Date:</span>
+            <span className="ml-2 text-sm text-gray-900">
+              {new Date(idea.publishingDateTime).toLocaleDateString()}
+            </span>
+          </div>
+        )}
+        {idea.mediaType && (
+          <div>
+            <span className="text-sm font-medium text-gray-500">Media Type:</span>
+            <span className="ml-2 text-sm text-gray-900">
+              {idea.mediaType.replace(/_/g, ' ')}
+            </span>
+          </div>
+        )}
+        {idea.contentType && (
+          <div>
+            <span className="text-sm font-medium text-gray-500">Content Type:</span>
+            <span className="ml-2 text-sm text-gray-900">
+              {idea.contentType.replace(/_/g, ' ')}
+            </span>
+          </div>
+        )}
+        {idea.savedForLater && (
+          <div>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              Saved for Later
+            </span>
           </div>
         )}
       </div>
+
+      {/* Action buttons for creator */}
+      {(isCreator || isAdmin(session)) && (
+        <div className="mt-4 flex justify-end space-x-3">
+          <button
+            onClick={() => onEdit?.(idea)}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Edit
+          </button>
+          <button
+            onClick={handleDelete}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+
+      {/* Feedback Panel */}
+      <IdeaFeedbackPanel idea={idea} onStatusChange={onStatusChange} />
     </div>
   )
 } 

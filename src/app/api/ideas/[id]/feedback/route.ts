@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
-import { sendEmail, getFeedbackEmailContent } from '@/lib/actions/email'
+import { isClient, isAdmin } from '@/lib/auth'
+import { ContentType, DraftStatus } from '@prisma/client'
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
 
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  if (!isClient(session) && !isAdmin(session)) {
+    return NextResponse.json({ error: 'Only clients and admins can provide feedback' }, { status: 403 })
   }
 
   try {
@@ -21,39 +23,31 @@ export async function POST(
       return NextResponse.json({ error: 'Comment is required' }, { status: 400 })
     }
 
-    // Check if idea exists and get creator info
     const idea = await prisma.idea.findUnique({
       where: { id: params.id },
-      include: {
-        createdBy: {
-          select: {
-            email: true,
-          },
-        },
-      },
     })
 
     if (!idea) {
       return NextResponse.json({ error: 'Idea not found' }, { status: 404 })
     }
 
+    // First create the content draft
+    const contentDraft = await prisma.contentDraft.create({
+      data: {
+        body: '',
+        contentType: ContentType.SOCIAL_MEDIA_POST,
+        status: DraftStatus.PENDING_FIRST_REVIEW,
+        ideaId: params.id,
+        createdById: session.user.id,
+      },
+    })
+
+    // Then create the feedback
     const feedback = await prisma.feedback.create({
       data: {
         comment,
-        contentDraft: {
-          create: {
-            body: '',
-            idea: {
-              connect: { id: params.id },
-            },
-            createdBy: {
-              connect: { id: session.user.id },
-            },
-          },
-        },
-        createdBy: {
-          connect: { id: session.user.id },
-        },
+        contentDraftId: contentDraft.id,
+        createdById: session.user.id,
       },
       include: {
         createdBy: {
@@ -62,22 +56,18 @@ export async function POST(
             email: true,
           },
         },
+        contentDraft: {
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     })
-
-    // Send email notification to the idea creator
-    if (idea.createdBy.email) {
-      const feedbackUrl = `${process.env.NEXTAUTH_URL}/ideas/${idea.id}`
-      
-      await sendEmail({
-        to: idea.createdBy.email,
-        subject: 'New Feedback on Your Content Idea',
-        html: getFeedbackEmailContent(
-          idea.title,
-          feedbackUrl
-        ),
-      })
-    }
 
     return NextResponse.json(feedback)
   } catch (error) {

@@ -8,50 +8,35 @@ import { DraftStatus } from '@prisma/client'
 interface ApprovalButtonProps {
   draftId: string
   currentStatus: DraftStatus
-  onSuccess?: () => void
+  onApprove: (draftId: string, status: DraftStatus) => Promise<void>
 }
 
-export default function ApprovalButton({ draftId, currentStatus, onSuccess }: ApprovalButtonProps) {
+export default function ApprovalButton({
+  draftId,
+  currentStatus,
+  onApprove,
+}: ApprovalButtonProps) {
   const router = useRouter()
   const { data: session } = useSession()
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [showSchedule, setShowSchedule] = useState(false)
   const [scheduledDate, setScheduledDate] = useState<string>('')
   const [error, setError] = useState('')
 
-  if (currentStatus === 'APPROVED') {
+  if (currentStatus === DraftStatus.APPROVED_FOR_PUBLISHING) {
     return null
   }
 
-  const handleApprove = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!session?.user?.id) return
-
-    setIsSubmitting(true)
+  const handleApprove = async () => {
+    setIsLoading(true)
     setError('')
 
     try {
-      const response = await fetch(`/api/drafts/${draftId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          scheduledDate: scheduledDate || undefined,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to approve draft')
-      }
-
-      onSuccess?.()
-      router.refresh()
-    } catch (error) {
-      console.error('Failed to approve draft:', error)
-      setError('Failed to approve draft. Please try again.')
+      await onApprove(draftId, DraftStatus.APPROVED_FOR_PUBLISHING)
+    } catch (err) {
+      setError('Failed to approve draft')
     } finally {
-      setIsSubmitting(false)
+      setIsLoading(false)
     }
   }
 
@@ -78,10 +63,12 @@ export default function ApprovalButton({ draftId, currentStatus, onSuccess }: Ap
 
         <button
           onClick={handleApprove}
-          disabled={isSubmitting || (showSchedule && !scheduledDate)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+          disabled={isLoading || (showSchedule && !scheduledDate)}
+          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          {isSubmitting ? 'Approving...' : 'Approve Draft'}
+          {isLoading ? 'Approving...' : 'Approve'}
         </button>
       </div>
 
