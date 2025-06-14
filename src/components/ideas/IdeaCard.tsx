@@ -1,6 +1,6 @@
 'use client'
 
-import { Idea, IdeaStatus, User, Feedback } from '@prisma/client'
+import { Idea, IdeaStatus, User, Feedback, ContentDraft, IdeaComment } from '@prisma/client'
 import { formatDistanceToNow } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { isClient, isAdmin } from '@/lib/auth'
@@ -9,6 +9,15 @@ import IdeaFeedbackPanel from './IdeaFeedbackPanel'
 type IdeaWithCreator = Idea & {
   createdBy: Pick<User, 'name' | 'email'>
   feedbacks?: (Feedback & {
+    createdBy: Pick<User, 'name' | 'email'>
+  })[]
+  contentDrafts: (ContentDraft & {
+    createdBy: Pick<User, 'name' | 'email'>
+    feedbacks: (Feedback & {
+      createdBy: Pick<User, 'name' | 'email'>
+    })[]
+  })[]
+  comments: (IdeaComment & {
     createdBy: Pick<User, 'name' | 'email'>
   })[]
 }
@@ -107,7 +116,7 @@ export default function IdeaCard({ idea, onStatusChange, onEdit, onDelete }: Ide
       )}
 
       {/* Feedback Panel */}
-      <IdeaFeedbackPanel idea={idea} onStatusChange={onStatusChange} />
+      <IdeaFeedbackPanel idea={idea} />
     </div>
   )
 } 
