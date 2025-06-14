@@ -107,22 +107,24 @@ export default function DraftHistory({ params }: { params: { id: string } }) {
                       <div className="mb-4">
                         <h3 className="text-sm font-medium text-gray-700">Hashtags</h3>
                         <div className="mt-1 flex flex-wrap gap-2">
-                          {draft.metadata.hashtags?.map((tag: string, i: number) => (
-                            <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              #{tag}
-                            </span>
-                          ))}
+                          {typeof draft.metadata === 'object' &&
+                            Array.isArray((draft.metadata as any)?.hashtags) &&
+                            (draft.metadata as any).hashtags.map((tag: string, i: number) => (
+                              <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                #{tag}
+                              </span>
+                            ))}
                         </div>
                       </div>
 
                       <div className="mb-4">
                         <h3 className="text-sm font-medium text-gray-700">Call to Action</h3>
-                        <p className="mt-1 text-gray-900">{draft.metadata.callToAction}</p>
+                        <p className="mt-1 text-gray-900">{typeof draft.metadata === 'object' && (draft.metadata as any).callToAction}</p>
                       </div>
 
                       <div className="mb-4">
                         <h3 className="text-sm font-medium text-gray-700">Additional Context</h3>
-                        <p className="mt-1 text-gray-900">{draft.metadata.additionalContext || 'None'}</p>
+                        <p className="mt-1 text-gray-900">{typeof draft.metadata === 'object' && ((draft.metadata as any).additionalContext || 'None')}</p>
                       </div>
                     </>
                   )}
@@ -134,7 +136,7 @@ export default function DraftHistory({ params }: { params: { id: string } }) {
                       By {draft.createdBy.name || draft.createdBy.email}
                     </span>
                     <span className="text-sm text-gray-500">
-                      • Model: {draft.metadata?.model || 'Unknown'}
+                      • Model: {typeof draft.metadata === 'object' && (draft.metadata as any).model || 'Unknown'}
                     </span>
                   </div>
                   
