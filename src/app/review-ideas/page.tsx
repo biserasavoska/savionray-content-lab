@@ -55,6 +55,19 @@ export default async function ReviewIdeasPage() {
           createdAt: 'desc',
         },
       },
+      comments: {
+        include: {
+          createdBy: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',
