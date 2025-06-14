@@ -5,22 +5,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { isClient, isAdmin } from '@/lib/auth'
 import IdeaFeedbackPanel from './IdeaFeedbackPanel'
-
-type IdeaWithCreator = Idea & {
-  createdBy: Pick<User, 'name' | 'email'>
-  feedbacks?: (Feedback & {
-    createdBy: Pick<User, 'name' | 'email'>
-  })[]
-  contentDrafts: (ContentDraft & {
-    createdBy: Pick<User, 'name' | 'email'>
-    feedbacks: (Feedback & {
-      createdBy: Pick<User, 'name' | 'email'>
-    })[]
-  })[]
-  comments: (IdeaComment & {
-    createdBy: Pick<User, 'name' | 'email'>
-  })[]
-}
+import { IdeaWithCreator } from '@/types/idea'
 
 interface IdeaCardProps {
   idea: IdeaWithCreator

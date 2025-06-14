@@ -5,10 +5,7 @@ import { useSession } from 'next-auth/react'
 import { IdeaStatus, Idea, User } from '@prisma/client'
 import { useRouter } from 'next/navigation'
 import IdeaCard from '@/components/ideas/IdeaCard'
-
-type IdeaWithCreator = Idea & {
-  createdBy: Pick<User, 'name' | 'email'>
-}
+import { IdeaWithCreator } from '@/types/idea'
 
 const TABS = [
   { id: 'all', name: 'All Ideas', status: undefined },
