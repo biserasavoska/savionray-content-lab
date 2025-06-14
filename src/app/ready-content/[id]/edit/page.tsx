@@ -221,7 +221,7 @@ Would you like me to modify anything about this content?`
         <ModelSelector
           models={AVAILABLE_MODELS}
           selectedModel={selectedModel}
-          onSelect={setSelectedModel}
+          setSelectedModel={setSelectedModel}
         />
       </div>
 
