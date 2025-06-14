@@ -3,9 +3,21 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { ContentDraft, Idea } from '@prisma/client'
+import { Idea } from '@prisma/client'
 import ModelSelector from '@/components/ModelSelector'
 import { AVAILABLE_MODELS } from '@/lib/models'
+
+// Define a local ContentDraft type for frontend use
+interface LocalContentDraft {
+  id: string
+  body: string
+  status: string
+  createdAt: string | Date
+  updatedAt: string | Date
+  createdById: string
+  ideaId: string
+  metadata: any
+}
 
 interface DraftMetadata {
   model: string
@@ -15,7 +27,7 @@ interface DraftMetadata {
   callToAction: string
 }
 
-interface DraftWithMetadata extends ContentDraft {
+interface DraftWithMetadata extends LocalContentDraft {
   metadata: DraftMetadata
 }
 
