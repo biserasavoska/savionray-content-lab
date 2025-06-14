@@ -5,6 +5,7 @@ export interface AIModel {
   maxTokens: number;
   costPerToken: number;
   type: 'fast' | 'balanced' | 'advanced';
+  api: 'responses' | 'chat';
 }
 
 export const AVAILABLE_MODELS: AIModel[] = [
@@ -14,7 +15,8 @@ export const AVAILABLE_MODELS: AIModel[] = [
     description: 'Fast and cost-effective for most content generation tasks',
     maxTokens: 4096,
     costPerToken: 0.000002,
-    type: 'fast'
+    type: 'fast',
+    api: 'chat'
   },
   {
     id: 'gpt-4-turbo',
@@ -22,7 +24,8 @@ export const AVAILABLE_MODELS: AIModel[] = [
     description: 'Most capable model for high-quality content generation',
     maxTokens: 4096,
     costPerToken: 0.00001,
-    type: 'balanced'
+    type: 'balanced',
+    api: 'chat'
   },
   {
     id: 'o4-mini',
@@ -30,6 +33,7 @@ export const AVAILABLE_MODELS: AIModel[] = [
     description: 'Efficient model for basic content generation',
     maxTokens: 2048,
     costPerToken: 0.000001,
-    type: 'fast'
+    type: 'fast',
+    api: 'responses'
   }
 ]; 
