@@ -44,7 +44,7 @@ const MODEL_CONFIGS: Record<string, ModelConfig> = {
 };
 
 // Default model configuration
-const DEFAULT_MODEL = "gpt-3.5-turbo";
+const DEFAULT_MODEL = "gpt-3.5-turbo-0125";
 
 type ContentFormat = 'linkedin' | 'twitter' | 'instagram' | 'facebook';
 

@@ -1,0 +1,73 @@
+image: node:20
+
+variables:
+  POSTGRES_DB: content_lab_test
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_HOST: postgres
+  DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}"
+
+stages:
+  - test
+  - build
+  - deploy
+
+cache:
+  paths:
+    - node_modules/
+    - .next/cache/
+
+services:
+  - postgres:14
+
+before_script:
+  - npm ci
+
+lint:
+  stage: test
+  script:
+    - npm run lint
+
+# test:
+#   stage: test
+#   script:
+#     - npm run test
+
+build:
+  stage: build
+  script:
+    - npm run build
+    - cp -r .next/out public
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
+
+pages:
+  stage: deploy
+  script:
+    - echo "Deploying to GitLab Pages"
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy_preview:
+  stage: deploy
+  script:
+    - echo "Deploy to preview environment"
+  environment:
+    name: preview
+  only:
+    - merge_requests
+
+deploy_production:
+  stage: deploy
+  script:
+    - echo "Deploy to production"
+  environment:
+    name: production
+  only:
+    - main
+  when: manual 
