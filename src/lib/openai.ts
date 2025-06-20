@@ -86,8 +86,14 @@ async function generateWithResponsesAPI(prompt: string, model: ModelConfig) {
   try {
     console.log('Using Completions API with model:', model.id);
     const openai = getOpenAIClient();
+    
+    // Only use completions API for models that support it
+    if (!model.id || model.id.includes('gpt-4') || model.id.includes('gpt-3.5')) {
+      throw new Error(`Model ${model.id} requires chat completions API`);
+    }
+    
     const response = await openai.completions.create({
-      model: model.id || DEFAULT_MODEL,
+      model: model.id,
       prompt: prompt,
       max_tokens: model.maxTokens,
       temperature: 0.7,
@@ -159,11 +165,8 @@ Call to Action:
     console.log('Generating content with prompt:', prompt);
     
     let content: string;
-    if (selectedModel.api === 'responses') {
-      content = await generateWithResponsesAPI(prompt, selectedModel);
-    } else {
-      content = await generateWithChatAPI(prompt, selectedModel);
-    }
+    // All current models use chat API
+    content = await generateWithChatAPI(prompt, selectedModel);
 
     console.log('Raw API response:', content);
 
