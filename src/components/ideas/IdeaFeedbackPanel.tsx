@@ -152,7 +152,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
     }
   }
 
-  const latestDraft = idea.contentDrafts[0]
+  const latestDraft = idea.contentDrafts?.[0]
 
   return (
     <div className="space-y-6">
@@ -231,7 +231,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium leading-6 text-gray-900">Drafts</h3>
           
-          {idea.contentDrafts.map((draft, index) => (
+          {idea.contentDrafts?.map((draft, index) => (
             <div key={draft.id} className="mt-6 border-t border-gray-200 pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -288,7 +288,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
               {/* Feedback Section */}
               <div className="mt-6">
                 <h5 className="text-sm font-medium text-gray-900">Feedback</h5>
-                {draft.feedbacks.map((feedback) => (
+                {draft.feedbacks?.map((feedback) => (
                   <div key={feedback.id} className="mt-2 text-sm text-gray-700">
                     <p className="font-medium">
                       {feedback.createdBy?.name || feedback.createdBy?.email || 'Unknown User'} -{' '}

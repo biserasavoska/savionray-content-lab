@@ -1,10 +1,20 @@
 import OpenAI from 'openai';
 import { AVAILABLE_MODELS } from './models';
+import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
 // Initialize the OpenAI client with API key from environment variable
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+  }
+  return new OpenAI({ apiKey });
+};
+
+// Check if API key is available
+const isApiKeyAvailable = () => {
+  return !!process.env.OPENAI_API_KEY;
+};
 
 // Model configurations
 interface ModelConfig {
@@ -75,6 +85,7 @@ interface ChatRequest {
 async function generateWithResponsesAPI(prompt: string, model: ModelConfig) {
   try {
     console.log('Using Completions API with model:', model.id);
+    const openai = getOpenAIClient();
     const response = await openai.completions.create({
       model: model.id || DEFAULT_MODEL,
       prompt: prompt,
@@ -94,6 +105,7 @@ async function generateWithResponsesAPI(prompt: string, model: ModelConfig) {
 async function generateWithChatAPI(prompt: string, model: ModelConfig) {
   try {
     console.log('Using Chat API with model:', model.id);
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: model.id || DEFAULT_MODEL,
       messages: [
@@ -189,13 +201,15 @@ Call to Action:
     console.error('Error generating content:', error);
     if (error instanceof Error) {
       throw new Error(`Failed to generate content: ${error.message}`);
+    } else {
+      throw new Error('An unknown error occurred during content generation.');
     }
-    throw new Error('Failed to generate content: An unexpected error occurred');
   }
 }
 
 export async function generateVisualPrompt(description: string) {
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
       messages: [
@@ -227,7 +241,12 @@ export async function generateVisualPrompt(description: string) {
 }
 
 export async function generateImage(prompt: string) {
+  if (!prompt) {
+    throw new Error('A prompt is required to generate an image.');
+  }
+
   try {
+    const openai = getOpenAIClient();
     const response = await openai.images.generate({
       model: "dall-e-3",
       prompt: prompt,
@@ -245,7 +264,7 @@ export async function generateImage(prompt: string) {
     if (error instanceof Error) {
       throw new Error(`Failed to generate image: ${error.message}`);
     }
-    throw new Error('Failed to generate image: An unexpected error occurred');
+    throw new Error('An unknown error occurred while generating the image.');
   }
 }
 
@@ -256,90 +275,64 @@ export async function generateChatResponse({
   model: modelId,
 }: ChatRequest): Promise<ChatResponse> {
   try {
+    const openai = getOpenAIClient();
     const selectedModel = AVAILABLE_MODELS.find(m => m.id === modelId);
     if (!selectedModel) {
       throw new Error(`Invalid model selected: ${modelId}`);
     }
 
-    // Prepare conversation history
-    const messages = [
+    const messages: ChatCompletionMessageParam[] = [
       {
         role: 'system',
-        content: `You are a professional content creator helping to create and refine content for the following idea:
-Title: ${idea.title}
-Description: ${idea.description}
-
-Your responses should be helpful and focused on improving the content. If asked to generate new content, format it with these sections:
-1. Post Text: [the main content]
-2. Hashtags: [relevant hashtags, each starting with #]
-3. Call to Action: [compelling call to action]`
+        content: `You are a helpful assistant for content creation. You are helping a user refine an idea. The idea is titled "${idea.title}" and described as "${idea.description}". The current conversation history is below.`
       },
-      ...conversation.slice(-10), // Keep last 10 messages for context
-      {
-        role: 'user',
-        content: message
-      }
+      ...conversation,
+      { role: 'user', content: message }
     ];
 
-    let response: string;
-    if (selectedModel.api === 'responses') {
-      // For completions API, format the conversation into a single string
-      const prompt = messages
-        .map(m => `${m.role}: ${m.content}`)
-        .join('\n\n');
+    const response = await openai.chat.completions.create({
+      model: selectedModel.id,
+      messages,
+      temperature: 0.7,
+      max_tokens: selectedModel.maxTokens,
+    });
+
+    const responseMessage = response.choices[0].message?.content || '';
+
+    // Check if the response contains structured content
+    const postTextMatch = responseMessage.match(/Post Text:\s*([\s\S]*?)(?=Hashtags:|$)/);
+    if (postTextMatch) {
+      // It's structured content
+      const hashtagsMatch = responseMessage.match(/Hashtags:\s*([\s\S]*?)(?=Call to Action:|$)/);
+      const callToActionMatch = responseMessage.match(/Call to Action:\s*([\s\S]*?)$/);
+
+      const postText = (postTextMatch?.[1] || '').trim();
+      const hashtags = hashtagsMatch?.[1]
+        ? hashtagsMatch[1].trim().split(/\s+/).filter(tag => tag.startsWith('#'))
+        : [];
+      const callToAction = (callToActionMatch?.[1] || '').trim();
       
-      const completion = await openai.completions.create({
-        model: selectedModel.id,
-        prompt,
-        max_tokens: selectedModel.maxTokens,
-        temperature: 0.7,
-      });
-
-      response = completion.choices[0]?.text || '';
-    } else {
-      const completion = await openai.chat.completions.create({
-        model: selectedModel.id,
-        messages: messages.map(m => ({
-          role: m.role as 'system' | 'user' | 'assistant',
-          content: m.content
-        })),
-        max_tokens: selectedModel.maxTokens,
-        temperature: 0.7,
-      });
-
-      response = completion.choices[0]?.message?.content || '';
-    }
-
-    // Check if the response contains new content
-    const postTextMatch = response.match(/Post Text:\s*([\s\S]*?)(?=Hashtags:|$)/);
-    const hashtagsMatch = response.match(/Hashtags:\s*([\s\S]*?)(?=Call to Action:|$)/);
-    const callToActionMatch = response.match(/Call to Action:\s*([\s\S]*?)$/);
-
-    if (postTextMatch && hashtagsMatch && callToActionMatch) {
-      // Response includes new content
       return {
-        message: response,
+        message: responseMessage,
         content: {
-          postText: postTextMatch[1].trim(),
-          hashtags: hashtagsMatch[1]
-            .trim()
-            .split(/\s+/)
-            .filter(tag => tag.startsWith('#'))
-            .map(tag => tag.substring(1)),
-          callToAction: callToActionMatch[1].trim()
+          postText,
+          hashtags: hashtags.map(h => h.substring(1)),
+          callToAction,
         }
       };
+    } else {
+      // It's a plain message
+      return {
+        message: responseMessage,
+      };
     }
-
-    // Regular chat response
-    return { message: response };
-  } catch (error: unknown) {
-    console.error('Error in chat response:', error);
+  } catch (error) {
+    console.error('Error in content generation API:', error);
     if (error instanceof Error) {
-      throw new Error(`Failed to generate chat response: ${error.message}`);
+      throw new Error(`Failed to generate content: ${error.message}`);
     }
-    throw new Error('Failed to generate chat response: An unexpected error occurred');
+    throw new Error('An unknown error occurred during content generation.');
   }
 }
 
-export default openai; 
+export default getOpenAIClient(); 

@@ -25,13 +25,17 @@ describe('IdeaCard', () => {
     publishingDateTime: null,
     savedForLater: false,
     mediaType: null,
+    contentType: null,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
     createdById: 'test-user-id',
+    deliveryItemId: null,
     createdBy: {
       name: 'Test User',
       email: 'test@example.com',
     },
+    contentDrafts: [],
+    comments: [],
   }
 
   const mockSession = {
@@ -112,7 +116,7 @@ describe('IdeaCard', () => {
     }
 
     render(<IdeaCard idea={approvedIdea} />)
-    const statusElement = screen.getByText('APPROVED BY_CLIENT')
+    const statusElement = screen.getByText('APPROVED BY CLIENT')
     expect(statusElement.className).toContain('bg-green-100')
     expect(statusElement.className).toContain('text-green-800')
   })

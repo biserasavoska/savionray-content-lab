@@ -68,21 +68,31 @@ describe('IdeaForm', () => {
     fireEvent.change(screen.getByLabelText(/description/i), {
       target: { value: 'Test Description' },
     })
+    
+    // Select content type (required field)
+    fireEvent.change(screen.getByLabelText(/content type/i), {
+      target: { value: 'BLOG_POST' },
+    })
 
     // Submit the form
     fireEvent.click(screen.getByRole('button', { name: /create idea/i }))
 
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('/api/ideas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      expect(fetch).toHaveBeenCalled()
+      const fetchCall = (fetch as jest.Mock).mock.calls[0]
+      expect(fetchCall[0]).toBe('/api/ideas')
+      expect(fetchCall[1].method).toBe('POST')
+      expect(fetchCall[1].headers).toEqual({ 'Content-Type': 'application/json' })
+      const body = JSON.parse(fetchCall[1].body)
+      expect(body).toEqual(
+        expect.objectContaining({
           title: 'Test Idea',
           description: 'Test Description',
-        }),
-      })
+          contentType: 'BLOG_POST',
+          publishingDateTime: null,
+          savedForLater: false,
+        })
+      )
       expect(mockOnSuccess).toHaveBeenCalled()
       expect(mockRouter.push).toHaveBeenCalledWith('/ideas')
     })
@@ -103,6 +113,11 @@ describe('IdeaForm', () => {
     fireEvent.change(screen.getByLabelText(/description/i), {
       target: { value: 'Test Description' },
     })
+    
+    // Select content type (required field)
+    fireEvent.change(screen.getByLabelText(/content type/i), {
+      target: { value: 'BLOG_POST' },
+    })
 
     // Submit the form
     fireEvent.click(screen.getByRole('button', { name: /create idea/i }))
@@ -118,6 +133,11 @@ describe('IdeaForm', () => {
       title: 'Existing Idea',
       description: 'Existing Description',
       status: 'PENDING' as IdeaStatus,
+      publishingDateTime: null,
+      savedForLater: false,
+      mediaType: null,
+      contentType: null,
+      deliveryItemId: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdById: 'test-user-id',
