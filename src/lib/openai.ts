@@ -1,46 +1,14 @@
-import OpenAI from 'openai';
 import { AVAILABLE_MODELS } from './models';
-import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
-// Initialize the OpenAI client with API key from environment variable
 const getOpenAIClient = () => {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
-  }
-  return new OpenAI({ apiKey });
+  const { OpenAI } = require('openai');
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 };
 
-// Check if API key is available
 const isApiKeyAvailable = () => {
   return !!process.env.OPENAI_API_KEY;
-};
-
-// Model configurations
-interface ModelConfig {
-  api: 'chat' | 'responses';
-  maxTokens: number;
-  temperature?: number;
-  reasoningEffort?: 'low' | 'medium' | 'high';
-  id?: string;
-}
-
-const MODEL_CONFIGS: Record<string, ModelConfig> = {
-  'gpt-3.5-turbo-0125': {
-    api: 'chat',
-    maxTokens: 4096,
-    temperature: 0.7
-  },
-  'gpt-4-0125-preview': {
-    api: 'chat',
-    maxTokens: 8192,
-    temperature: 0.7
-  },
-  'o4-mini': {
-    api: 'responses',
-    maxTokens: 2048,
-    reasoningEffort: 'high'
-  }
 };
 
 // Default model configuration
@@ -80,61 +48,6 @@ interface ChatRequest {
     description: string;
   };
   model: string;
-}
-
-async function generateWithResponsesAPI(prompt: string, model: ModelConfig) {
-  try {
-    console.log('Using Completions API with model:', model.id);
-    const openai = getOpenAIClient();
-    
-    // Only use completions API for models that support it
-    if (!model.id || model.id.includes('gpt-4') || model.id.includes('gpt-3.5')) {
-      throw new Error(`Model ${model.id} requires chat completions API`);
-    }
-    
-    const response = await openai.completions.create({
-      model: model.id,
-      prompt: prompt,
-      max_tokens: model.maxTokens,
-      temperature: 0.7,
-    });
-
-    const content = response.choices[0]?.text || '';
-    console.log('Completions API response:', content);
-    return content;
-  } catch (error) {
-    console.error('Error in completions API:', error);
-    throw error;
-  }
-}
-
-async function generateWithChatAPI(prompt: string, model: ModelConfig) {
-  try {
-    console.log('Using Chat API with model:', model.id);
-    const openai = getOpenAIClient();
-    const response = await openai.chat.completions.create({
-      model: model.id || DEFAULT_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional content creator who writes engaging and informative content. Your responses must always follow the exact format specified in the user prompt.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      max_tokens: model.maxTokens,
-      temperature: 0.7,
-    });
-
-    const content = response.choices[0]?.message?.content || '';
-    console.log('Chat API response:', content);
-    return content;
-  } catch (error) {
-    console.error('Error in chat API:', error);
-    throw error;
-  }
 }
 
 export async function generateSocialContent({
@@ -201,8 +114,8 @@ Call to Action:
           .trim()
           .replace(/###/g, '')
           .split(/\s+/)
-          .filter(tag => tag.startsWith('#'))
-          .map(tag => tag.substring(1))
+          .filter((tag: string) => tag.startsWith('#'))
+          .map((tag: string) => tag.substring(1))
       : [];
     const callToAction = (callToActionMatch?.[1] || '').trim().replace(/###/g, '');
 
