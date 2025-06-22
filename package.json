@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "bash scripts/start-railway.sh",
     "prisma": "prisma",
     "seed": "ts-node prisma/seed.ts",
     "test": "jest",
