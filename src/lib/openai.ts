@@ -1,9 +1,14 @@
 import { AVAILABLE_MODELS } from './models';
 
 const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+  }
+  
   const { OpenAI } = require('openai');
   return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: apiKey,
   });
 };
 
