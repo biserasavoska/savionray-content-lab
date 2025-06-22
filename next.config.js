@@ -17,6 +17,10 @@ const nextConfig = {
         ]
       }
     ]
+  },
+  // Server configuration for Railway
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client']
   }
 }
 
