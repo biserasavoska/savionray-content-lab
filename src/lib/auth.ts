@@ -87,9 +87,18 @@ export const authOptions: NextAuthOptions = {
             }
           }
 
-          // Determine role based on email domain
+          // Determine role based on email
           const emailDomain = credentials.email.split('@')[1]
-          const role = emailDomain === 'savionray.com' ? 'CLIENT' : 'CREATIVE'
+          let role: UserRole = 'CREATIVE'
+          if (credentials.email === 'admin@savionray.com') {
+            role = 'ADMIN'
+          } else if (credentials.email === 'client@savionray.com') {
+            role = 'CLIENT'
+          } else if (credentials.email === 'creative@savionray.com') {
+            role = 'CREATIVE'
+          } else if (emailDomain === 'savionray.com') {
+            role = 'CLIENT'
+          }
 
           // Create new user with appropriate role
           const newUser = await prisma.user.create({
