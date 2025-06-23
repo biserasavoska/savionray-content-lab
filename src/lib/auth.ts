@@ -6,6 +6,7 @@ import { prisma } from "./prisma"
 import CredentialsProvider from "next-auth/providers/credentials"
 import LinkedInProvider from "next-auth/providers/linkedin"
 import { UserRole } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 export function isCreative(session: Session | null): boolean {
   return session?.user?.role === 'CREATIVE'
@@ -70,6 +71,9 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email) {
           throw new Error('Email is required')
         }
+        if (!credentials?.password) {
+          throw new Error('Password is required')
+        }
         
         try {
           // Find user by email
@@ -77,8 +81,14 @@ export const authOptions: NextAuthOptions = {
             where: { email: credentials.email }
           })
 
-          // If user exists, return their data
+          // If user exists, check password
           if (user) {
+            if (user.password) {
+              const isValid = await bcrypt.compare(credentials.password, user.password)
+              if (!isValid) {
+                throw new Error('Invalid email or password')
+              }
+            } // If user.password is null, allow login (legacy users)
             return {
               id: user.id,
               email: user.email,
@@ -100,12 +110,16 @@ export const authOptions: NextAuthOptions = {
             role = 'CLIENT'
           }
 
-          // Create new user with appropriate role
+          // Hash the password
+          const hashedPassword = await bcrypt.hash(credentials.password, 10)
+
+          // Create new user with appropriate role and password
           const newUser = await prisma.user.create({
             data: {
               email: credentials.email,
               name: credentials.email.split('@')[0],
-              role: role as UserRole
+              role: role as UserRole,
+              password: hashedPassword
             }
           })
 
