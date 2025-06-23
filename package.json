@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "bash scripts/start-railway.sh",
+    "start:simple": "next start -p $PORT",
     "prisma": "prisma",
     "seed": "ts-node prisma/seed.ts",
     "test": "jest",
