@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { exec } from 'child_process'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
 
 export async function POST(req: NextRequest) {
   const { token } = await req.json()
@@ -8,13 +11,13 @@ export async function POST(req: NextRequest) {
   if (token !== SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  return new Promise((resolve) => {
-    exec('npx prisma migrate deploy', (error, stdout, stderr) => {
-      if (error) {
-        resolve(NextResponse.json({ error: stderr || error.message }, { status: 500 }))
-      } else {
-        resolve(NextResponse.json({ success: true, output: stdout }))
-      }
-    })
-  })
+  try {
+    const { stdout, stderr } = await execAsync('npx prisma migrate deploy')
+    if (stderr) {
+      return NextResponse.json({ error: stderr }, { status: 500 })
+    }
+    return NextResponse.json({ success: true, output: stdout })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
 } 
