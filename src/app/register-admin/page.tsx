@@ -21,13 +21,20 @@ export default function RegisterAdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, role })
       })
-      const data = await res.json()
+      let data
+      try {
+        data = await res.json()
+      } catch (err) {
+        setError("Could not parse server response. Status: " + res.status)
+        setLoading(false)
+        return
+      }
       if (res.ok) {
         setMessage(`User created: ${data.user.email} (${data.user.role})`)
         setEmail("")
         setPassword("")
       } else {
-        setError(data.error || "Unknown error")
+        setError(data.error || JSON.stringify(data) || "Unknown error")
       }
     } catch (err: any) {
       setError(err.message || "Request failed")
@@ -41,7 +48,7 @@ export default function RegisterAdminPage() {
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow max-w-md w-full space-y-4">
         <h1 className="text-2xl font-bold mb-4">Admin User Registration</h1>
         {message && <div className="bg-green-100 text-green-800 p-2 rounded">{message}</div>}
-        {error && <div className="bg-red-100 text-red-800 p-2 rounded">{error}</div>}
+        {error && <div className="bg-red-100 text-red-800 p-2 rounded whitespace-pre-wrap">{error}</div>}
         <div>
           <label className="block mb-1 font-medium">Email</label>
           <input type="email" className="w-full border rounded p-2" value={email} onChange={e => setEmail(e.target.value)} required />
