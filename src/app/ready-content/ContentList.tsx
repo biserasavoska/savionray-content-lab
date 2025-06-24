@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-
-type DraftStatus = 'PENDING_FIRST_REVIEW' | 'NEEDS_REVISION' | 'PENDING_FINAL_APPROVAL' | 'APPROVED_FOR_PUBLISHING' | 'REJECTED'
+import { DraftStatus } from '@prisma/client'
 
 interface Creator {
   name: string | null
@@ -51,16 +50,18 @@ export default function ContentList({ ideas }: ContentListProps) {
 
   const getDraftStatusColor = (status: DraftStatus) => {
     switch (status) {
-      case 'PENDING_FIRST_REVIEW':
+      case DraftStatus.DRAFT:
         return 'bg-yellow-100 text-yellow-800'
-      case 'NEEDS_REVISION':
+      case DraftStatus.AWAITING_REVISION:
         return 'bg-orange-100 text-orange-800'
-      case 'PENDING_FINAL_APPROVAL':
+      case DraftStatus.AWAITING_FEEDBACK:
         return 'bg-blue-100 text-blue-800'
-      case 'APPROVED_FOR_PUBLISHING':
+      case DraftStatus.APPROVED:
         return 'bg-green-100 text-green-800'
-      case 'REJECTED':
+      case DraftStatus.REJECTED:
         return 'bg-red-100 text-red-800'
+      case DraftStatus.PUBLISHED:
+        return 'bg-purple-100 text-purple-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }

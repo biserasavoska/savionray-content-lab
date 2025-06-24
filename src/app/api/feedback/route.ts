@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       await prisma.contentDraft.update({
         where: { id: contentDraftId },
         data: {
-          status: DraftStatus.PENDING_FIRST_REVIEW,
+          status: DraftStatus.DRAFT,
         },
       })
     }

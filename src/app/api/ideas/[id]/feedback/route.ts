@@ -36,7 +36,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       data: {
         body: '',
         contentType: ContentType.SOCIAL_MEDIA_POST,
-        status: DraftStatus.PENDING_FIRST_REVIEW,
+        status: DraftStatus.DRAFT,
         ideaId: params.id,
         createdById: session.user.id,
       },

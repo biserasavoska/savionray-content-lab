@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin } from '@/lib/auth'
 import { ContentType } from '@prisma/client'
+import { DraftStatus } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
       data: {
         body,
         contentType,
-        status: 'PENDING_FIRST_REVIEW',
+        status: DraftStatus.DRAFT,
         ideaId: req.url.split('/').pop()!,
         createdById: session.user.id,
       },

@@ -26,7 +26,7 @@ export default async function CreateContentPage() {
   // Show ideas that are approved by client and ready for content creation
   const items = await prisma.idea.findMany({
     where: {
-      status: 'APPROVED' as any,
+      status: IdeaStatus.APPROVED,
     },
     include: {
       createdBy: {

@@ -52,7 +52,7 @@ export async function POST(
       data: {
         body,
         contentType,
-        status: DraftStatus.PENDING_FIRST_REVIEW,
+        status: DraftStatus.DRAFT,
         idea: {
           connect: { id: params.id },
         },
