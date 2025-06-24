@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import FeedbackForm from './FeedbackForm'
 
-type IdeaStatus = 'PENDING' | 'APPROVED_BY_CLIENT' | 'REJECTED_BY_CLIENT'
+type IdeaStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 interface Creator {
   name: string | null
@@ -118,7 +118,7 @@ export default function ReviewList({ initialIdeas }: ReviewListProps) {
               <div className="ml-4 flex-shrink-0">
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                   ${idea.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                    idea.status === 'APPROVED_BY_CLIENT' ? 'bg-green-100 text-green-800' : 
+                    idea.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 
                     'bg-red-100 text-red-800'}`}>
                   {idea.status.replace(/_/g, ' ')}
                 </span>
@@ -141,15 +141,15 @@ export default function ReviewList({ initialIdeas }: ReviewListProps) {
               <div className="mt-4 space-y-4">
                 <div className="flex space-x-4">
                   <button
-                    onClick={() => handleStatusUpdate(idea.id, 'APPROVED_BY_CLIENT')}
-                    disabled={isSubmitting === idea.id || idea.status === 'APPROVED_BY_CLIENT'}
+                    onClick={() => handleStatusUpdate(idea.id, 'APPROVED')}
+                    disabled={isSubmitting === idea.id || idea.status === 'APPROVED'}
                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting === idea.id ? 'Updating...' : 'Approve'}
                   </button>
                   <button
-                    onClick={() => handleStatusUpdate(idea.id, 'REJECTED_BY_CLIENT')}
-                    disabled={isSubmitting === idea.id || idea.status === 'REJECTED_BY_CLIENT'}
+                    onClick={() => handleStatusUpdate(idea.id, 'REJECTED')}
+                    disabled={isSubmitting === idea.id || idea.status === 'REJECTED'}
                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitting === idea.id ? 'Updating...' : 'Reject'}

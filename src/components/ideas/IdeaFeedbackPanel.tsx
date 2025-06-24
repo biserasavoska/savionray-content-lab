@@ -43,7 +43,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: approve ? IdeaStatus.APPROVED_BY_CLIENT : IdeaStatus.REJECTED_BY_CLIENT,
+          status: approve ? IdeaStatus.APPROVED : IdeaStatus.REJECTED,
         }),
       })
 
@@ -157,7 +157,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
   return (
     <div className="space-y-6">
       {/* Idea Approval Section */}
-      {isClient(session) && idea.status === IdeaStatus.PENDING_CLIENT_APPROVAL && (
+      {isClient(session) && idea.status === IdeaStatus.PENDING && (
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900">Review</h3>

@@ -112,11 +112,11 @@ describe('IdeaCard', () => {
   it('shows correct status color', () => {
     const approvedIdea = {
       ...mockIdea,
-      status: 'APPROVED_BY_CLIENT' as IdeaStatus,
+      status: 'APPROVED' as IdeaStatus,
     }
 
     render(<IdeaCard idea={approvedIdea} />)
-    const statusElement = screen.getByText('APPROVED BY CLIENT')
+    const statusElement = screen.getByText('APPROVED')
     expect(statusElement.className).toContain('bg-green-100')
     expect(statusElement.className).toContain('text-green-800')
   })

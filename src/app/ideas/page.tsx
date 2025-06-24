@@ -10,15 +10,14 @@ import { IdeaWithCreator } from '@/types/idea'
 const TABS = [
   { id: 'all', name: 'All Ideas', status: undefined },
   { id: 'pending', name: 'Pending', status: 'PENDING' as IdeaStatus },
-  { id: 'approved', name: 'Approved', status: 'APPROVED_BY_CLIENT' as IdeaStatus },
-  { id: 'rejected', name: 'Rejected', status: 'REJECTED_BY_CLIENT' as IdeaStatus },
+  { id: 'approved', name: 'Approved', status: 'APPROVED' as IdeaStatus },
+  { id: 'rejected', name: 'Rejected', status: 'REJECTED' as IdeaStatus },
 ]
 
 export default function IdeasPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [ideas, setIdeas] = useState<IdeaWithCreator[]>([])
@@ -31,14 +30,12 @@ export default function IdeasPage() {
 
   const loadIdeas = async (
     status?: IdeaStatus,
-    search?: string,
     page: number = 1
   ) => {
     setIsLoading(true)
     try {
       const params = new URLSearchParams({
         ...(status && { status }),
-        ...(search && { search }),
         page: page.toString(),
         limit: '10',
       })
@@ -63,14 +60,7 @@ export default function IdeasPage() {
     setActiveTab(tabId)
     const tab = TABS.find((t) => t.id === tabId)
     setCurrentPage(1)
-    loadIdeas(tab?.status, searchQuery, 1)
-  }
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    setCurrentPage(1)
-    const tab = TABS.find((t) => t.id === activeTab)
-    loadIdeas(tab?.status, query, 1)
+    loadIdeas(tab?.status, 1)
   }
 
   const handleStatusChange = async (id: string, status: IdeaStatus) => {
@@ -82,7 +72,7 @@ export default function IdeasPage() {
       })
       if (!response.ok) throw new Error('Failed to update status')
       const tab = TABS.find((t) => t.id === activeTab)
-      loadIdeas(tab?.status, searchQuery, currentPage)
+      loadIdeas(tab?.status, currentPage)
     } catch (error) {
       console.error('Failed to update idea status:', error)
     }
@@ -99,7 +89,7 @@ export default function IdeasPage() {
       })
       if (!response.ok) throw new Error('Failed to delete idea')
       const tab = TABS.find((t) => t.id === activeTab)
-      loadIdeas(tab?.status, searchQuery, currentPage)
+      loadIdeas(tab?.status, currentPage)
     } catch (error) {
       console.error('Failed to delete idea:', error)
     }
@@ -108,7 +98,7 @@ export default function IdeasPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
     const tab = TABS.find((t) => t.id === activeTab)
-    loadIdeas(tab?.status, searchQuery, page)
+    loadIdeas(tab?.status, page)
   }
 
   if (!session) {
@@ -128,19 +118,8 @@ export default function IdeasPage() {
           </button>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search ideas..."
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-          />
-        </div>
-
         {/* Tabs */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 flex items-center justify-between">
           <nav className="-mb-px flex space-x-8">
             {TABS.map((tab) => (
               <button
@@ -159,6 +138,18 @@ export default function IdeasPage() {
               </button>
             ))}
           </nav>
+          {/* Next Month Dropdown */}
+          <div className="ml-4">
+            <label htmlFor="next-month" className="sr-only">Next Month</label>
+            <select
+              id="next-month"
+              name="next-month"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-sm"
+            >
+              <option>Next Month</option>
+              {/* Add more options as needed */}
+            </select>
+          </div>
         </div>
 
         {/* Ideas Grid */}

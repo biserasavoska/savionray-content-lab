@@ -1,22 +1,26 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { generateChatResponse } from '@/lib/openai'
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) {
-      return new NextResponse('Unauthorized', { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await req.json()
     const { message, conversation, idea, model } = body
 
-    if (!message || !idea || !model) {
-      return new NextResponse('Missing required fields', { status: 400 })
+    if (!message || !conversation || !idea || !model) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
+    // Generate chat response
     const response = await generateChatResponse({
       message,
       conversation,
@@ -27,8 +31,8 @@ export async function POST(request: Request) {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error in chat API:', error)
-    return new NextResponse(
-      error instanceof Error ? error.message : 'An error occurred',
+    return NextResponse.json(
+      error instanceof Error ? error.message : 'An error occurred while generating chat response',
       { status: 500 }
     )
   }

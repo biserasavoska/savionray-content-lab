@@ -34,7 +34,7 @@ export async function POST(
     const idea = await prisma.idea.findUnique({
       where: {
         id: params.id,
-        status: 'APPROVED_BY_CLIENT',
+        status: 'APPROVED',
         ...(isCreative(session) ? { createdById: session.user.id } : {}),
       },
     })

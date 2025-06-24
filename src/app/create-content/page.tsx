@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { isCreative } from '@/lib/auth'
 import CreateContentList from '@/components/create-content/CreateContentList'
+import { IdeaStatus } from '@prisma/client'
 
 export const metadata: Metadata = {
   title: 'Create Content',
@@ -25,7 +26,7 @@ export default async function CreateContentPage() {
   // Show ideas that are approved by client and ready for content creation
   const items = await prisma.idea.findMany({
     where: {
-      status: 'APPROVED_BY_CLIENT',
+      status: 'APPROVED' as any,
     },
     include: {
       createdBy: {

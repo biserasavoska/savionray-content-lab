@@ -1,22 +1,33 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DraftStatus } from '@prisma/client'
 
 export async function GET(
-  request: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
+  const session = await getServerSession(authOptions)
 
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
     const draft = await prisma.contentDraft.findUnique({
       where: { id: params.id },
       include: {
+        idea: {
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
         createdBy: {
           select: {
             name: true,
@@ -27,61 +38,50 @@ export async function GET(
     })
 
     if (!draft) {
-      return new NextResponse('Draft not found', { status: 404 })
+      return NextResponse.json({ error: 'Content draft not found' }, { status: 404 })
     }
 
     return NextResponse.json(draft)
   } catch (error) {
-    console.error('Error:', error)
-    return new NextResponse('Internal error', { status: 500 })
+    console.error('Failed to fetch content draft:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch content draft' },
+      { status: 500 }
+    )
   }
 }
 
 export async function PUT(
-  request: Request,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
+    const { status, body, metadata } = await req.json()
 
-    const body = await request.json()
-    const { status, contentType, body: content, metadata } = body
-
-    // Validate status
-    if (!Object.values(DraftStatus).includes(status)) {
-      return new NextResponse('Invalid status', { status: 400 })
-    }
-
-    // Get the existing draft
-    const existingDraft = await prisma.contentDraft.findUnique({
-      where: { id: params.id },
-      include: {
-        idea: true,
-      },
-    })
-
-    if (!existingDraft) {
-      return new NextResponse('Draft not found', { status: 404 })
-    }
-
-    // Only allow the creator to edit their drafts
-    if (existingDraft.createdById !== session.user.id) {
-      return new NextResponse('Unauthorized', { status: 403 })
-    }
-
-    // Update the draft
     const updatedDraft = await prisma.contentDraft.update({
       where: { id: params.id },
       data: {
-        status,
-        contentType,
-        body: content,
-        metadata,
+        ...(status && { status }),
+        ...(body && { body }),
+        ...(metadata && { metadata }),
       },
       include: {
+        idea: {
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
         createdBy: {
           select: {
             name: true,
@@ -93,7 +93,10 @@ export async function PUT(
 
     return NextResponse.json(updatedDraft)
   } catch (error) {
-    console.error('Error:', error)
-    return new NextResponse('Internal error', { status: 500 })
+    console.error('Failed to update content draft:', error)
+    return NextResponse.json(
+      { error: 'Failed to update content draft' },
+      { status: 500 }
+    )
   }
 } 

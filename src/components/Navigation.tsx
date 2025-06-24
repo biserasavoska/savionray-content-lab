@@ -99,22 +99,16 @@ export default function Navigation() {
                 Ideas
               </Link>
               <Link
-                href="/ready-content"
-                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/ready-content')}`}
+                href="/content-review"
+                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/content-review')}`}
               >
-                Ready Content
+                Content Review
               </Link>
               <Link
-                href="/scheduled-posts"
-                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/scheduled-posts')}`}
+                href="/published"
+                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/published')}`}
               >
-                Scheduled Posts
-              </Link>
-              <Link
-                href="/approvals"
-                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/approvals')}`}
-              >
-                Approvals
+                Published
               </Link>
             </nav>
           </div>

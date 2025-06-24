@@ -20,7 +20,7 @@ export default async function ReviewIdeasPage() {
   // Fetch initial ideas pending review
   const ideas = await prisma.idea.findMany({
     where: {
-      status: IdeaStatus.PENDING_CLIENT_APPROVAL,
+      status: IdeaStatus.PENDING,
     },
     include: {
       createdBy: {

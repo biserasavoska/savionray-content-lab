@@ -1,11 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["clientExtensions"]
 }
 
@@ -20,15 +14,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -42,75 +35,71 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String                @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?               @unique
   emailVerified DateTime?
   image         String?
+  role          UserRole              @default(CREATIVE)
   password      String?
-  role          UserRole  @default(CREATIVE)
   accounts      Account[]
-  sessions      Session[]
-
-  // Content management relations
-  ideas         Idea[]
-  feedbacks     Feedback[]
-  ideaComments  IdeaComment[]
-  contentDrafts ContentDraft[]
-  media         Media[]
   deliveryPlans ContentDeliveryPlan[]
+  contentDrafts ContentDraft[]
+  feedbacks     Feedback[]
+  ideas         Idea[]
+  ideaComments  IdeaComment[]
+  media         Media[]
+  sessions      Session[]
   visualDrafts  VisualDraft[]
 }
 
 model Idea {
-  id          String      @id @default(cuid())
-  title       String
-  description String      @db.Text
-  status      IdeaStatus  @default(PENDING_CLIENT_APPROVAL)
+  id                 String               @id @default(cuid())
+  title              String
+  description        String
+  status             IdeaStatus           @default(PENDING)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  createdById        String
+  mediaType          MediaType?
   publishingDateTime DateTime?
-  savedForLater Boolean   @default(false)
-  mediaType    MediaType?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  createdBy   User        @relation(fields: [createdById], references: [id])
-  createdById String
-  contentType ContentType?
-
-  // Content management relations
-  contentDrafts ContentDraft[]
-  comments     IdeaComment[]
-  deliveryItem  ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
-  deliveryItemId String?
-  visualDrafts VisualDraft[]
+  savedForLater      Boolean              @default(false)
+  contentType        ContentType?
+  deliveryItemId     String?
+  contentDrafts      ContentDraft[]
+  createdBy          User                 @relation(fields: [createdById], references: [id])
+  deliveryItem       ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
+  comments           IdeaComment[]
+  visualDrafts       VisualDraft[]
 }
 
 model ContentDraft {
-  id          String      @id @default(cuid())
-  status      DraftStatus @default(PENDING_FIRST_REVIEW)
-  contentType ContentType
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  createdBy   User        @relation(fields: [createdById], references: [id])
-  createdById String
-  body        String      @db.Text
-  metadata    Json?       @default("{\"contentType\":\"social-media\"}")
-  idea        Idea        @relation(fields: [ideaId], references: [id])
-  ideaId      String
-  feedbacks   Feedback[]
-  media       Media[]
+  id             String          @id @default(cuid())
+  status         DraftStatus     @default(DRAFT)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdById    String
+  body           String
+  metadata       Json?           @default("{\"contentType\": \"social-media\"}")
+  ideaId         String
+  contentType    ContentType
+  createdBy      User            @relation(fields: [createdById], references: [id])
+  idea           Idea            @relation(fields: [ideaId], references: [id])
+  feedbacks      Feedback[]
+  media          Media[]
   scheduledPosts ScheduledPost[]
 }
 
 model Feedback {
-  id            String      @id @default(cuid())
-  comment       String
-  createdAt     DateTime    @default(now())
+  id             String        @id @default(cuid())
+  comment        String
+  createdAt      DateTime      @default(now())
   contentDraftId String?
-  visualDraftId String?
-  createdById   String
-  contentDraft  ContentDraft? @relation(fields: [contentDraftId], references: [id])
-  visualDraft   VisualDraft? @relation(fields: [visualDraftId], references: [id])
-  createdBy     User        @relation(fields: [createdById], references: [id])
+  createdById    String
+  visualDraftId  String?
+  contentDraft   ContentDraft? @relation(fields: [contentDraftId], references: [id])
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  visualDraft    VisualDraft?  @relation(fields: [visualDraftId], references: [id])
 
   @@index([contentDraftId])
   @@index([visualDraftId])
@@ -118,31 +107,93 @@ model Feedback {
 }
 
 model Media {
-  id          String   @id @default(cuid())
-  url         String
-  filename    String
-  contentType String
-  size        Int
-  createdAt   DateTime @default(now())
-
-  // Relations
-  contentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
+  id             String       @id @default(cuid())
+  url            String
+  filename       String
+  contentType    String
+  size           Int
+  createdAt      DateTime     @default(now())
   contentDraftId String
-  uploadedBy     User        @relation(fields: [uploadedById], references: [id])
   uploadedById   String
+  contentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
+  uploadedBy     User         @relation(fields: [uploadedById], references: [id])
 }
 
 model ScheduledPost {
-  id            String         @id @default(cuid())
-  scheduledDate DateTime
-  status        ScheduleStatus @default(SCHEDULED)
-  metadata      Json?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  // Relations
-  contentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
+  id             String         @id @default(cuid())
+  scheduledDate  DateTime
+  status         ScheduleStatus @default(SCHEDULED)
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   contentDraftId String
+  contentDraft   ContentDraft   @relation(fields: [contentDraftId], references: [id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model ContentDeliveryPlan {
+  id          String                @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  status      DeliveryPlanStatus    @default(DRAFT)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  clientId    String
+  targetMonth DateTime
+  isArchived  Boolean               @default(false)
+  items       ContentDeliveryItem[]
+  client      User                  @relation(fields: [clientId], references: [id])
+}
+
+model ContentDeliveryItem {
+  id          String              @id @default(cuid())
+  contentType ContentType
+  quantity    Int
+  dueDate     DateTime
+  status      DeliveryItemStatus  @default(PENDING)
+  priority    Int                 @default(0)
+  notes       String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  planId      String
+  plan        ContentDeliveryPlan @relation(fields: [planId], references: [id])
+  ideas       Idea[]
+}
+
+model IdeaComment {
+  id          String   @id @default(cuid())
+  comment     String
+  createdAt   DateTime @default(now())
+  ideaId      String
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  idea        Idea     @relation(fields: [ideaId], references: [id])
+}
+
+model VisualDraft {
+  id          String     @id @default(cuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  status      String
+  imageUrl    String
+  metadata    Json
+  ideaId      String
+  createdById String
+  feedback    Feedback[]
+  createdBy   User       @relation(fields: [createdById], references: [id])
+  idea        Idea       @relation(fields: [ideaId], references: [id])
+
+  @@index([ideaId])
+  @@index([createdById])
 }
 
 enum UserRole {
@@ -152,17 +203,18 @@ enum UserRole {
 }
 
 enum IdeaStatus {
-  PENDING_CLIENT_APPROVAL
-  APPROVED_BY_CLIENT
-  REJECTED_BY_CLIENT
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum DraftStatus {
-  PENDING_FIRST_REVIEW // Initial draft waiting for client review
-  NEEDS_REVISION // Client provided feedback, needs changes
-  PENDING_FINAL_APPROVAL // Updated draft after feedback, waiting for final approval
-  APPROVED_FOR_PUBLISHING // Final approval given, ready to publish
-  REJECTED // Client rejected the content
+  DRAFT
+  AWAITING_FEEDBACK
+  AWAITING_REVISION
+  APPROVED
+  REJECTED
+  PUBLISHED
 }
 
 enum ScheduleStatus {
@@ -188,49 +240,6 @@ enum ContentType {
   EMAIL_CAMPAIGN
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-model ContentDeliveryPlan {
-  id          String   @id @default(cuid())
-  name        String
-  description String?  @db.Text
-  startDate   DateTime
-  endDate     DateTime
-  targetMonth DateTime // The month this content is intended for
-  isArchived  Boolean  @default(false) // Simple flag for archived content
-  status      DeliveryPlanStatus @default(DRAFT)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  client      User     @relation(fields: [clientId], references: [id])
-  clientId    String
-  items       ContentDeliveryItem[]
-}
-
-model ContentDeliveryItem {
-  id          String   @id @default(cuid())
-  contentType ContentType
-  quantity    Int
-  dueDate     DateTime
-  status      DeliveryItemStatus @default(PENDING)
-  priority    Int      @default(0)
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  plan        ContentDeliveryPlan @relation(fields: [planId], references: [id])
-  planId      String
-  ideas       Idea[]
-}
-
 enum DeliveryPlanStatus {
   DRAFT
   ACTIVE
@@ -244,34 +253,4 @@ enum DeliveryItemStatus {
   REVIEW
   APPROVED
   DELIVERED
-}
-
-model IdeaComment {
-  id        String   @id @default(cuid())
-  comment   String   @db.Text
-  createdAt DateTime @default(now())
-
-  // Relations
-  idea        Idea   @relation(fields: [ideaId], references: [id])
-  ideaId      String
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-}
-
-model VisualDraft {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  status      String
-  imageUrl    String
-  metadata    Json
-  ideaId      String
-  createdById String
-
-  idea        Idea     @relation(fields: [ideaId], references: [id])
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  feedback    Feedback[]
-
-  @@index([ideaId])
-  @@index([createdById])
 }

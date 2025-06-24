@@ -3,9 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin, isClient } from '@/lib/auth'
-import { Prisma } from '@prisma/client'
-
-type IdeaStatus = 'PENDING_CLIENT_APPROVAL' | 'APPROVED_BY_CLIENT' | 'REJECTED_BY_CLIENT'
+import { Prisma, IdeaStatus } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -67,13 +65,19 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = parseInt(url.searchParams.get('limit') || '10')
-  const skip = (page - 1) * limit
+    const skip = (page - 1) * limit
+    const status = url.searchParams.get('status')
+
+    // Only allow valid status values
+    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED']
+    const statusFilter = validStatuses.includes(status || '') ? { status: { equals: status as IdeaStatus } } : undefined;
 
     const totalCount = await prisma.idea.count({
-      where: {},
+      where: statusFilter,
     })
 
     const ideas = await prisma.idea.findMany({
+      where: statusFilter,
       orderBy: {
         createdAt: 'desc',
       },
@@ -102,17 +106,17 @@ export async function GET(req: NextRequest) {
         contentDrafts: {
           include: {
             feedbacks: {
-        include: {
-          createdBy: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
+              include: {
+                createdBy: {
+                  select: {
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
             },
           },
         },

@@ -37,8 +37,8 @@ export default function IdeaCard({ idea, onStatusChange, onEdit, onDelete }: Ide
         </div>
         <div className="ml-4 flex-shrink-0">
           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-            ${idea.status === 'PENDING_CLIENT_APPROVAL' ? 'bg-yellow-100 text-yellow-800' : 
-              idea.status === 'APPROVED_BY_CLIENT' ? 'bg-green-100 text-green-800' : 
+            ${idea.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+              idea.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
               'bg-red-100 text-red-800'}`}>
             {idea.status.replace(/_/g, ' ')}
           </span>

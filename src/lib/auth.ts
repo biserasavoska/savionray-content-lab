@@ -49,7 +49,11 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as UserRole
       }
       return session
-    }
+    },
+    async redirect({ url, baseUrl }) {
+      // Always redirect to the main dashboard after login
+      return baseUrl + '/';
+    },
   },
   providers: [
     LinkedInProvider({

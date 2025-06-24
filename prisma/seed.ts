@@ -52,7 +52,7 @@ async function main() {
       data: {
         title: 'Summer Marketing Campaign',
         description: 'Create engaging social media content highlighting our summer products and special offers. Focus on outdoor activities and seasonal trends.',
-        status: IdeaStatus.APPROVED_BY_CLIENT,
+        status: IdeaStatus.APPROVED,
         contentType: ContentType.SOCIAL_MEDIA_POST,
         publishingDateTime: new Date('2024-07-01'),
         createdById: creative.id,
@@ -62,7 +62,7 @@ async function main() {
       data: {
         title: 'Industry Insights Newsletter',
         description: 'Monthly newsletter covering the latest trends in digital marketing, featuring expert interviews and case studies.',
-        status: IdeaStatus.APPROVED_BY_CLIENT,
+        status: IdeaStatus.APPROVED,
         contentType: ContentType.NEWSLETTER,
         publishingDateTime: new Date('2024-07-15'),
         createdById: creative.id,
@@ -72,7 +72,7 @@ async function main() {
       data: {
         title: 'Product Launch Blog Series',
         description: 'A series of blog posts introducing our new product line, including features, benefits, and customer success stories.',
-        status: IdeaStatus.APPROVED_BY_CLIENT,
+        status: IdeaStatus.APPROVED,
         contentType: ContentType.BLOG_POST,
         publishingDateTime: new Date('2024-07-10'),
         createdById: creative.id,
@@ -102,7 +102,7 @@ async function main() {
                 {
                   title: 'Summer Marketing Trends',
                   description: 'A comprehensive guide to summer marketing strategies',
-                  status: IdeaStatus.PENDING_CLIENT_APPROVAL,
+                  status: IdeaStatus.PENDING,
                   createdById: creative.id,
                   contentType: ContentType.BLOG_POST,
                 },
@@ -120,7 +120,7 @@ async function main() {
                 {
                   title: 'Instagram Summer Campaign',
                   description: 'Series of Instagram posts highlighting summer products',
-                  status: IdeaStatus.PENDING_CLIENT_APPROVAL,
+                  status: IdeaStatus.PENDING,
                   createdById: creative.id,
                   contentType: ContentType.SOCIAL_MEDIA_POST,
                 },
@@ -138,7 +138,7 @@ async function main() {
                 {
                   title: 'July Newsletter: Summer Edition',
                   description: 'Mid-summer newsletter featuring seasonal content',
-                  status: IdeaStatus.PENDING_CLIENT_APPROVAL,
+                  status: IdeaStatus.PENDING,
                   createdById: creative.id,
                   contentType: ContentType.NEWSLETTER,
                 },
