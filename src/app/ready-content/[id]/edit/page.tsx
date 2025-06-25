@@ -158,7 +158,7 @@ Would you like me to modify anything about this content?`
     }
   }
 
-  const saveDraft = async (status: 'PENDING_FIRST_REVIEW' | 'NEEDS_REVISION' | 'PENDING_FINAL_APPROVAL' | 'APPROVED_FOR_PUBLISHING' | 'REJECTED') => {
+  const saveDraft = async (status: 'DRAFT' | 'AWAITING_REVISION' | 'AWAITING_FEEDBACK' | 'APPROVED' | 'REJECTED' | 'PUBLISHED') => {
     if (!generatedContent) return;
     
     setSavingDraft(true);
@@ -187,7 +187,7 @@ Would you like me to modify anything about this content?`
       }
 
       // If approved, redirect to the idea page
-      if (status === 'APPROVED_FOR_PUBLISHING') {
+      if (status === 'APPROVED') {
         router.push(`/ideas/${params.id}`);
       } else {
         // Just show a success message for drafts
@@ -283,14 +283,14 @@ Would you like me to modify anything about this content?`
           </div>
           <div className="mt-4 flex gap-4">
             <button
-              onClick={() => saveDraft('PENDING_FIRST_REVIEW')}
+              onClick={() => saveDraft('DRAFT')}
               disabled={savingDraft}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50"
             >
               {savingDraft ? 'Saving...' : 'Save as Draft'}
             </button>
             <button
-              onClick={() => saveDraft('PENDING_FINAL_APPROVAL')}
+              onClick={() => saveDraft('AWAITING_FEEDBACK')}
               disabled={savingDraft}
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
             >

@@ -28,30 +28,35 @@ interface Draft {
 }
 
 const STATUS_COLORS: Record<DraftStatus, { bg: string; text: string; label: string }> = {
-  PENDING_FIRST_REVIEW: {
+  DRAFT: {
     bg: 'bg-yellow-100',
     text: 'text-yellow-800',
-    label: 'Pending First Review',
+    label: 'Draft',
   },
-  NEEDS_REVISION: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-800',
-    label: 'Needs Revision',
-  },
-  PENDING_FINAL_APPROVAL: {
+  AWAITING_FEEDBACK: {
     bg: 'bg-blue-100',
     text: 'text-blue-800',
-    label: 'Pending Final Approval',
+    label: 'Awaiting Feedback',
   },
-  APPROVED_FOR_PUBLISHING: {
+  AWAITING_REVISION: {
+    bg: 'bg-orange-100',
+    text: 'text-orange-800',
+    label: 'Awaiting Revision',
+  },
+  APPROVED: {
     bg: 'bg-green-100',
     text: 'text-green-800',
-    label: 'Approved for Publishing',
+    label: 'Approved',
   },
   REJECTED: {
     bg: 'bg-red-100',
     text: 'text-red-800',
     label: 'Rejected',
+  },
+  PUBLISHED: {
+    bg: 'bg-purple-100',
+    text: 'text-purple-800',
+    label: 'Published',
   },
 }
 

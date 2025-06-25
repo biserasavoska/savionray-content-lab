@@ -77,7 +77,7 @@ export default function EditDraft({ params }: { params: { id: string; draftId: s
     }
   }
 
-  const saveDraft = async (status: 'PENDING_FIRST_REVIEW' | 'NEEDS_REVISION' | 'PENDING_FINAL_APPROVAL' | 'APPROVED_FOR_PUBLISHING' | 'REJECTED') => {
+  const saveDraft = async (status: 'DRAFT' | 'AWAITING_REVISION' | 'AWAITING_FEEDBACK' | 'APPROVED' | 'REJECTED' | 'PUBLISHED') => {
     setSaving(true)
     try {
       const response = await fetch(`/api/content-drafts/${params.draftId}`, {
@@ -226,14 +226,14 @@ export default function EditDraft({ params }: { params: { id: string; draftId: s
             Cancel
           </button>
           <button
-            onClick={() => saveDraft('PENDING_FIRST_REVIEW')}
+            onClick={() => saveDraft('DRAFT')}
             disabled={saving}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             {saving ? 'Saving...' : 'Save as Draft'}
           </button>
           <button
-            onClick={() => saveDraft('PENDING_FINAL_APPROVAL')}
+            onClick={() => saveDraft('AWAITING_FEEDBACK')}
             disabled={saving}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >

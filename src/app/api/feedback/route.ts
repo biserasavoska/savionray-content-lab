@@ -32,6 +32,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
     }
 
+    if (draft.status === DraftStatus.AWAITING_REVISION) {
+      return NextResponse.json(
+        { error: 'Cannot add feedback to draft in revision state' },
+        { status: 400 }
+      )
+    }
+
     // Create feedback
     const feedback = await prisma.feedback.create({
       data: {
@@ -50,14 +57,12 @@ export async function POST(req: NextRequest) {
     })
 
     // Update draft status if needed
-    if (draft.status === DraftStatus.NEEDS_REVISION) {
-      await prisma.contentDraft.update({
-        where: { id: contentDraftId },
-        data: {
-          status: DraftStatus.DRAFT,
-        },
-      })
-    }
+    await prisma.contentDraft.update({
+      where: { id: contentDraftId },
+      data: {
+        status: DraftStatus.DRAFT,
+      },
+    })
 
     return NextResponse.json(feedback)
   } catch (error) {

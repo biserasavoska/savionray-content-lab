@@ -29,7 +29,7 @@ export async function POST(
       return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
     }
 
-    if (draft.status === 'APPROVED_FOR_PUBLISHING') {
+    if (draft.status === 'APPROVED') {
       return NextResponse.json({ error: 'Draft is already approved' }, { status: 400 })
     }
 
@@ -37,7 +37,7 @@ export async function POST(
     const updatedDraft = await prisma.contentDraft.update({
       where: { id: params.id },
       data: {
-        status: 'APPROVED_FOR_PUBLISHING',
+        status: 'APPROVED',
       },
     })
 

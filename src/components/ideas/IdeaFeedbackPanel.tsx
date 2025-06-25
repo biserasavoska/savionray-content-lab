@@ -3,27 +3,12 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { format } from 'date-fns'
-import { Idea, ContentDraft, DraftStatus, IdeaStatus, User, ContentType, IdeaComment } from '@prisma/client'
 import { isClient } from '@/lib/auth'
 
-type IdeaWithDrafts = Idea & {
-  contentDrafts: (ContentDraft & {
-    createdBy: Pick<User, 'name' | 'email'>
-    feedbacks: {
-      id: string
-      comment: string
-      createdAt: Date
-      createdBy: Pick<User, 'name' | 'email'>
-    }[]
-  })[]
-  createdBy: Pick<User, 'name' | 'email'>
-  comments: (IdeaComment & {
-    createdBy: Pick<User, 'name' | 'email'>
-  })[]
-}
+type IdeaWithDrafts = any
 
 interface IdeaFeedbackPanelProps {
-  idea: IdeaWithDrafts
+  idea: any
 }
 
 export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
@@ -43,7 +28,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: approve ? IdeaStatus.APPROVED : IdeaStatus.REJECTED,
+          status: approve ? 'APPROVED' : 'REJECTED',
         }),
       })
 
@@ -104,7 +89,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
     }
   }
 
-  const handleDraftApproval = async (draftId: string, status: DraftStatus) => {
+  const handleDraftApproval = async (draftId: string, status: string) => {
     if (!session?.user?.id) return
 
     try {
@@ -157,7 +142,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
   return (
     <div className="space-y-6">
       {/* Idea Approval Section */}
-      {isClient(session) && idea.status === IdeaStatus.PENDING && (
+      {isClient(session) && idea.status === 'PENDING' && (
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900">Review</h3>
@@ -195,7 +180,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium leading-6 text-gray-900">Comments</h3>
           
-          {idea.comments?.map((comment) => (
+          {idea.comments?.map((comment: any) => (
             <div key={comment.id} className="mt-4 text-sm text-gray-700">
               <p className="font-medium">
                 {comment.createdBy?.name || comment.createdBy?.email || 'Unknown User'} -{' '}
@@ -231,7 +216,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium leading-6 text-gray-900">Drafts</h3>
           
-          {idea.contentDrafts?.map((draft, index) => (
+          {idea.contentDrafts?.map((draft: any, index: any) => (
             <div key={draft.id} className="mt-6 border-t border-gray-200 pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -245,37 +230,29 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
                 </div>
                 {isClient(session) && (
                   <div className="space-x-4">
-                    {draft.status === DraftStatus.PENDING_FIRST_REVIEW && (
-                      <>
-                        <button
-                          onClick={() => handleDraftApproval(draft.id, DraftStatus.APPROVED_FOR_PUBLISHING)}
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleDraftApproval(draft.id, DraftStatus.NEEDS_REVISION)}
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700"
-                        >
-                          Revise
-                        </button>
-                      </>
+                    {draft.status === 'DRAFT' && (
+                      <button
+                        onClick={() => handleDraftApproval(draft.id, 'APPROVED')}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                      >
+                        Approve
+                      </button>
                     )}
-                    {draft.status === DraftStatus.PENDING_FINAL_APPROVAL && (
-                      <>
-                        <button
-                          onClick={() => handleDraftApproval(draft.id, DraftStatus.APPROVED_FOR_PUBLISHING)}
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleDraftApproval(draft.id, DraftStatus.REJECTED)}
-                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
-                        >
-                          Reject
-                        </button>
-                      </>
+                    {draft.status === 'DRAFT' && (
+                      <button
+                        onClick={() => handleDraftApproval(draft.id, 'AWAITING_REVISION')}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
+                      >
+                        Request Revision
+                      </button>
+                    )}
+                    {draft.status === 'AWAITING_FEEDBACK' && (
+                      <button
+                        onClick={() => handleDraftApproval(draft.id, 'APPROVED')}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                      >
+                        Approve
+                      </button>
                     )}
                   </div>
                 )}
@@ -288,7 +265,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
               {/* Feedback Section */}
               <div className="mt-6">
                 <h5 className="text-sm font-medium text-gray-900">Feedback</h5>
-                {draft.feedbacks?.map((feedback) => (
+                {draft.feedbacks?.map((feedback: any) => (
                   <div key={feedback.id} className="mt-2 text-sm text-gray-700">
                     <p className="font-medium">
                       {feedback.createdBy?.name || feedback.createdBy?.email || 'Unknown User'} -{' '}
@@ -299,27 +276,27 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
                 ))}
 
                 {isClient(session) && 
-                  (draft.status === DraftStatus.PENDING_FIRST_REVIEW || 
-                   draft.status === DraftStatus.PENDING_FINAL_APPROVAL) && (
-                  <div className="mt-4">
-                    <textarea
-                      rows={3}
-                      className="shadow-sm block w-full focus:ring-red-500 focus:border-red-500 sm:text-sm border border-gray-300 rounded-md"
-                      placeholder="Write feedback..."
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                    />
-                    <div className="mt-3">
-                      <button
-                        onClick={() => handleSubmitFeedback(draft.id)}
-                        disabled={isSubmitting || !feedback.trim()}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-300"
-                      >
-                        {isSubmitting ? 'Sending...' : 'Send'}
-                      </button>
+                  (draft.status === 'DRAFT' || 
+                   draft.status === 'AWAITING_FEEDBACK') && (
+                    <div className="mt-4">
+                      <textarea
+                        rows={3}
+                        className="shadow-sm block w-full focus:ring-red-500 focus:border-red-500 sm:text-sm border border-gray-300 rounded-md"
+                        placeholder="Write feedback..."
+                        value={feedback}
+                        onChange={(e) => setFeedback(e.target.value)}
+                      />
+                      <div className="mt-3">
+                        <button
+                          onClick={() => handleSubmitFeedback(draft.id)}
+                          disabled={isSubmitting || !feedback.trim()}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-300"
+                        >
+                          {isSubmitting ? 'Sending...' : 'Send'}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
           ))}

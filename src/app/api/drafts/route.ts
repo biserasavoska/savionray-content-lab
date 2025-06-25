@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
       data: {
         body,
         ideaId,
-        contentType,
+        contentType: contentType as ContentType,
+        status: 'DRAFT',
         createdById: session.user.id,
         metadata: metadata || {},
-        status: 'PENDING_FIRST_REVIEW',
       },
       include: {
         createdBy: {

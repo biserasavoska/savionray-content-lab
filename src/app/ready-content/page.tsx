@@ -28,8 +28,8 @@ export default async function ReadyContentPage() {
       contentDrafts: {
         some: {
           OR: [
-            { status: 'PENDING_FIRST_REVIEW' },
-            { status: 'PENDING_FINAL_APPROVAL' }
+            { status: 'DRAFT' },
+            { status: 'AWAITING_FEEDBACK' }
           ]
         }
       }

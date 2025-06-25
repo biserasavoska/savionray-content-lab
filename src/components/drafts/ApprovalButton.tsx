@@ -23,8 +23,12 @@ export default function ApprovalButton({
   const [scheduledDate, setScheduledDate] = useState<string>('')
   const [error, setError] = useState('')
 
-  if (currentStatus === DraftStatus.APPROVED_FOR_PUBLISHING) {
-    return null
+  if (currentStatus === DraftStatus.APPROVED) {
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        Approved
+      </span>
+    )
   }
 
   const handleApprove = async () => {
@@ -32,7 +36,7 @@ export default function ApprovalButton({
     setError('')
 
     try {
-      await onApprove(draftId, DraftStatus.APPROVED_FOR_PUBLISHING)
+      await onApprove(draftId, DraftStatus.APPROVED)
     } catch (err) {
       setError('Failed to approve draft')
     } finally {

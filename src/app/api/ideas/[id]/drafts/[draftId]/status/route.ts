@@ -34,21 +34,28 @@ export async function PATCH(
     }
 
     // Validate status transitions
-    if (draft.status === DraftStatus.PENDING_FIRST_REVIEW) {
-      if (status !== DraftStatus.APPROVED_FOR_PUBLISHING && status !== DraftStatus.NEEDS_REVISION) {
+    if (draft.status === DraftStatus.DRAFT) {
+      if (status !== DraftStatus.APPROVED && status !== DraftStatus.AWAITING_REVISION) {
         return NextResponse.json(
-          { error: 'Invalid status transition from PENDING_FIRST_REVIEW' },
+          { error: 'Invalid status transition from DRAFT' },
           { status: 400 }
         )
       }
-    } else if (draft.status === DraftStatus.PENDING_FINAL_APPROVAL) {
-      if (status !== DraftStatus.APPROVED_FOR_PUBLISHING && status !== DraftStatus.REJECTED) {
+    } else if (draft.status === DraftStatus.AWAITING_FEEDBACK) {
+      if (status !== DraftStatus.APPROVED && status !== DraftStatus.REJECTED) {
         return NextResponse.json(
-          { error: 'Invalid status transition from PENDING_FINAL_APPROVAL' },
+          { error: 'Invalid status transition from AWAITING_FEEDBACK' },
           { status: 400 }
         )
       }
-    } else {
+    } else if (draft.status === DraftStatus.AWAITING_REVISION) {
+      if (status !== DraftStatus.APPROVED && status !== DraftStatus.AWAITING_FEEDBACK) {
+        return NextResponse.json(
+          { error: 'Invalid status transition from AWAITING_REVISION' },
+          { status: 400 }
+        )
+      }
+    } else if (draft.status === DraftStatus.APPROVED || draft.status === DraftStatus.REJECTED || draft.status === DraftStatus.PUBLISHED) {
       return NextResponse.json(
         { error: 'Cannot update status in current state' },
         { status: 400 }

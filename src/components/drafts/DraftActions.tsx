@@ -77,11 +77,11 @@ export default function DraftActions({ draftId, currentStatus, ideaId }: DraftAc
     }
   }
 
-  if (currentStatus === DraftStatus.APPROVED_FOR_PUBLISHING) {
+  if (currentStatus === DraftStatus.APPROVED) {
     return (
-      <div className="bg-green-50 p-4 rounded-md">
-        <p className="text-green-700">This draft has been approved.</p>
-      </div>
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        Approved
+      </span>
     )
   }
 
@@ -98,14 +98,14 @@ export default function DraftActions({ draftId, currentStatus, ideaId }: DraftAc
       <div className="space-y-4">
         <div className="flex space-x-4">
           <button
-            onClick={() => handleStatusUpdate(DraftStatus.APPROVED_FOR_PUBLISHING)}
+            onClick={() => handleStatusUpdate(DraftStatus.APPROVED)}
             disabled={isSubmitting}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
           >
             {isSubmitting ? 'Approving...' : 'Approve'}
           </button>
           <button
-            onClick={() => handleStatusUpdate(DraftStatus.NEEDS_REVISION)}
+            onClick={() => handleStatusUpdate(DraftStatus.AWAITING_REVISION)}
             disabled={isSubmitting}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50"
           >
