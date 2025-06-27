@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin } from '@/lib/auth'
 import { DraftStatus, ContentType } from '@prisma/client'
+import { IDEA_STATUS } from '@/lib/utils/enum-constants'
 
 export async function POST(
   req: NextRequest,
@@ -34,7 +35,7 @@ export async function POST(
     const idea = await prisma.idea.findUnique({
       where: {
         id: params.id,
-        status: 'APPROVED',
+        status: IDEA_STATUS.APPROVED,
         ...(isCreative(session) ? { createdById: session.user.id } : {}),
       },
     })

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin, isClient } from '@/lib/auth'
 import { Prisma, IdeaStatus } from '@prisma/client'
+import { IDEA_STATUS } from '@/lib/utils/enum-constants'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -68,8 +69,8 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit
     const status = url.searchParams.get('status')
 
-    // Only allow valid status values
-    const validStatuses = ['PENDING', 'APPROVED', 'REJECTED']
+    // Use centralized enum constants instead of hardcoded strings
+    const validStatuses = [IDEA_STATUS.PENDING, IDEA_STATUS.APPROVED, IDEA_STATUS.REJECTED]
     const statusFilter = validStatuses.includes(status || '') ? { status: { equals: status as IdeaStatus } } : undefined;
 
     const totalCount = await prisma.idea.count({

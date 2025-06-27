@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isClient } from '@/lib/auth'
+import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
 
 export async function POST(
   req: NextRequest,
@@ -29,7 +30,7 @@ export async function POST(
       return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
     }
 
-    if (draft.status === 'APPROVED') {
+    if (draft.status === DRAFT_STATUS.APPROVED) {
       return NextResponse.json({ error: 'Draft is already approved' }, { status: 400 })
     }
 
@@ -37,7 +38,7 @@ export async function POST(
     const updatedDraft = await prisma.contentDraft.update({
       where: { id: params.id },
       data: {
-        status: 'APPROVED',
+        status: DRAFT_STATUS.APPROVED,
       },
     })
 
