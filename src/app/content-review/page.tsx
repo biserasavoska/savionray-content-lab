@@ -19,6 +19,9 @@ export default async function ContentReviewPage() {
   const drafts = await prisma.contentDraft.findMany({
     where: {
       ...(isCreativeUser ? { createdById: session.user.id } : {}),
+      idea: {
+        status: 'APPROVED' // Only show drafts for approved ideas
+      },
       status: {
         in: [
           'DRAFT',

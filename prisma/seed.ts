@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, ContentType, IdeaStatus } from '@prisma/client'
+import { PrismaClient, UserRole, ContentType, IdeaStatus, DraftStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -18,6 +18,7 @@ async function main() {
       name: 'Creative User',
       email: 'creative@savionray.com',
       role: UserRole.CREATIVE,
+      password: await bcrypt.hash('password123', 10),
     },
   })
 
@@ -26,6 +27,7 @@ async function main() {
       name: 'Client User',
       email: 'client@savionray.com',
       role: UserRole.CLIENT,
+      password: await bcrypt.hash('password123', 10),
     },
   })
 
@@ -34,6 +36,7 @@ async function main() {
       name: 'Admin User',
       email: 'admin@savionray.com',
       role: UserRole.ADMIN,
+      password: await bcrypt.hash('password123', 10),
     },
   })
 
@@ -76,6 +79,77 @@ async function main() {
         contentType: ContentType.BLOG_POST,
         publishingDateTime: new Date('2024-07-10'),
         createdById: creative.id,
+      },
+    }),
+  ])
+
+  // Create content drafts for approved ideas
+  await Promise.all([
+    prisma.contentDraft.create({
+      data: {
+        body: '🌞 Summer is here! Discover our amazing summer collection with exclusive offers that will make your season unforgettable. From beach essentials to outdoor adventures, we\'ve got everything you need to make the most of the sunshine! ☀️ #SummerVibes #SavionRay #SummerCollection',
+        status: DraftStatus.AWAITING_FEEDBACK,
+        contentType: ContentType.SOCIAL_MEDIA_POST,
+        createdById: creative.id,
+        ideaId: approvedIdeas[0].id,
+        metadata: {
+          platform: 'Instagram',
+          hashtags: ['#SummerVibes', '#SavionRay', '#SummerCollection'],
+          targetAudience: 'Young professionals, 25-40',
+        },
+      },
+    }),
+    prisma.contentDraft.create({
+      data: {
+        body: `# Industry Insights Newsletter - July 2024
+
+## This Month's Highlights
+
+### Digital Marketing Trends
+The landscape of digital marketing continues to evolve rapidly. This month, we're seeing a significant shift towards AI-powered personalization and voice search optimization.
+
+### Expert Interview: Sarah Johnson
+We sat down with Sarah Johnson, a leading digital marketing strategist, to discuss the future of content marketing in an AI-driven world.
+
+### Case Study: E-commerce Success Story
+Learn how Company XYZ increased their conversion rate by 150% using our innovative marketing strategies.
+
+Stay tuned for more insights next month!`,
+        status: DraftStatus.AWAITING_FEEDBACK,
+        contentType: ContentType.NEWSLETTER,
+        createdById: creative.id,
+        ideaId: approvedIdeas[1].id,
+        metadata: {
+          subject: 'Industry Insights Newsletter - July 2024',
+          targetAudience: 'Marketing professionals',
+          estimatedReadTime: '5 minutes',
+        },
+      },
+    }),
+    prisma.contentDraft.create({
+      data: {
+        body: `# Introducing Our Revolutionary Product Line
+
+We're excited to announce the launch of our latest product line that's set to transform the industry. After months of research and development, we've created something truly special.
+
+## What Makes It Different?
+
+Our new products feature cutting-edge technology that addresses the most pressing challenges faced by our customers today. From enhanced performance to improved user experience, every detail has been carefully crafted.
+
+## Customer Success Stories
+
+Hear from early adopters who have already experienced the benefits of our new product line. Their stories demonstrate the real-world impact of our innovations.
+
+Stay tuned for more details and exclusive launch offers!`,
+        status: DraftStatus.AWAITING_FEEDBACK,
+        contentType: ContentType.BLOG_POST,
+        createdById: creative.id,
+        ideaId: approvedIdeas[2].id,
+        metadata: {
+          seoTitle: 'Revolutionary Product Line Launch - Transform Your Business',
+          keywords: ['product launch', 'innovation', 'business transformation'],
+          estimatedReadTime: '8 minutes',
+        },
       },
     }),
   ])
@@ -150,7 +224,14 @@ async function main() {
     },
   })
 
-  console.log('Database seeded!')
+  console.log('Database seeded successfully!')
+  console.log('Test users created:')
+  console.log('- Creative: creative@savionray.com / password123')
+  console.log('- Client: client@savionray.com / password123')
+  console.log('- Admin: admin@savionray.com / password123')
+  console.log('- Bisera: bisera@savionray.com / SavionRay2025!')
+  console.log('')
+  console.log('✅ Content Review page should now show content drafts for approved ideas!')
 }
 
 main()
