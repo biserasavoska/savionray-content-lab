@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { isCreative, isClient } from '@/lib/auth'
+import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-constants'
 import ContentReviewList from './ContentReviewList'
 
 export default async function ContentReviewPage() {
@@ -16,19 +17,20 @@ export default async function ContentReviewPage() {
   const isClientUser = isClient(session)
 
   // Fetch content drafts for review - show drafts for approved ideas
+  // Using centralized enum constants to prevent enum mismatches
   const drafts = await prisma.contentDraft.findMany({
     where: {
       ...(isCreativeUser ? { createdById: session.user.id } : {}),
       idea: {
-        status: 'APPROVED' // Only show drafts for approved ideas
+        status: IDEA_STATUS.APPROVED // Only show drafts for approved ideas
       },
       status: {
         in: [
-          'DRAFT',
-          'AWAITING_FEEDBACK',
-          'AWAITING_REVISION',
-          'APPROVED',
-          'REJECTED'
+          DRAFT_STATUS.DRAFT,
+          DRAFT_STATUS.AWAITING_FEEDBACK,
+          DRAFT_STATUS.AWAITING_REVISION,
+          DRAFT_STATUS.APPROVED,
+          DRAFT_STATUS.REJECTED
         ]
       }
     },

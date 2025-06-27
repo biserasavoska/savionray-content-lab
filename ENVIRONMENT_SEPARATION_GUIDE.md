@@ -57,6 +57,11 @@ Mixing local, staging, and production environments can cause:
 ./scripts/verify-env-separation.sh
 ```
 
+### **Validate Enum Consistency**
+```bash
+npm run validate:enums
+```
+
 ### **Common Issues and Solutions**
 
 #### **Enum Mismatch Errors**
