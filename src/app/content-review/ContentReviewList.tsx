@@ -21,6 +21,13 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
 
+  console.log('ContentReviewList: Rendering with', {
+    draftsCount: drafts.length,
+    isCreativeUser,
+    isClientUser,
+    sessionUser: session?.user?.email
+  })
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DRAFT':
@@ -62,19 +69,34 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
         window.location.reload()
       } else {
         console.error('Failed to update status')
+        alert('Failed to update status. Please try again.')
       }
     } catch (error) {
       console.error('Error updating status:', error)
+      alert('Error updating status. Please try again.')
     } finally {
       setIsSubmitting(null)
     }
   }
 
-  if (drafts.length === 0) {
+  if (!drafts || drafts.length === 0) {
     return (
       <div className="text-center py-12">
         <h3 className="text-lg font-medium text-gray-900 mb-2">No content to review</h3>
-        <p className="text-gray-600">There are no content drafts awaiting review.</p>
+        <p className="text-gray-600 mb-4">
+          {isCreativeUser 
+            ? "You don't have any content drafts awaiting review. Create some content from approved ideas first."
+            : "There are no content drafts awaiting review at this time."
+          }
+        </p>
+        {isCreativeUser && (
+          <Link
+            href="/create-content"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Create Content
+          </Link>
+        )}
       </div>
     )
   }
@@ -87,18 +109,18 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-2">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {draft.idea.title}
+                  {draft.idea?.title || 'Untitled Idea'}
                 </h3>
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(draft.status)}`}>
                   {getStatusLabel(draft.status)}
                 </span>
               </div>
               
-              <p className="text-gray-600 mb-4">{draft.idea.description}</p>
+              <p className="text-gray-600 mb-4">{draft.idea?.description || 'No description available'}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
                 <div>
-                  <span className="font-medium">Created by:</span> {draft.createdBy.name || draft.createdBy.email}
+                  <span className="font-medium">Created by:</span> {draft.createdBy?.name || draft.createdBy?.email || 'Unknown'}
                 </div>
                 <div>
                   <span className="font-medium">Content Type:</span> {draft.contentType}
