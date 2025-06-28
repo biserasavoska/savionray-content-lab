@@ -6,6 +6,7 @@ import { isCreative, isAdmin, isClient } from '@/lib/auth'
 import { Prisma, IdeaStatus } from '@prisma/client'
 import { IDEA_STATUS, isValidIdeaStatus } from '@/lib/utils/enum-constants'
 
+// Force fresh build - staging deployment fix
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
 
