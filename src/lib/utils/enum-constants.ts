@@ -28,7 +28,7 @@ export const DRAFT_STATUS = {
   AWAITING_REVISION: 'AWAITING_REVISION',
   APPROVED: 'APPROVED',
   REJECTED: 'REJECTED',
-  PUBLISHED: 'PUBLISHED'
+  PUBLISHED: 'PUBLISHED',
 } as const
 
 export type DraftStatus = typeof DRAFT_STATUS[keyof typeof DRAFT_STATUS]
@@ -94,6 +94,24 @@ export const USER_ROLE = {
 } as const
 
 export type UserRole = typeof USER_ROLE[keyof typeof USER_ROLE]
+
+// NEW: Unified Content Item Status
+export const CONTENT_ITEM_STATUS = {
+  IDEA: 'IDEA',
+  CONTENT_REVIEW: 'CONTENT_REVIEW',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  PUBLISHED: 'PUBLISHED',
+} as const
+
+// NEW: Workflow Stage
+export const WORKFLOW_STAGE = {
+  IDEA: 'IDEA',
+  CONTENT_REVIEW: 'CONTENT_REVIEW',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  PUBLISHED: 'PUBLISHED',
+} as const
 
 // Helper functions for common enum operations
 export const getIdeaStatusValues = () => Object.values(IDEA_STATUS)

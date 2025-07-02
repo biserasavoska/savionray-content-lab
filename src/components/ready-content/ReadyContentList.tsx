@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { ContentDraft, Idea, User, Media, Feedback, ContentType } from '@prisma/client'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import type { ContentDraft, Idea, User, Media, ContentType } from '../../types/content'
+import { formatDate } from '../../lib/utils/date-helpers'
 
 interface ReadyContentListProps {
   content: (Omit<ContentDraft, 'status'> & {
@@ -19,6 +20,15 @@ interface ReadyContentListProps {
   })[]
   isCreativeUser: boolean
   isClientUser: boolean
+}
+
+// Local Feedback type for this file
+type Feedback = {
+  id: string
+  comment: string
+  createdAt: Date
+  contentDraftId: string
+  createdById: string
 }
 
 export default function ReadyContentList({ content, isCreativeUser, isClientUser }: ReadyContentListProps) {
@@ -116,6 +126,8 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
     return text.substring(0, maxLength) + '...'
   }
 
+  const CONTENT_TYPE_OPTIONS: ContentType[] = ['NEWSLETTER', 'BLOG_POST', 'SOCIAL_MEDIA_POST', 'EMAIL_CAMPAIGN', 'PODCAST']
+
   if (!content || content.length === 0) {
     return (
       <div className="text-center py-12">
@@ -154,7 +166,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
             className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
           >
             <option value="ALL">All Types</option>
-            {Object.values(ContentType).map(type => (
+            {CONTENT_TYPE_OPTIONS.map(type => (
               <option key={type} value={type}>
                 {type.replace(/_/g, ' ')}
               </option>
@@ -186,13 +198,99 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                 
                 <p className="text-gray-600 mb-4">{item.idea?.description || 'No description available'}</p>
                 
-                {/* Content Preview */}
-                <div className="bg-gray-50 rounded-md p-4 mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Content Preview:</h4>
-                  <div className="text-sm text-gray-600 whitespace-pre-wrap">
-                    {truncateText(item.body)}
+                {/* AI Generated Content (Main Post Text) */}
+                <div className="bg-green-50 rounded-md p-4 mb-4">
+                  <h4 className="text-sm font-semibold text-green-700 mb-2">AI Generated Content:</h4>
+                  <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                    {item.body}
                   </div>
                 </div>
+
+                {/* Additional AI Details (if present) */}
+                {item.metadata && Object.keys(item.metadata).length > 0 && (
+                  <div className="bg-blue-50 rounded-md p-4 mb-4">
+                    <h4 className="text-sm font-semibold text-blue-700 mb-2">Additional AI Details</h4>
+                    <div className="space-y-2">
+                      {/* Model Info */}
+                      {item.metadata.model && (
+                        <div>
+                          <span className="font-medium text-gray-700">Model:</span>
+                          <span className="ml-2 text-sm text-gray-600">{item.metadata.model}</span>
+                        </div>
+                      )}
+                      
+                      {/* Hashtags */}
+                      {Array.isArray(item.metadata.hashtags) && item.metadata.hashtags.length > 0 && (
+                        <div>
+                          <span className="font-medium text-gray-700">Hashtags:</span>
+                          <div className="mt-1 flex flex-wrap gap-2">
+                            {item.metadata.hashtags.map((tag: string, idx: number) => (
+                              <span key={typeof tag === 'string' ? tag : idx} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                #{typeof tag === 'string' ? tag : ''}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Call to Action */}
+                      {item.metadata.callToAction && (
+                        <div>
+                          <span className="font-medium text-gray-700">Call to Action:</span>
+                          <div className="mt-1 text-sm text-gray-600">{item.metadata.callToAction}</div>
+                        </div>
+                      )}
+                      
+                      {/* Additional Context */}
+                      {item.metadata.additionalContext && (
+                        <div>
+                          <span className="font-medium text-gray-700">Additional Context:</span>
+                          <div className="mt-1 text-sm text-gray-600">{item.metadata.additionalContext}</div>
+                        </div>
+                      )}
+                      
+                      {/* Reasoning Information */}
+                      {item.metadata.reasoning && (
+                        <div>
+                          <span className="font-medium text-gray-700">AI Reasoning:</span>
+                          <div className="mt-1 text-sm text-gray-600">
+                            {item.metadata.reasoning.summary && (
+                              <div className="mb-2">
+                                <span className="font-medium">Summary:</span> {item.metadata.reasoning.summary}
+                              </div>
+                            )}
+                            {item.metadata.reasoning.reasoningId && (
+                              <div className="mb-2">
+                                <span className="font-medium">Reasoning ID:</span> {item.metadata.reasoning.reasoningId}
+                              </div>
+                            )}
+                            {item.metadata.reasoning.encryptedContent && (
+                              <div>
+                                <span className="font-medium">Encrypted Reasoning:</span> Available
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Platform */}
+                      {item.metadata.platform && (
+                        <div>
+                          <span className="font-medium text-gray-700">Platform:</span>
+                          <span className="ml-2 text-sm text-gray-600">{item.metadata.platform}</span>
+                        </div>
+                      )}
+                      
+                      {/* Target Audience */}
+                      {item.metadata.targetAudience && (
+                        <div>
+                          <span className="font-medium text-gray-700">Target Audience:</span>
+                          <span className="ml-2 text-gray-600">{item.metadata.targetAudience}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Metadata */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-500 mb-4">
@@ -203,7 +301,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                     <span className="font-medium">Idea by:</span> {item.idea.createdBy?.name || item.idea.createdBy?.email || 'Unknown'}
                   </div>
                   <div>
-                    <span className="font-medium">Updated:</span> {new Date(item.updatedAt).toLocaleDateString()}
+                    <span className="font-medium">Updated:</span> {formatDate(item.updatedAt)}
                   </div>
                   <div>
                     <span className="font-medium">Feedback:</span> {item.feedbacks.length} comments

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { ContentDraft, Idea, User, Media, Feedback } from '@prisma/client'
+import { formatDate } from '../../../../lib/utils/date-helpers'
+import type { ContentDraft, Idea, User, Media } from '../../../../types/content'
 import RichTextEditor from '@/components/editor/RichTextEditor'
 import MediaUpload from './MediaUpload'
 
@@ -13,9 +14,15 @@ type ContentDraftWithDetails = ContentDraft & {
   }
   createdBy: Pick<User, 'name' | 'email'>
   media: Media[]
-  feedbacks: (Feedback & {
-    createdBy: Pick<User, 'name' | 'email'>
-  })[]
+}
+
+// Local Feedback type
+interface Feedback {
+  id: string
+  comment: string
+  createdAt: Date
+  createdBy: User
+  contentDraftId: string
 }
 
 export default function ReadyContentEditPage({ params }: { params: { id: string } }) {
@@ -207,7 +214,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
             </div>
             <div>
               <span className="font-medium text-gray-700">Last Updated:</span>
-              <p className="text-gray-600">{new Date(content.updatedAt).toLocaleDateString()}</p>
+              <p className="text-gray-600">{formatDate(content.updatedAt)}</p>
             </div>
           </div>
         </div>
@@ -228,28 +235,6 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         <h2 className="text-lg font-medium text-gray-900 mb-4">Media Attachments</h2>
         <MediaUpload contentId={content.id} />
       </div>
-
-      {/* Feedback Section */}
-      {content.feedbacks.length > 0 && (
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Feedback ({content.feedbacks.length})</h2>
-          <div className="space-y-4">
-            {content.feedbacks.map((feedback) => (
-              <div key={feedback.id} className="border-l-4 border-gray-200 pl-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {feedback.createdBy?.name || feedback.createdBy?.email || 'Unknown'}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(feedback.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">{feedback.comment}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between">

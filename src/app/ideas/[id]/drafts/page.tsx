@@ -7,7 +7,7 @@ import DraftsList from '@/components/drafts/DraftsList'
 import { DraftMetadata, DraftWithRelations } from '@/types/draft'
 import { ContentDraft, DraftStatus } from '@prisma/client'
 import { format } from 'date-fns'
-import { VisualDraftsSection } from '@/components/visuals/VisualDraftsSection'
+
 
 interface DraftsPageProps {
   params: {
@@ -47,19 +47,7 @@ export default async function DraftsPage({ params }: DraftsPageProps) {
           email: true,
         },
       },
-      visualDrafts: {
-        include: {
-          createdBy: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      },
+
     },
   })
 
@@ -119,7 +107,7 @@ export default async function DraftsPage({ params }: DraftsPageProps) {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Text Drafts</h2>
           <DraftsList drafts={drafts} ideaId={params.id} />
         </div>
-        <VisualDraftsSection idea={idea} visualDrafts={idea.visualDrafts} />
+        
       </div>
     </div>
   )

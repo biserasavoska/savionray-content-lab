@@ -1,17 +1,41 @@
 'use client'
 
 import { useState } from 'react'
-import { ContentDraft, Idea, User } from '@prisma/client'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
+interface ContentDraft {
+  id: string
+  status: string
+  createdAt: Date
+  updatedAt: Date
+  createdById: string
+  body: string | null
+  metadata: any
+  ideaId: string | null
+  contentType: string
+}
+
+interface Idea {
+  id: string
+  title: string
+  description: string | null
+  status: string
+  createdBy: {
+    name: string | null
+    email: string
+  }
+}
+
+interface User {
+  name: string | null
+  email: string
+}
+
 interface ContentReviewListProps {
-  drafts: (Omit<ContentDraft, 'status'> & {
-    status: string
-    idea: Idea & {
-      createdBy: Pick<User, 'name' | 'email'>
-    }
-    createdBy: Pick<User, 'name' | 'email'>
+  drafts: (ContentDraft & {
+    idea: Idea
+    createdBy: User
   })[]
   isCreativeUser: boolean
   isClientUser: boolean
@@ -20,13 +44,6 @@ interface ContentReviewListProps {
 export default function ContentReviewList({ drafts, isCreativeUser, isClientUser }: ContentReviewListProps) {
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
-
-  console.log('ContentReviewList: Rendering with', {
-    draftsCount: drafts.length,
-    isCreativeUser,
-    isClientUser,
-    sessionUser: session?.user?.email
-  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -126,7 +143,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                   <span className="font-medium">Content Type:</span> {draft.contentType}
                 </div>
                 <div>
-                  <span className="font-medium">Updated:</span> {new Date(draft.updatedAt).toLocaleDateString()}
+                  <span className="font-medium">Updated:</span> {new Date(draft.updatedAt).toISOString().slice(0, 10)}
                 </div>
               </div>
             </div>

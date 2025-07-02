@@ -24,7 +24,7 @@ type ContentFormat = 'linkedin' | 'twitter' | 'instagram' | 'facebook';
 interface GenerateContentOptions {
   title: string;
   description: string;
-  format: ContentFormat;
+  format: string;
   tone?: string;
   targetAudience?: string;
   model?: string;
@@ -44,30 +44,7 @@ interface GeneratedContent {
   };
 }
 
-interface ChatResponse {
-  message: string;
-  content?: {
-    postText: string;
-    hashtags: string[];
-    callToAction: string;
-  };
-  reasoning?: {
-    summary?: string;
-    reasoningId?: string;
-    encryptedContent?: string;
-  };
-}
 
-interface ChatRequest {
-  message: string;
-  conversation: Array<{ role: 'user' | 'assistant'; content: string }>;
-  idea: {
-    title: string;
-    description: string;
-  };
-  model: string;
-  includeReasoning?: boolean;
-}
 
 // Enhanced content generation with reasoning support
 export async function generateSocialContent({
@@ -261,115 +238,6 @@ async function generateWithChatAPI(openai: any, model: any, prompt: string): Pro
 
   console.log('Processed content:', result);
   return result;
-}
-
-export async function generateVisualPrompt(description: string) {
-  try {
-    const openai = getOpenAIClient();
-    const response = await openai.chat.completions.create({
-      model: DEFAULT_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert at creating detailed visual descriptions for image generation."
-        },
-        {
-          role: "user",
-          content: `Create a detailed visual prompt based on this description: ${description}`
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000
-    });
-
-    if (!response.choices[0]?.message?.content) {
-      throw new Error('No visual prompt generated');
-    }
-
-    return response.choices[0].message.content;
-  } catch (error) {
-    console.error('Error generating visual prompt:', error);
-    if (error instanceof Error) {
-      throw new Error(`Failed to generate visual prompt: ${error.message}`);
-    }
-    throw new Error('Failed to generate visual prompt: An unexpected error occurred');
-  }
-}
-
-export async function generateImage(prompt: string) {
-  if (!prompt) {
-    throw new Error('A prompt is required to generate an image.');
-  }
-
-  try {
-    const openai = getOpenAIClient();
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-    });
-
-    if (!response.data || !response.data[0]?.url) {
-      throw new Error('No image URL generated');
-    }
-
-    return response.data[0].url;
-  } catch (error) {
-    console.error('Error generating image:', error);
-    if (error instanceof Error) {
-      throw new Error(`Failed to generate image: ${error.message}`);
-    }
-    throw new Error('Failed to generate image: An unexpected error occurred');
-  }
-}
-
-export async function generateChatResponse({
-  message,
-  conversation,
-  idea,
-  model: modelId,
-}: ChatRequest): Promise<ChatResponse> {
-  try {
-    const selectedModel = AVAILABLE_MODELS.find(m => m.id === modelId);
-    if (!selectedModel) {
-      throw new Error(`Invalid model selected: ${modelId}`);
-    }
-
-    const openai = getOpenAIClient();
-    const response = await openai.chat.completions.create({
-      model: selectedModel.id || DEFAULT_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful content creation assistant. You're helping with an idea titled "${idea.title}". 
-          
-Description: ${idea.description}
-
-Be conversational, helpful, and provide specific suggestions for content creation.`
-        },
-        ...conversation,
-        {
-          role: 'user',
-          content: message
-        }
-      ],
-      max_tokens: selectedModel.maxTokens || 4096,
-      temperature: 0.7,
-    });
-
-    const content = response.choices[0]?.message?.content || '';
-    
-    return {
-      message: content,
-    };
-  } catch (error) {
-    console.error('Error generating chat response:', error);
-    if (error instanceof Error) {
-      throw new Error(`Failed to generate chat response: ${error.message}`);
-    }
-    throw new Error('Failed to generate chat response: An unexpected error occurred');
-  }
 }
 
 export default getOpenAIClient(); 

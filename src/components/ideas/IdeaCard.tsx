@@ -1,11 +1,32 @@
 'use client'
 
-import { Idea, IdeaStatus, User, Feedback, ContentDraft, IdeaComment } from '@prisma/client'
+import type { Idea, User, ContentDraft } from '../../types/content'
+import { IDEA_STATUS } from '../../lib/utils/enum-constants'
 import { formatDistanceToNow } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { isClient, isAdmin } from '@/lib/auth'
 import IdeaFeedbackPanel from './IdeaFeedbackPanel'
 import { IdeaWithCreator } from '@/types/idea'
+import { formatDate } from '../../lib/utils/date-helpers'
+
+// Local types
+type IdeaStatus = typeof IDEA_STATUS[keyof typeof IDEA_STATUS]
+
+interface Feedback {
+  id: string
+  comment: string
+  createdAt: Date
+  createdBy: User
+  contentDraftId: string
+}
+
+interface IdeaComment {
+  id: string
+  comment: string
+  createdAt: Date
+  createdBy: User
+  ideaId: string
+}
 
 interface IdeaCardProps {
   idea: IdeaWithCreator
@@ -53,7 +74,7 @@ export default function IdeaCard({ idea, onStatusChange, onEdit, onDelete }: Ide
           <div>
             <span className="text-sm font-medium text-gray-500">Publishing Date:</span>
             <span className="ml-2 text-sm text-gray-900">
-              {new Date(idea.publishingDateTime).toLocaleDateString()}
+              {formatDate(idea.publishingDateTime)}
             </span>
           </div>
         )}

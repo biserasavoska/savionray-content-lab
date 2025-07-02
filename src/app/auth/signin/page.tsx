@@ -9,12 +9,14 @@ function SignInForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+  const callbackUrl = searchParams.get('callbackUrl') || '/'
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setIsLoading(true)
 
     try {
       const result = await signIn('credentials', {
@@ -32,6 +34,8 @@ function SignInForm() {
     } catch (error) {
       console.error('Sign in error:', error)
       setError('An error occurred during sign in')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -62,6 +66,7 @@ function SignInForm() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div>
@@ -75,13 +80,15 @@ function SignInForm() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <button
               type="submit"
-              className="w-full rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 transition-colors"
+              className="w-full rounded-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
-              Log in
+              {isLoading ? 'Signing in...' : 'Log in'}
             </button>
             <button
               type="button"
@@ -94,6 +101,7 @@ function SignInForm() {
           <button
             onClick={handleLinkedInSignIn}
             className="w-full mt-4 flex justify-center items-center rounded-full border border-gray-300 bg-white text-gray-700 font-semibold py-3 hover:bg-gray-100 transition-colors"
+            disabled={isLoading}
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path d="M15.547 1.5H4.453C2.842 1.5 1.5 2.842 1.5 4.453v11.094c0 1.611 1.342 2.953 2.953 2.953h11.094c1.611 0 2.953-1.342 2.953-2.953V4.453c0-1.611-1.342-2.953-2.953-2.953zM7.5 14.5h-2v-7h2v7zm-1-7.95c-.652 0-1.181-.529-1.181-1.181s.529-1.181 1.181-1.181 1.181.529 1.181 1.181S7.152 6.55 6.5 6.55zM15 14.5h-2v-3.5c0-2.206-2-2.049-2-2.049v-1.451h2c2.206 0 2 2.049 2 2.049V14.5z" />

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import FeedbackForm from './FeedbackForm'
+import { formatDate } from '../../lib/utils/date-helpers'
 
 type IdeaStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
@@ -166,7 +167,7 @@ export default function ReviewList({ initialIdeas }: ReviewListProps) {
                           {feedback.createdBy.name || feedback.createdBy.email}
                         </span>
                         <span className="text-sm text-gray-500">
-                          {new Date(feedback.createdAt).toLocaleDateString()}
+                          {formatDate(feedback.createdAt)}
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-gray-600">{feedback.comment}</p>

@@ -2,7 +2,7 @@
 
 import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Sidebar from './Sidebar'
 import TopNavigation from './TopNavigation'
@@ -15,10 +15,26 @@ export default function RootClientWrapper({
   session: Session | null
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Hide sidebar on auth pages
   const isAuthPage = pathname?.startsWith('/auth') || pathname?.startsWith('/signin') || pathname?.startsWith('/signout')
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <SessionProvider session={session}>
+        <div className="min-h-screen bg-gray-50">
+          {children}
+        </div>
+      </SessionProvider>
+    )
+  }
 
   return (
     <SessionProvider session={session}>
