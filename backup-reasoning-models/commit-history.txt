@@ -1,0 +1,10 @@
+13f4226 docs: Add comprehensive development guide for reasoning models feature
+d4b123f feat: Add backup and rollback script for reasoning models branch
+7818ac6 feat: Add reasoning models support (o3, o4-mini) with Responses API integration
+4138428 cleanup: remove temporary comment from ideas API route
+cd651a9 feat: add staging-specific content review fix script and verification
+422ac15 fix: comprehensive content review improvements and permanent troubleshooting solutions
+adb775b force: fresh staging deployment to bypass Railway build cache
+330eb1a fix: use isValidIdeaStatus helper to resolve TypeScript error in ideas API route (staging build fix)
+d27ce28 chore: add troubleshooting checklist and dev automation script for local development stability
+24babcd Fix enum mismatches in API routes and use centralized constants
