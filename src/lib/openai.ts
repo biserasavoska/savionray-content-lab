@@ -138,7 +138,6 @@ async function generateWithReasoningAPI(
   const requestConfig: any = {
     model: model.id,
     input,
-    temperature: 0.7,
   };
 
   // Add reasoning features based on options
@@ -158,7 +157,7 @@ async function generateWithReasoningAPI(
 
   const response = await openai.responses.create(requestConfig);
   
-  console.log('Responses API response:', JSON.stringify(response.model_dump(), null, 2));
+  console.log('Responses API response:', JSON.stringify(response, null, 2));
 
   // Extract content from response
   const messageOutput = response.output.find((item: any) => item.type === 'message');
