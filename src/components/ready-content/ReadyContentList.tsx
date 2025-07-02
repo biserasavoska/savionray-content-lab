@@ -126,7 +126,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
     return text.substring(0, maxLength) + '...'
   }
 
-  const CONTENT_TYPE_OPTIONS: ContentType[] = ['NEWSLETTER', 'BLOG_POST', 'SOCIAL_MEDIA_POST', 'EMAIL_CAMPAIGN', 'PODCAST']
+  const CONTENT_TYPE_OPTIONS: ContentType[] = ['NEWSLETTER', 'BLOG_POST', 'SOCIAL_MEDIA_POST', 'EMAIL_CAMPAIGN', 'WEBSITE_COPY']
 
   if (!content || content.length === 0) {
     return (

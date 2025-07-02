@@ -2,7 +2,7 @@ export type UserRole = 'CREATIVE' | 'CLIENT' | 'ADMIN'
 
 export type ContentStatus = 'DRAFT' | 'AWAITING_FEEDBACK' | 'AWAITING_REVISION' | 'APPROVED' | 'REJECTED' | 'PUBLISHED'
 export type IdeaStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
-export type ContentType = 'NEWSLETTER' | 'BLOG_POST' | 'SOCIAL_MEDIA_POST' | 'EMAIL_CAMPAIGN' | 'PODCAST'
+export type ContentType = 'NEWSLETTER' | 'BLOG_POST' | 'SOCIAL_MEDIA_POST' | 'WEBSITE_COPY' | 'EMAIL_CAMPAIGN'
 export type MediaType = 'PHOTO' | 'GRAPH_OR_INFOGRAPHIC' | 'VIDEO' | 'SOCIAL_CARD' | 'POLL' | 'CAROUSEL'
 
 export interface User {
@@ -65,4 +65,13 @@ export interface DashboardTab {
   id: 'ideas' | 'content-review' | 'published'
   label: string
   count?: number
+}
+
+export interface Feedback {
+  id: string
+  comment: string
+  createdAt: Date
+  contentDraftId: string | null
+  createdById: string
+  createdBy: User
 } 

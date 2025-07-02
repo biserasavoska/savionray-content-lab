@@ -8,7 +8,6 @@ import { formatDate } from '../../lib/utils/date-helpers'
 interface ScheduledPost {
   id: string
   scheduledDate: Date
-  platform: string
   status: string
 }
 

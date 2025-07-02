@@ -40,16 +40,22 @@ export default async function ReadyContentPage() {
           include: {
             createdBy: {
               select: {
+                id: true,
                 name: true,
-                email: true
+                email: true,
+                role: true,
+                image: true
               }
             }
           }
         },
         createdBy: {
           select: {
+            id: true,
             name: true,
-            email: true
+            email: true,
+            role: true,
+            image: true
           }
         },
         feedbacks: {
@@ -83,6 +89,33 @@ export default async function ReadyContentPage() {
 
     console.log(`Ready Content: Found ${readyContent.length} items for user ${session.user.email}`)
 
+    // Patch: Ensure email and name are never null to fix TypeScript type error
+    const safeReadyContent = readyContent.map((item: typeof readyContent[0]) => ({
+      ...item,
+      idea: {
+        ...item.idea,
+        createdBy: {
+          ...item.idea.createdBy,
+          email: item.idea.createdBy.email ?? '',
+          name: item.idea.createdBy.name ?? '',
+        }
+      },
+      createdBy: {
+        ...item.createdBy,
+        email: item.createdBy.email ?? '',
+        name: item.createdBy.name ?? '',
+      },
+      feedbacks: item.feedbacks.map((fb: any) => ({
+        ...fb,
+        contentDraftId: fb.contentDraftId ?? '',
+        createdBy: {
+          ...fb.createdBy,
+          email: fb.createdBy.email ?? '',
+          name: fb.createdBy.name ?? '',
+        }
+      }))
+    })) as any // type assertion to satisfy TS
+
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
@@ -93,7 +126,7 @@ export default async function ReadyContentPage() {
         </div>
         
         <ReadyContentList 
-          content={readyContent} 
+          content={safeReadyContent} 
           isCreativeUser={isCreativeUser}
           isClientUser={isClientUser}
         />
