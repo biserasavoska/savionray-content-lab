@@ -1,6 +1,7 @@
 'use client'
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { logReactError } from '@/lib/utils/react-logger'
 
 interface Props {
   children: ReactNode
@@ -26,8 +27,8 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log the error
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    // Log the error with structured logging
+    logReactError(error, errorInfo, this.constructor.name)
     
     // Call the onError callback if provided
     this.props.onError?.(error, errorInfo)
@@ -119,7 +120,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 // Hook for functional components to handle errors
 export function useErrorHandler() {
   return React.useCallback((error: Error, errorInfo?: ErrorInfo) => {
-    console.error('Error caught by useErrorHandler:', error, errorInfo)
+    logReactError(error, errorInfo, 'useErrorHandler')
     // You can add additional error handling logic here
     // For example, sending to an error reporting service
   }, [])

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import ReadyContentList from '@/components/ready-content/ReadyContentList'
+import { logger } from '@/lib/utils/logger'
 import { isClient, isCreative } from '@/lib/auth'
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
@@ -88,7 +89,11 @@ export default async function ReadyContentPage() {
       ]
     })
 
-    console.log(`Ready Content: Found ${readyContent.length} items for user ${session.user.email}`)
+    logger.info(`Ready Content: Found ${readyContent.length} items for user ${session.user.email}`, {
+      userId: session.user.id,
+      userEmail: session.user.email,
+      itemCount: readyContent.length
+    })
 
     // Use the sanitization utility to ensure all user fields are non-null
     const safeReadyContent = sanitizeContentDraftsData(readyContent)
@@ -110,7 +115,10 @@ export default async function ReadyContentPage() {
       </div>
     )
   } catch (error) {
-    console.error('Error loading ready content page:', error)
+    logger.error('Error loading ready content page', error as Error, {
+      userId: session?.user?.id,
+      userEmail: session?.user?.email
+    })
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Ready Content</h1>

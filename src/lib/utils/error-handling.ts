@@ -156,30 +156,29 @@ export function createInternalError(
   )
 }
 
+import { logger } from './logger'
+
 // ============================================================================
 // ERROR LOGGING
 // ============================================================================
 
 export function logError(error: AppError, context?: Record<string, any>): void {
-  const logData = {
-    ...error,
-    context,
-    timestamp: error.timestamp.toISOString()
-  }
+  // Convert AppError to standard Error for logging
+  const errorObj = new Error(error.message)
+  errorObj.name = error.type
+  ;(errorObj as any).code = error.code
 
   // Log based on severity
   switch (error.severity) {
     case ErrorSeverity.LOW:
-      console.warn('App Warning:', logData)
+      logger.warn(error.message, { ...error, ...context })
       break
     case ErrorSeverity.MEDIUM:
-      console.error('App Error:', logData)
+      logger.error(error.message, errorObj, { ...error, ...context })
       break
     case ErrorSeverity.HIGH:
     case ErrorSeverity.CRITICAL:
-      console.error('Critical App Error:', logData)
-      // In production, you might want to send to external logging service
-      // await sendToLoggingService(logData)
+      logger.critical(error.message, errorObj, { ...error, ...context })
       break
   }
 }

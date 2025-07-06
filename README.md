@@ -45,12 +45,43 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## 🧪 Testing Requirements
+
+**⚠️ CRITICAL: Before pushing any changes to main, you MUST complete the testing checklist**
+
+### Pre-Push Testing Checklist
+- [ ] **Complete the full testing checklist**: See [TESTING_CHECKLIST.md](./TESTING_CHECKLIST.md)
+- [ ] **Test locally first**: Always test on your local development environment
+- [ ] **Verify core functionality**: Home page, authentication, navigation, API endpoints
+- [ ] **Check for errors**: No build errors, runtime errors, or console errors
+- [ ] **Test affected features**: All modified functionality works as expected
+
+### Quick Testing Commands
+```bash
+# Start development server
+npm run dev
+
+# Test API health
+curl http://localhost:3000/api/health
+
+# Check for TypeScript errors
+npx tsc --noEmit
+
+# Test database connection
+npx prisma studio
+```
+
+**🚨 NEVER PUSH TO MAIN WITHOUT TESTING LOCALLY FIRST**
+
 ## Contributing
 
 1. Create a new branch for your feature
 2. Make your changes
-3. Create a merge request
-4. Wait for review and approval
+3. **🧪 TEST THOROUGHLY** - Complete the [testing checklist](./TESTING_CHECKLIST.md)
+4. Create a merge request
+5. Wait for review and approval
+
+**⚠️ IMPORTANT: Testing is mandatory before any merge to main**
 
 ## Project Status
 

@@ -14,6 +14,8 @@ import {
   validateRequired,
   validateString
 } from '@/lib/utils/error-handling'
+import { withLogging, withDbLogging } from '@/lib/middleware/logger'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(req: NextRequest) {
   const requestId = generateRequestId()
@@ -67,25 +69,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(body, { status })
     }
 
-    const idea = await prisma.idea.create({
-      data: {
-        title,
-        description,
-        publishingDateTime: publishingDateTime ? new Date(publishingDateTime) : null,
-        savedForLater: savedForLater || false,
-        mediaType: mediaType || null,
-        contentType,
-        createdById: session.user.id,
-      },
-      include: {
-        createdBy: {
-          select: {
-            name: true,
-            email: true,
+    const createIdea = withDbLogging('create', 'Idea', async () => {
+      return await prisma.idea.create({
+        data: {
+          title,
+          description,
+          publishingDateTime: publishingDateTime ? new Date(publishingDateTime) : null,
+          savedForLater: savedForLater || false,
+          mediaType: mediaType || null,
+          contentType,
+          createdById: session.user.id,
+        },
+        include: {
+          createdBy: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
+      })
     })
+
+    const idea = await createIdea()
 
     return NextResponse.json({
       success: true,
@@ -118,56 +124,63 @@ export async function GET(req: NextRequest) {
     // Use centralized enum constants instead of hardcoded strings
     const statusFilter = status && isValidIdeaStatus(status) ? { status: { equals: status } } : undefined;
 
-    const totalCount = await prisma.idea.count({
-      where: statusFilter,
+    const countIdeas = withDbLogging('count', 'Idea', async () => {
+      return await prisma.idea.count({
+        where: statusFilter,
+      })
     })
 
-    const ideas = await prisma.idea.findMany({
-      where: statusFilter,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      skip,
-      take: limit,
-      include: {
-        createdBy: {
-          select: {
-            name: true,
-            email: true,
-          },
+    const findIdeas = withDbLogging('findMany', 'Idea', async () => {
+      return await prisma.idea.findMany({
+        where: statusFilter,
+        orderBy: {
+          createdAt: 'desc',
         },
-        comments: {
-          include: {
-            createdBy: {
-              select: {
-                name: true,
-                email: true,
-              },
+        skip,
+        take: limit,
+        include: {
+          createdBy: {
+            select: {
+              name: true,
+              email: true,
             },
           },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
-        contentDrafts: {
-          include: {
-            feedbacks: {
-              include: {
-                createdBy: {
-                  select: {
-                    name: true,
-                    email: true,
-                  },
+          comments: {
+            include: {
+              createdBy: {
+                select: {
+                  name: true,
+                  email: true,
                 },
               },
-              orderBy: {
-                createdAt: 'desc',
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+          },
+          contentDrafts: {
+            include: {
+              feedbacks: {
+                include: {
+                  createdBy: {
+                    select: {
+                      name: true,
+                      email: true,
+                    },
+                  },
+                },
+                orderBy: {
+                  createdAt: 'desc',
+                },
               },
             },
           },
         },
-      },
+      })
     })
+
+    const totalCount = await countIdeas()
+    const ideas = await findIdeas()
 
     return NextResponse.json({
       success: true,
