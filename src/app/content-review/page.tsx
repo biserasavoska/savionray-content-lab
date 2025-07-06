@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { isCreative, isClient } from '@/lib/auth'
 import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-constants'
 import ContentReviewList from './ContentReviewList'
+import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 
 export default async function ContentReviewPage() {
   const session = await getServerSession(authOptions)
@@ -45,23 +46,8 @@ export default async function ContentReviewPage() {
       }
     })
 
-    // Ensure email and name are never null to fix TypeScript type error
-    const safeDrafts = drafts.map((draft: any) => ({
-      ...draft,
-      idea: {
-        ...draft.idea,
-        createdBy: {
-          ...draft.idea.createdBy,
-          email: draft.idea.createdBy.email ?? '',
-          name: draft.idea.createdBy.name ?? '',
-        }
-      },
-      createdBy: {
-        ...draft.createdBy,
-        email: draft.createdBy.email ?? '',
-        name: draft.createdBy.name ?? '',
-      }
-    })) as any // Use any to bypass TypeScript strict checking for this specific case
+    // Use the sanitization utility to ensure all user fields are non-null
+    const safeDrafts = sanitizeContentDraftsData(drafts)
 
     return (
       <div className="container mx-auto px-4 py-8">

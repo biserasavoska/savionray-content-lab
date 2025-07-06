@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import ReadyContentList from '@/components/ready-content/ReadyContentList'
 import { isClient, isCreative } from '@/lib/auth'
 import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
+import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 
 export const metadata: Metadata = {
   title: 'Ready Content',
@@ -89,32 +90,8 @@ export default async function ReadyContentPage() {
 
     console.log(`Ready Content: Found ${readyContent.length} items for user ${session.user.email}`)
 
-    // Patch: Ensure email and name are never null to fix TypeScript type error
-    const safeReadyContent = readyContent.map((item: typeof readyContent[0]) => ({
-      ...item,
-      idea: {
-        ...item.idea,
-        createdBy: {
-          ...item.idea.createdBy,
-          email: item.idea.createdBy.email ?? '',
-          name: item.idea.createdBy.name ?? '',
-        }
-      },
-      createdBy: {
-        ...item.createdBy,
-        email: item.createdBy.email ?? '',
-        name: item.createdBy.name ?? '',
-      },
-      feedbacks: item.feedbacks.map((fb: any) => ({
-        ...fb,
-        contentDraftId: fb.contentDraftId ?? '',
-        createdBy: {
-          ...fb.createdBy,
-          email: fb.createdBy.email ?? '',
-          name: fb.createdBy.name ?? '',
-        }
-      }))
-    })) as any // type assertion to satisfy TS
+    // Use the sanitization utility to ensure all user fields are non-null
+    const safeReadyContent = sanitizeContentDraftsData(readyContent)
 
     return (
       <div className="container mx-auto px-4 py-8">

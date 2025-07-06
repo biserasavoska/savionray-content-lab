@@ -59,6 +59,54 @@ Active development - Building core features and integrations.
 ## License
 
 Proprietary - All rights reserved.
+
+## Integration Workflow, Branch Cleanup, and Rollback Plan
+
+### Integration Workflow
+- Feature and refactor branches are developed separately from `main`.
+- To combine major features and technical debt fixes, create an integration branch from `main` (e.g., `feature/unified-content-with-refactors`).
+- Merge feature and refactor branches into the integration branch, resolving any conflicts.
+- Test thoroughly on the integration branch.
+- Open a Pull Request from the integration branch to `main`.
+- As a solo maintainer, use the "bypass rules and merge" option if branch protection is enabled.
+
+### Branch Cleanup
+- After merging, delete the integration and feature branches both locally and remotely to keep the branch list tidy:
+  ```bash
+  git branch -d feature/unified-content-with-refactors
+  git push origin --delete feature/unified-content-with-refactors
+  git branch -d feature/unified-content-item-entity
+  git push origin --delete feature/unified-content-item-entity
+  ```
+
+### Staging and Production Deployment
+- After merging to `main`, deploy to staging and test all major flows.
+- When staging is stable, deploy to production.
+- Run any required database migrations in both environments.
+- Update environment variables if needed.
+
+### Rollback Plan
+- If a deployment causes issues, you can roll back to a previous tag, commit, or branch:
+  - **To a tag:**
+    ```bash
+    git checkout v1.0.0
+    git push origin v1.0.0:main --force
+    ```
+  - **To a previous commit:**
+    ```bash
+    git checkout <commit-sha>
+    git push origin <commit-sha>:main --force
+    ```
+  - **To revert a merge:**
+    ```bash
+    git revert -m 1 <merge-commit-sha>
+    git push origin main
+    ```
+- Always test after rollback and redeploy to staging/production as needed.
+
+---
+This workflow ensures a clean, maintainable codebase and safe deployments, even as a solo maintainer.
+
 # Trigger pipeline
 # Trigger pipeline again
 # Trigger pipeline for deployment

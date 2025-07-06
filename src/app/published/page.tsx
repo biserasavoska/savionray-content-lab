@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { isCreative } from '@/lib/auth'
 import PublishedContentList from './PublishedContentList'
+import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 
 export default async function PublishedPage() {
   const session = await getServerSession(authOptions)
@@ -54,34 +55,8 @@ export default async function PublishedPage() {
     }
   })
 
-  // Ensure email and name are never null to fix TypeScript type error
-  const safePublishedContent = publishedContent.map((content: typeof publishedContent[0]) => ({
-    ...content,
-    idea: {
-      ...content.idea,
-      createdBy: {
-        ...content.idea.createdBy,
-        email: content.idea.createdBy.email ?? '',
-        name: content.idea.createdBy.name ?? '',
-      }
-    },
-    createdBy: {
-      ...content.createdBy,
-      email: content.createdBy.email ?? '',
-      name: content.createdBy.name ?? '',
-    }
-  })) as (typeof publishedContent[0] & {
-    idea: {
-      createdBy: {
-        email: string;
-        name: string;
-      };
-    };
-    createdBy: {
-      email: string;
-      name: string;
-    };
-  })[]
+  // Use the sanitization utility to ensure all user fields are non-null
+  const safePublishedContent = sanitizeContentDraftsData(publishedContent)
 
   return (
     <div className="max-w-7xl mx-auto">
