@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { format } from 'date-fns'
 import { isClient } from '@/lib/auth'
+import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-utils'
 
 type IdeaWithDrafts = any
 
@@ -28,7 +29,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: approve ? 'APPROVED' : 'REJECTED',
+          status: approve ? IDEA_STATUS.APPROVED : IDEA_STATUS.REJECTED,
         }),
       })
 
@@ -142,7 +143,7 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
   return (
     <div className="space-y-6">
       {/* Idea Approval Section */}
-      {isClient(session) && idea.status === 'PENDING' && (
+      {isClient(session) && idea.status === IDEA_STATUS.PENDING && (
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900">Review</h3>
@@ -230,25 +231,25 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
                 </div>
                 {isClient(session) && (
                   <div className="space-x-4">
-                    {draft.status === 'DRAFT' && (
+                    {draft.status === DRAFT_STATUS.DRAFT && (
                       <button
-                        onClick={() => handleDraftApproval(draft.id, 'APPROVED')}
+                        onClick={() => handleDraftApproval(draft.id, DRAFT_STATUS.APPROVED)}
                         className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
                       >
                         Approve
                       </button>
                     )}
-                    {draft.status === 'DRAFT' && (
+                    {draft.status === DRAFT_STATUS.DRAFT && (
                       <button
-                        onClick={() => handleDraftApproval(draft.id, 'AWAITING_REVISION')}
+                        onClick={() => handleDraftApproval(draft.id, DRAFT_STATUS.AWAITING_REVISION)}
                         className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700"
                       >
                         Request Revision
                       </button>
                     )}
-                    {draft.status === 'AWAITING_FEEDBACK' && (
+                    {draft.status === DRAFT_STATUS.AWAITING_FEEDBACK && (
                       <button
-                        onClick={() => handleDraftApproval(draft.id, 'APPROVED')}
+                        onClick={() => handleDraftApproval(draft.id, DRAFT_STATUS.APPROVED)}
                         className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
                       >
                         Approve
@@ -276,8 +277,8 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
                 ))}
 
                 {isClient(session) && 
-                  (draft.status === 'DRAFT' || 
-                   draft.status === 'AWAITING_FEEDBACK') && (
+                  (draft.status === DRAFT_STATUS.DRAFT || 
+                   draft.status === DRAFT_STATUS.AWAITING_FEEDBACK) && (
                     <div className="mt-4">
                       <textarea
                         rows={3}

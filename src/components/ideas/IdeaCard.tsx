@@ -1,7 +1,7 @@
 'use client'
 
 import type { Idea, User, ContentDraft } from '../../types/content'
-import { IDEA_STATUS } from '../../lib/utils/enum-constants'
+import { IDEA_STATUS, getStatusBadgeClasses } from '../../lib/utils/enum-utils'
 import { formatDistanceToNow } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import { isClient, isAdmin } from '@/lib/auth'
@@ -57,10 +57,7 @@ export default function IdeaCard({ idea, onStatusChange, onEdit, onDelete }: Ide
           </p>
         </div>
         <div className="ml-4 flex-shrink-0">
-          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-            ${idea.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-              idea.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-              'bg-red-100 text-red-800'}`}>
+          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClasses(idea.status)}`}>
             {idea.status.replace(/_/g, ' ')}
           </span>
         </div>

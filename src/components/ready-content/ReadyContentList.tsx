@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS, CONTENT_TYPE } from '@/lib/utils/enum-utils'
 import type { ContentDraft, Idea, User, Media, ContentType } from '../../types/content'
 import { formatDate } from '../../lib/utils/date-helpers'
 
@@ -50,31 +51,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
     return true
   })
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return 'bg-green-100 text-green-800'
-      case 'AWAITING_FEEDBACK':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'PUBLISHED':
-        return 'bg-purple-100 text-purple-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return 'Ready to Publish'
-      case 'AWAITING_FEEDBACK':
-        return 'Awaiting Review'
-      case 'PUBLISHED':
-        return 'Published'
-      default:
-        return status.replace(/_/g, ' ')
-    }
-  }
 
   const getContentTypeLabel = (contentType: string) => {
     switch (contentType) {
@@ -188,7 +165,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                   <h3 className="text-lg font-medium text-gray-900">
                     {item.idea?.title || 'Untitled Idea'}
                   </h3>
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(item.status)}`}>
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClasses(item.status)}`}>
                     {getStatusLabel(item.status)}
                   </span>
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -335,17 +312,17 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                 </Link>
 
                 {/* Status update buttons for appropriate users */}
-                {isClientUser && item.status === 'AWAITING_FEEDBACK' && (
+                {isClientUser && item.status === DRAFT_STATUS.AWAITING_FEEDBACK && (
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleStatusUpdate(item.id, 'APPROVED')}
+                                              onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.APPROVED)}
                       disabled={isSubmitting === item.id}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting === item.id ? 'Updating...' : 'Approve'}
                     </button>
                     <button
-                      onClick={() => handleStatusUpdate(item.id, 'AWAITING_REVISION')}
+                                              onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.AWAITING_REVISION)}
                       disabled={isSubmitting === item.id}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -354,9 +331,9 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                   </div>
                 )}
 
-                {item.status === 'APPROVED' && (
+                {item.status === DRAFT_STATUS.APPROVED && (
                   <button
-                    onClick={() => handleStatusUpdate(item.id, 'PUBLISHED')}
+                                          onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.PUBLISHED)}
                     disabled={isSubmitting === item.id}
                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >

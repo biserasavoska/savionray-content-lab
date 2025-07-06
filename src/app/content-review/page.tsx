@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { isCreative, isClient } from '@/lib/auth'
-import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-constants'
+import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import ContentReviewList from './ContentReviewList'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 
@@ -26,7 +26,13 @@ export default async function ContentReviewPage() {
           status: IDEA_STATUS.APPROVED
         },
         status: {
-          in: [DRAFT_STATUS.DRAFT, DRAFT_STATUS.AWAITING_FEEDBACK, DRAFT_STATUS.AWAITING_REVISION, DRAFT_STATUS.APPROVED, DRAFT_STATUS.REJECTED]
+          in: [
+            DRAFT_STATUS.DRAFT, 
+            DRAFT_STATUS.AWAITING_FEEDBACK, 
+            DRAFT_STATUS.AWAITING_REVISION, 
+            DRAFT_STATUS.APPROVED, 
+            DRAFT_STATUS.REJECTED
+          ]
         }
       },
       include: {

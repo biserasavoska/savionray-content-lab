@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { isCreative } from '@/lib/auth'
 import PublishedContentList from './PublishedContentList'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
+import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 
 export default async function PublishedPage() {
   const session = await getServerSession(authOptions)
@@ -19,7 +20,7 @@ export default async function PublishedPage() {
   const publishedContent = await prisma.contentDraft.findMany({
     where: {
       ...(isCreativeUser ? { createdById: session.user.id } : {}),
-      status: 'PUBLISHED'
+      status: DRAFT_STATUS.PUBLISHED
     },
     include: {
       idea: {

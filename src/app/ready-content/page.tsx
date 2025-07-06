@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import ReadyContentList from '@/components/ready-content/ReadyContentList'
 import { isClient, isCreative } from '@/lib/auth'
-import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
+import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 
 export const metadata: Metadata = {

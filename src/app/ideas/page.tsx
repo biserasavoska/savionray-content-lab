@@ -6,12 +6,13 @@ import { IdeaStatus, Idea, User } from '@prisma/client'
 import { useRouter } from 'next/navigation'
 import IdeaCard from '@/components/ideas/IdeaCard'
 import { IdeaWithCreator } from '@/types/idea'
+import { IDEA_STATUS } from '@/lib/utils/enum-utils'
 
 const TABS = [
   { id: 'all', name: 'All Ideas', status: undefined },
-  { id: 'pending', name: 'Pending', status: 'PENDING' as IdeaStatus },
-  { id: 'approved', name: 'Approved', status: 'APPROVED' as IdeaStatus },
-  { id: 'rejected', name: 'Rejected', status: 'REJECTED' as IdeaStatus },
+  { id: 'pending', name: 'Pending', status: IDEA_STATUS.PENDING },
+  { id: 'approved', name: 'Approved', status: IDEA_STATUS.APPROVED },
+  { id: 'rejected', name: 'Rejected', status: IDEA_STATUS.REJECTED },
 ]
 
 export default function IdeasPage() {
