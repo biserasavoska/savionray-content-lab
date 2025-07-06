@@ -30,8 +30,12 @@ export default function DraftHistory({ params }: { params: { id: string } }) {
     try {
       const response = await fetch(`/api/ideas/${params.id}?include=drafts`)
       if (!response.ok) throw new Error('Failed to fetch idea')
-      const data = await response.json()
-      setIdea(data)
+      const result = await response.json()
+      if (result.success) {
+        setIdea(result.data)
+      } else {
+        throw new Error(result.error?.message || 'Failed to fetch idea')
+      }
     } catch (error) {
       setError('Error loading idea and drafts')
       console.error('Error:', error)

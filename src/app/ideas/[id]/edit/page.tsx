@@ -17,8 +17,12 @@ export default function EditIdeaPage() {
         if (!response.ok) {
           throw new Error('Failed to fetch idea')
         }
-        const data = await response.json()
-        setIdea(data)
+        const result = await response.json()
+        if (result.success) {
+          setIdea(result.data)
+        } else {
+          throw new Error(result.error?.message || 'Failed to fetch idea')
+        }
       } catch (error) {
         console.error('Error fetching idea:', error)
         setError('Failed to load idea. Please try again.')

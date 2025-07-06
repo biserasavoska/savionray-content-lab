@@ -21,7 +21,16 @@ export default function ApprovalsPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   if (!session) {
-    return null
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading session...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -67,8 +67,12 @@ export default function EditDraft({ params }: { params: { id: string; draftId: s
       // Fetch idea
       const ideaResponse = await fetch(`/api/ideas/${params.id}`)
       if (!ideaResponse.ok) throw new Error('Failed to fetch idea')
-      const ideaData = await ideaResponse.json()
-      setIdea(ideaData)
+      const ideaResult = await ideaResponse.json()
+      if (ideaResult.success) {
+        setIdea(ideaResult.data)
+      } else {
+        throw new Error(ideaResult.error?.message || 'Failed to fetch idea')
+      }
     } catch (error) {
       setError('Error loading draft')
       console.error('Error:', error)

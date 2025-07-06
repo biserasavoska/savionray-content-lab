@@ -54,15 +54,19 @@ export default function EditContent({ params }: { params: { id: string } }) {
     try {
       const response = await fetch(`/api/ideas/${params.id}`)
       if (!response.ok) throw new Error('Failed to fetch idea')
-      const data = await response.json()
-      setIdea(data)
-      // Add initial system message
-      setMessages([
-        {
-          role: 'assistant',
-          content: `I'll help you create content for: "${data.title}"\nDescription: ${data.description}\n\nHow would you like to customize this content?`
-        }
-      ])
+      const result = await response.json()
+      if (result.success) {
+        setIdea(result.data)
+        // Add initial system message
+        setMessages([
+          {
+            role: 'assistant',
+            content: `I'll help you create content for: "${result.data.title}"\nDescription: ${result.data.description}\n\nHow would you like to customize this content?`
+          }
+        ])
+      } else {
+        throw new Error(result.error?.message || 'Failed to fetch idea')
+      }
     } catch (error) {
       setError('Error loading idea')
       console.error('Error:', error)
