@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Idea } from '@prisma/client'
+import type { Idea } from '@/types/content'
 import ModelSelector from '@/components/ModelSelector'
 import { AVAILABLE_MODELS } from '@/lib/models'
 import Link from 'next/link'
-import VisualGenerator from '@/components/visuals/VisualGenerator'
+
+import ReasoningOptions from '@/components/content/ReasoningOptions'
+import ReasoningDisplay from '@/components/content/ReasoningDisplay'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -18,6 +20,11 @@ interface GeneratedContent {
   postText: string
   hashtags: string[]
   callToAction: string
+  reasoning?: {
+    summary?: string
+    reasoningId?: string
+    encryptedContent?: string
+  }
 }
 
 export default function EditContent({ params }: { params: { id: string } }) {
@@ -32,6 +39,12 @@ export default function EditContent({ params }: { params: { id: string } }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [currentMessage, setCurrentMessage] = useState('')
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
+  
+  // Add reasoning options state
+  const [includeReasoning, setIncludeReasoning] = useState(false)
+  const [reasoningSummary, setReasoningSummary] = useState(false)
+  const [encryptedReasoning, setEncryptedReasoning] = useState(false)
+  const [showReasoning, setShowReasoning] = useState(false)
 
   useEffect(() => {
     fetchIdea()
@@ -76,7 +89,10 @@ export default function EditContent({ params }: { params: { id: string } }) {
           format: 'social',
           model: selectedModel.id,
           additionalContext,
-          conversation: messages
+          conversation: messages,
+          includeReasoning,
+          reasoningSummary,
+          encryptedReasoning
         }),
       })
 
@@ -135,7 +151,8 @@ Would you like me to modify anything about this content?`
             additionalContext,
             conversation: messages,
             hashtags: generatedContent.hashtags,
-            callToAction: generatedContent.callToAction
+            callToAction: generatedContent.callToAction,
+            reasoning: generatedContent.reasoning
           }
         }),
       });
@@ -192,6 +209,19 @@ Would you like me to modify anything about this content?`
             selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}
             models={AVAILABLE_MODELS}
+          />
+        </div>
+
+        {/* Reasoning Options */}
+        <div className="mb-6">
+          <ReasoningOptions
+            selectedModel={selectedModel.id}
+            includeReasoning={includeReasoning}
+            reasoningSummary={reasoningSummary}
+            encryptedReasoning={encryptedReasoning}
+            onIncludeReasoningChange={setIncludeReasoning}
+            onReasoningSummaryChange={setReasoningSummary}
+            onEncryptedReasoningChange={setEncryptedReasoning}
           />
         </div>
 
@@ -265,9 +295,18 @@ Would you like me to modify anything about this content?`
               <p className="mt-1 text-gray-900">{generatedContent.callToAction || ''}</p>
             </div>
 
+            {/* Reasoning Display */}
+            {generatedContent.reasoning && (
+              <ReasoningDisplay
+                reasoning={generatedContent.reasoning}
+                isVisible={showReasoning}
+                onToggleVisibility={() => setShowReasoning(!showReasoning)}
+              />
+            )}
+
             <div className="mt-8 border-t pt-8">
-              <h2 className="text-lg font-semibold mb-4">Generate Visual Content</h2>
-              <VisualGenerator ideaId={params.id} />
+      
+  
             </div>
 
             <div className="mt-4 flex gap-4">

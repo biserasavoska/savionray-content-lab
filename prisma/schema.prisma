@@ -35,22 +35,27 @@ model Session {
 }
 
 model User {
-  id            String                @id @default(cuid())
-  name          String?
-  email         String?               @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole              @default(CREATIVE)
-  password      String?
-  accounts      Account[]
-  deliveryPlans ContentDeliveryPlan[]
-  contentDrafts ContentDraft[]
-  feedbacks     Feedback[]
-  ideas         Idea[]
-  ideaComments  IdeaComment[]
-  media         Media[]
-  sessions      Session[]
-  visualDrafts  VisualDraft[]
+  id                   String                @id @default(cuid())
+  name                 String?
+  email                String?               @unique
+  emailVerified        DateTime?
+  image                String?
+  role                 UserRole              @default(CREATIVE)
+  password             String?
+  accounts             Account[]
+  deliveryPlans        ContentDeliveryPlan[]
+  contentDrafts        ContentDraft[]
+  assignedContentItems ContentItem[]         @relation("AssignedContentItems")
+  createdContentItems  ContentItem[]         @relation("CreatedContentItems")
+  contentItemComments  ContentItemComment[]
+  contentItemFeedbacks ContentItemFeedback[]
+  contentItemMedia     ContentItemMedia[]
+  feedbacks            Feedback[]
+  ideas                Idea[]
+  ideaComments         IdeaComment[]
+  media                Media[]
+  sessions             Session[]
+  stageTransitions     StageTransition[]
 }
 
 model Idea {
@@ -70,7 +75,6 @@ model Idea {
   createdBy          User                 @relation(fields: [createdById], references: [id])
   deliveryItem       ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
   comments           IdeaComment[]
-  visualDrafts       VisualDraft[]
 }
 
 model ContentDraft {
@@ -96,13 +100,10 @@ model Feedback {
   createdAt      DateTime      @default(now())
   contentDraftId String?
   createdById    String
-  visualDraftId  String?
   contentDraft   ContentDraft? @relation(fields: [contentDraftId], references: [id])
   createdBy      User          @relation(fields: [createdById], references: [id])
-  visualDraft    VisualDraft?  @relation(fields: [visualDraftId], references: [id])
 
   @@index([contentDraftId])
-  @@index([visualDraftId])
   @@index([createdById])
 }
 
@@ -155,18 +156,19 @@ model ContentDeliveryPlan {
 }
 
 model ContentDeliveryItem {
-  id          String              @id @default(cuid())
-  contentType ContentType
-  quantity    Int
-  dueDate     DateTime
-  status      DeliveryItemStatus  @default(PENDING)
-  priority    Int                 @default(0)
-  notes       String?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-  planId      String
-  plan        ContentDeliveryPlan @relation(fields: [planId], references: [id])
-  ideas       Idea[]
+  id           String              @id @default(cuid())
+  contentType  ContentType
+  quantity     Int
+  dueDate      DateTime
+  status       DeliveryItemStatus  @default(PENDING)
+  priority     Int                 @default(0)
+  notes        String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  planId       String
+  plan         ContentDeliveryPlan @relation(fields: [planId], references: [id])
+  contentItems ContentItem[]
+  ideas        Idea[]
 }
 
 model IdeaComment {
@@ -179,20 +181,102 @@ model IdeaComment {
   idea        Idea     @relation(fields: [ideaId], references: [id])
 }
 
-model VisualDraft {
-  id          String     @id @default(cuid())
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  status      String
-  imageUrl    String
-  metadata    Json
-  ideaId      String
-  createdById String
-  feedback    Feedback[]
-  createdBy   User       @relation(fields: [createdById], references: [id])
-  idea        Idea       @relation(fields: [ideaId], references: [id])
+model ContentItem {
+  id             String                     @id @default(cuid())
+  title          String
+  description    String
+  body           String?
+  status         ContentItemStatus          @default(IDEA)
+  contentType    ContentType
+  mediaType      MediaType?
+  metadata       Json?                      @default("{}")
+  currentStage   WorkflowStage              @default(IDEA)
+  createdById    String
+  assignedToId   String?
+  deliveryItemId String?
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  publishedAt    DateTime?
+  assignedTo     User?                      @relation("AssignedContentItems", fields: [assignedToId], references: [id])
+  createdBy      User                       @relation("CreatedContentItems", fields: [createdById], references: [id])
+  deliveryItem   ContentDeliveryItem?       @relation(fields: [deliveryItemId], references: [id])
+  comments       ContentItemComment[]
+  feedbacks      ContentItemFeedback[]
+  media          ContentItemMedia[]
+  scheduledPosts ContentItemScheduledPost[]
+  stageHistory   StageTransition[]
 
-  @@index([ideaId])
+  @@index([currentStage])
+  @@index([status])
+  @@index([createdById])
+  @@index([assignedToId])
+}
+
+model StageTransition {
+  id             String        @id @default(cuid())
+  contentItemId  String
+  fromStage      WorkflowStage
+  toStage        WorkflowStage
+  transitionedAt DateTime      @default(now())
+  transitionedBy String
+  notes          String?
+  contentItem    ContentItem   @relation(fields: [contentItemId], references: [id])
+  user           User          @relation(fields: [transitionedBy], references: [id])
+
+  @@index([contentItemId])
+}
+
+model ContentItemFeedback {
+  id            String      @id @default(cuid())
+  comment       String
+  createdAt     DateTime    @default(now())
+  contentItemId String
+  createdById   String
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id])
+  createdBy     User        @relation(fields: [createdById], references: [id])
+
+  @@index([contentItemId])
+  @@index([createdById])
+}
+
+model ContentItemMedia {
+  id            String      @id @default(cuid())
+  url           String
+  filename      String
+  contentType   String
+  size          Int
+  createdAt     DateTime    @default(now())
+  contentItemId String
+  uploadedById  String
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id])
+  uploadedBy    User        @relation(fields: [uploadedById], references: [id])
+
+  @@index([contentItemId])
+}
+
+model ContentItemScheduledPost {
+  id            String         @id @default(cuid())
+  scheduledDate DateTime
+  status        ScheduleStatus @default(SCHEDULED)
+  metadata      Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  contentItemId String
+  contentItem   ContentItem    @relation(fields: [contentItemId], references: [id])
+
+  @@index([contentItemId])
+}
+
+model ContentItemComment {
+  id            String      @id @default(cuid())
+  comment       String
+  createdAt     DateTime    @default(now())
+  contentItemId String
+  createdById   String
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id])
+  createdBy     User        @relation(fields: [createdById], references: [id])
+
+  @@index([contentItemId])
   @@index([createdById])
 }
 
@@ -253,4 +337,20 @@ enum DeliveryItemStatus {
   REVIEW
   APPROVED
   DELIVERED
+}
+
+enum ContentItemStatus {
+  IDEA
+  CONTENT_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+enum WorkflowStage {
+  IDEA
+  CONTENT_REVIEW
+  APPROVED
+  REJECTED
+  PUBLISHED
 }

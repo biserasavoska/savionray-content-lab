@@ -25,16 +25,22 @@ export default async function PublishedPage() {
         include: {
           createdBy: {
             select: {
+              id: true,
               name: true,
-              email: true
+              email: true,
+              role: true,
+              image: true
             }
           }
         }
       },
       createdBy: {
         select: {
+          id: true,
           name: true,
-          email: true
+          email: true,
+          role: true,
+          image: true
         }
       },
       scheduledPosts: {
@@ -48,6 +54,35 @@ export default async function PublishedPage() {
     }
   })
 
+  // Ensure email and name are never null to fix TypeScript type error
+  const safePublishedContent = publishedContent.map((content: typeof publishedContent[0]) => ({
+    ...content,
+    idea: {
+      ...content.idea,
+      createdBy: {
+        ...content.idea.createdBy,
+        email: content.idea.createdBy.email ?? '',
+        name: content.idea.createdBy.name ?? '',
+      }
+    },
+    createdBy: {
+      ...content.createdBy,
+      email: content.createdBy.email ?? '',
+      name: content.createdBy.name ?? '',
+    }
+  })) as (typeof publishedContent[0] & {
+    idea: {
+      createdBy: {
+        email: string;
+        name: string;
+      };
+    };
+    createdBy: {
+      email: string;
+      name: string;
+    };
+  })[]
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
@@ -58,7 +93,7 @@ export default async function PublishedPage() {
       </div>
 
       <PublishedContentList 
-        publishedContent={publishedContent} 
+        publishedContent={safePublishedContent} 
         isCreativeUser={isCreativeUser}
       />
     </div>

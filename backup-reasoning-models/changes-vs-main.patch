@@ -1,0 +1,1046 @@
+diff --git a/REASONING_MODELS_DEVELOPMENT.md b/REASONING_MODELS_DEVELOPMENT.md
+new file mode 100644
+index 0000000..ce39b8c
+--- /dev/null
++++ b/REASONING_MODELS_DEVELOPMENT.md
+@@ -0,0 +1,208 @@
++# Reasoning Models Development Guide
++
++## 🎯 **Current Status**
++
++✅ **Branch Created**: `feature/reasoning-models`  
++✅ **Base Implementation**: Reasoning models support with Responses API  
++✅ **Backup System**: Rollback script available  
++✅ **Safe Development**: Can revert to main branch anytime  
++
++## 🚀 **What We've Implemented**
++
++### **1. Enhanced Model Configuration**
++- Added `o3` and `o4-mini` reasoning models
++- Configured reasoning features (summaries, encrypted content, tool use)
++- Updated model selector with reasoning capabilities
++
++### **2. Responses API Integration**
++- Implemented `generateWithReasoningAPI()` function
++- Added support for reasoning summaries and encrypted content
++- Maintained backward compatibility with existing Chat API
++
++### **3. UI Components**
++- **ModelSelector**: Shows reasoning capabilities and costs
++- **ReasoningOptions**: Checkboxes for enabling reasoning features
++- **ReasoningDisplay**: Shows AI's reasoning process and summaries
++
++### **4. API Enhancements**
++- Updated `/api/content/generate` to support reasoning options
++- Added validation for reasoning features
++- Enhanced error handling for reasoning models
++
++## 🔧 **Development Commands**
++
++### **Branch Management**
++```bash
++# Check current status
++./scripts/backup-reasoning-branch.sh status
++
++# Create backup of current work
++./scripts/backup-reasoning-branch.sh backup
++
++# Roll back to main branch (if needed)
++./scripts/backup-reasoning-branch.sh rollback
++
++# Restore from backup
++./scripts/backup-reasoning-branch.sh restore
++```
++
++### **Git Commands**
++```bash
++# Switch to reasoning branch
++git checkout feature/reasoning-models
++
++# Switch back to main
++git checkout main
++
++# See differences from main
++git diff main
++
++# Commit changes
++git add . && git commit -m "feat: your change description"
++```
++
++## 📋 **Next Implementation Steps**
++
++### **Phase 1: Integration (Current)**
++- [ ] Integrate ReasoningOptions into content creation forms
++- [ ] Add ReasoningDisplay to content generation results
++- [ ] Test reasoning models with real content generation
++- [ ] Validate API responses and error handling
++
++### **Phase 2: Enhanced Features**
++- [ ] Add multi-turn conversation support
++- [ ] Implement tool integration for content research
++- [ ] Add reasoning analytics and cost tracking
++- [ ] Create reasoning comparison tools
++
++### **Phase 3: Production Ready**
++- [ ] Performance testing and optimization
++- [ ] User experience improvements
++- [ ] Documentation and training materials
++- [ ] Production deployment
++
++## 🧪 **Testing Strategy**
++
++### **1. Model Testing**
++```bash
++# Test with o4-mini (cost-effective)
++curl -X POST /api/content/generate \
++  -H "Content-Type: application/json" \
++  -d '{
++    "title": "AI in Marketing",
++    "description": "How AI is transforming marketing strategies",
++    "format": "linkedin",
++    "model": "o4-mini",
++    "includeReasoning": true,
++    "reasoningSummary": true
++  }'
++```
++
++### **2. Feature Testing**
++- [ ] Test reasoning summaries display
++- [ ] Test encrypted reasoning functionality
++- [ ] Test model selector with reasoning models
++- [ ] Test error handling for unsupported features
++
++### **3. Performance Testing**
++- [ ] Compare generation times with/without reasoning
++- [ ] Monitor token usage and costs
++- [ ] Test cache utilization improvements
++- [ ] Validate response quality improvements
++
++## 🔍 **Key Files to Modify**
++
++### **Content Creation Forms**
++- `src/app/create-content/[id]/edit/page.tsx`
++- `src/app/ready-content/[id]/edit/page.tsx`
++- `src/components/drafts/ContentDraftForm.tsx`
++
++### **Content Display**
++- `src/components/content/ContentGrid.tsx`
++- `src/app/content/[id]/page.tsx`
++
++### **API Routes**
++- `src/app/api/content/generate/route.ts` ✅ (Done)
++- `src/app/api/content/chat/route.ts` (if exists)
++
++## 🚨 **Rollback Plan**
++
++If something breaks, here's how to recover:
++
++### **Quick Rollback**
++```bash
++# Option 1: Use backup script
++./scripts/backup-reasoning-branch.sh rollback
++
++# Option 2: Manual rollback
++git checkout main
++git branch -D feature/reasoning-models
++```
++
++### **Recover Changes**
++```bash
++# If you stashed changes
++git stash pop
++
++# If you have a backup
++./scripts/backup-reasoning-branch.sh restore
++```
++
++## 📊 **Expected Benefits**
++
++Based on [OpenAI documentation](https://cookbook.openai.com/examples/responses_api/reasoning_items):
++
++### **Performance Improvements**
++- **40% → 80% cache utilization** (lower costs)
++- **Better response quality** through advanced reasoning
++- **Improved latency** with better caching
++
++### **User Experience**
++- **Transparency**: Users can see AI's reasoning process
++- **Trust**: Explainable AI builds user confidence
++- **Quality**: More sophisticated content generation
++
++### **Technical Benefits**
++- **Privacy**: Encrypted reasoning for compliance
++- **Flexibility**: Tool integration capabilities
++- **Scalability**: Better performance under load
++
++## 🔐 **Environment Variables**
++
++Make sure these are set in your `.env`:
++```bash
++OPENAI_API_KEY=your_openai_api_key_here
++```
++
++## 📝 **Development Notes**
++
++### **Current Limitations**
++- Reasoning models are more expensive than standard models
++- Encrypted reasoning requires `store=false` (no persistence)
++- Tool integration not yet implemented
++
++### **Future Enhancements**
++- Multi-turn conversation support
++- Advanced tool integration
++- Reasoning analytics dashboard
++- Cost optimization features
++
++## 🎉 **Success Criteria**
++
++### **Phase 1 Complete When:**
++- [ ] Reasoning models work in content generation
++- [ ] UI shows reasoning options and results
++- [ ] No breaking changes to existing functionality
++- [ ] All tests pass
++
++### **Ready for Production When:**
++- [ ] Performance testing completed
++- [ ] User acceptance testing passed
++- [ ] Documentation complete
++- [ ] Cost analysis shows acceptable ROI
++
++---
++
++**Happy Coding! 🚀**
++
++Remember: You can always roll back if needed with `./scripts/backup-reasoning-branch.sh rollback` 
+\ No newline at end of file
+diff --git a/scripts/backup-reasoning-branch.sh b/scripts/backup-reasoning-branch.sh
+new file mode 100755
+index 0000000..cc3067f
+--- /dev/null
++++ b/scripts/backup-reasoning-branch.sh
+@@ -0,0 +1,95 @@
++#!/bin/bash
++
++# Backup and Restore Script for Reasoning Models Branch
++# This script helps manage the reasoning models feature branch
++
++set -e
++
++BACKUP_DIR="backup-reasoning-models"
++BRANCH_NAME="feature/reasoning-models"
++MAIN_BRANCH="main"
++
++case "$1" in
++  "backup")
++    echo "🔒 Creating backup of current reasoning models work..."
++    
++    # Create backup directory
++    mkdir -p "$BACKUP_DIR"
++    
++    # Save current branch state
++    git log --oneline -10 > "$BACKUP_DIR/commit-history.txt"
++    git diff main > "$BACKUP_DIR/changes-vs-main.patch"
++    git status > "$BACKUP_DIR/current-status.txt"
++    
++    # Create restore script
++    cat > "$BACKUP_DIR/restore.sh" << 'EOF'
++#!/bin/bash
++echo "🔄 Restoring reasoning models branch..."
++git checkout feature/reasoning-models
++git apply changes-vs-main.patch
++echo "✅ Restore complete!"
++EOF
++    
++    chmod +x "$BACKUP_DIR/restore.sh"
++    
++    echo "✅ Backup created in $BACKUP_DIR/"
++    echo "📋 To restore: cd $BACKUP_DIR && ./restore.sh"
++    ;;
++    
++  "restore")
++    echo "🔄 Restoring from backup..."
++    
++    if [ ! -d "$BACKUP_DIR" ]; then
++      echo "❌ No backup found. Run './scripts/backup-reasoning-branch.sh backup' first."
++      exit 1
++    fi
++    
++    cd "$BACKUP_DIR"
++    ./restore.sh
++    cd ..
++    ;;
++    
++  "rollback")
++    echo "🔄 Rolling back to main branch..."
++    
++    # Stash any current changes
++    git stash push -m "Auto-stash before rollback"
++    
++    # Switch to main branch
++    git checkout "$MAIN_BRANCH"
++    
++    # Delete the feature branch
++    git branch -D "$BRANCH_NAME"
++    
++    echo "✅ Rolled back to main branch"
++    echo "📋 To recover stashed changes: git stash pop"
++    ;;
++    
++  "status")
++    echo "📊 Current branch status:"
++    echo "Current branch: $(git branch --show-current)"
++    echo ""
++    echo "Recent commits:"
++    git log --oneline -5
++    echo ""
++    echo "Modified files:"
++    git status --porcelain
++    ;;
++    
++  *)
++    echo "🔧 Reasoning Models Branch Management Script"
++    echo ""
++    echo "Usage: $0 {backup|restore|rollback|status}"
++    echo ""
++    echo "Commands:"
++    echo "  backup   - Create a backup of current reasoning models work"
++    echo "  restore  - Restore from backup"
++    echo "  rollback - Roll back to main branch (delete feature branch)"
++    echo "  status   - Show current branch status"
++    echo ""
++    echo "Examples:"
++    echo "  ./scripts/backup-reasoning-branch.sh backup"
++    echo "  ./scripts/backup-reasoning-branch.sh rollback"
++    echo "  ./scripts/backup-reasoning-branch.sh status"
++    ;;
++esac 
+\ No newline at end of file
+diff --git a/src/app/api/content/generate/route.ts b/src/app/api/content/generate/route.ts
+index 93e09aa..6a96efc 100644
+--- a/src/app/api/content/generate/route.ts
++++ b/src/app/api/content/generate/route.ts
+@@ -15,7 +15,16 @@ export async function POST(req: NextRequest) {
+     const body = await req.json();
+     console.log('Content generation request:', body);
+ 
+-    const { title, description, format, model, additionalContext } = body;
++    const { 
++      title, 
++      description, 
++      format, 
++      model, 
++      additionalContext,
++      includeReasoning = false,
++      reasoningSummary = false,
++      encryptedReasoning = false
++    } = body;
+ 
+     if (!title || !description || !format || !model) {
+       return NextResponse.json(
+@@ -25,19 +34,45 @@ export async function POST(req: NextRequest) {
+     }
+ 
+     // Validate model if provided
+-    if (model && !AVAILABLE_MODELS.some(m => m.id === model)) {
++    const selectedModel = AVAILABLE_MODELS.find(m => m.id === model);
++    if (!selectedModel) {
+       return NextResponse.json(
+         { error: 'Invalid model selected' },
+         { status: 400 }
+       );
+     }
+ 
+-    // Generate social media content
++    // Validate reasoning options
++    if (includeReasoning && !selectedModel.supportsReasoning) {
++      return NextResponse.json(
++        { error: 'Selected model does not support reasoning features' },
++        { status: 400 }
++      );
++    }
++
++    if (reasoningSummary && !selectedModel.reasoningFeatures?.summaries) {
++      return NextResponse.json(
++        { error: 'Selected model does not support reasoning summaries' },
++        { status: 400 }
++      );
++    }
++
++    if (encryptedReasoning && !selectedModel.reasoningFeatures?.encryptedContent) {
++      return NextResponse.json(
++        { error: 'Selected model does not support encrypted reasoning' },
++        { status: 400 }
++      );
++    }
++
++    // Generate social media content with reasoning support
+     const content = await generateSocialContent({
+       title,
+       description: `${description}\n\nAdditional Context: ${additionalContext || 'None'}`,
+       format,
+       model,
++      includeReasoning,
++      reasoningSummary,
++      encryptedReasoning,
+     });
+ 
+     console.log('Generated content response:', content);
+diff --git a/src/components/content/ModelSelector.tsx b/src/components/content/ModelSelector.tsx
+index 92eb296..9812e59 100644
+--- a/src/components/content/ModelSelector.tsx
++++ b/src/components/content/ModelSelector.tsx
+@@ -1,5 +1,11 @@
+ import React from 'react';
+ import { AVAILABLE_MODELS, AIModel } from '@/lib/models';
++import { 
++  CpuChipIcon, 
++  ShieldCheckIcon, 
++  DocumentTextIcon,
++  SparklesIcon 
++} from '@heroicons/react/24/outline';
+ 
+ interface ModelSelectorProps {
+   selectedModel: string;
+@@ -7,6 +13,36 @@ interface ModelSelectorProps {
+ }
+ 
+ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelChange }) => {
++  const getTypeColor = (type: string) => {
++    switch (type) {
++      case 'fast':
++        return 'bg-green-100 text-green-800';
++      case 'balanced':
++        return 'bg-blue-100 text-blue-800';
++      case 'advanced':
++        return 'bg-purple-100 text-purple-800';
++      case 'reasoning':
++        return 'bg-orange-100 text-orange-800';
++      default:
++        return 'bg-gray-100 text-gray-800';
++    }
++  };
++
++  const getTypeIcon = (type: string) => {
++    switch (type) {
++      case 'reasoning':
++        return <CpuChipIcon className="h-4 w-4" />;
++      case 'advanced':
++        return <SparklesIcon className="h-4 w-4" />;
++      case 'balanced':
++        return <DocumentTextIcon className="h-4 w-4" />;
++      case 'fast':
++        return <SparklesIcon className="h-4 w-4" />;
++      default:
++        return <DocumentTextIcon className="h-4 w-4" />;
++    }
++  };
++
+   return (
+     <div className="space-y-4">
+       <h3 className="text-lg font-semibold text-gray-900">Select AI Model</h3>
+@@ -21,25 +57,59 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ selectedModel, onModelCha
+             }`}
+             onClick={() => onModelChange(model.id)}
+           >
+-            <div className="flex items-center justify-between">
++            <div className="flex items-center justify-between mb-2">
+               <div className="flex items-center">
+                 <div className="text-sm">
+                   <h4 className="font-medium text-gray-900">{model.name}</h4>
+-                  <p className="text-gray-500">{model.description}</p>
++                  <p className="text-gray-500 text-xs">{model.description}</p>
+                 </div>
+               </div>
+               <span
+-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+-                  model.type === 'fast'
+-                    ? 'bg-green-100 text-green-800'
+-                    : model.type === 'balanced'
+-                    ? 'bg-blue-100 text-blue-800'
+-                    : 'bg-purple-100 text-purple-800'
+-                }`}
++                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeColor(model.type)}`}
+               >
+-                {model.type}
++                {getTypeIcon(model.type)}
++                <span className="ml-1">{model.type}</span>
+               </span>
+             </div>
++
++            {/* Reasoning Features */}
++            {model.supportsReasoning && (
++              <div className="mt-3 space-y-2">
++                <div className="flex items-center text-xs text-gray-600">
++                  <CpuChipIcon className="h-3 w-3 mr-1" />
++                  <span>Advanced Reasoning</span>
++                </div>
++                
++                {model.reasoningFeatures && (
++                  <div className="flex flex-wrap gap-1">
++                    {model.reasoningFeatures.summaries && (
++                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-700">
++                        <DocumentTextIcon className="h-3 w-3 mr-1" />
++                        Summaries
++                      </span>
++                    )}
++                    {model.reasoningFeatures.encryptedContent && (
++                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-green-50 text-green-700">
++                        <ShieldCheckIcon className="h-3 w-3 mr-1" />
++                        Encrypted
++                      </span>
++                    )}
++                    {model.reasoningFeatures.toolUse && (
++                      <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-purple-50 text-purple-700">
++                        <SparklesIcon className="h-3 w-3 mr-1" />
++                        Tool Use
++                      </span>
++                    )}
++                  </div>
++                )}
++              </div>
++            )}
++
++            {/* Cost Information */}
++            <div className="mt-2 text-xs text-gray-500">
++              Cost: ${(model.costPerToken * 1000).toFixed(4)} per 1K tokens
++            </div>
++
+             {selectedModel === model.id && (
+               <div className="absolute -top-px -right-px -bottom-px -left-px rounded-lg border-2 border-blue-500 pointer-events-none" />
+             )}
+diff --git a/src/components/content/ReasoningDisplay.tsx b/src/components/content/ReasoningDisplay.tsx
+new file mode 100644
+index 0000000..e076e94
+--- /dev/null
++++ b/src/components/content/ReasoningDisplay.tsx
+@@ -0,0 +1,90 @@
++import React from 'react';
++import { CpuChipIcon, DocumentTextIcon, ShieldCheckIcon, EyeIcon } from '@heroicons/react/24/outline';
++
++interface ReasoningInfo {
++  summary?: string;
++  reasoningId?: string;
++  encryptedContent?: string;
++}
++
++interface ReasoningDisplayProps {
++  reasoning?: ReasoningInfo;
++  isVisible: boolean;
++  onToggleVisibility: () => void;
++}
++
++const ReasoningDisplay: React.FC<ReasoningDisplayProps> = ({
++  reasoning,
++  isVisible,
++  onToggleVisibility,
++}) => {
++  if (!reasoning) {
++    return null;
++  }
++
++  return (
++    <div className="mt-6 border-t border-gray-200 pt-4">
++      <div className="flex items-center justify-between mb-3">
++        <div className="flex items-center space-x-2">
++          <CpuChipIcon className="h-5 w-5 text-orange-600" />
++          <h3 className="text-sm font-medium text-gray-900">AI Reasoning Process</h3>
++        </div>
++        <button
++          onClick={onToggleVisibility}
++          className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-900"
++        >
++          <EyeIcon className="h-4 w-4" />
++          <span>{isVisible ? 'Hide' : 'Show'} Reasoning</span>
++        </button>
++      </div>
++
++      {isVisible && (
++        <div className="space-y-3">
++          {/* Reasoning Summary */}
++          {reasoning.summary && (
++            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
++              <div className="flex items-center space-x-2 mb-2">
++                <DocumentTextIcon className="h-4 w-4 text-blue-600" />
++                <span className="text-sm font-medium text-blue-900">Reasoning Summary</span>
++              </div>
++              <p className="text-sm text-blue-800 whitespace-pre-wrap">{reasoning.summary}</p>
++            </div>
++          )}
++
++          {/* Reasoning ID */}
++          {reasoning.reasoningId && (
++            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
++              <div className="flex items-center justify-between">
++                <span className="text-sm font-medium text-gray-700">Reasoning ID</span>
++                <span className="text-xs text-gray-500 font-mono">{reasoning.reasoningId}</span>
++              </div>
++            </div>
++          )}
++
++          {/* Encrypted Content Indicator */}
++          {reasoning.encryptedContent && (
++            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
++              <div className="flex items-center space-x-2">
++                <ShieldCheckIcon className="h-4 w-4 text-green-600" />
++                <span className="text-sm font-medium text-green-900">Encrypted Reasoning</span>
++              </div>
++              <p className="text-xs text-green-700 mt-1">
++                This reasoning data is encrypted for enhanced privacy and security.
++              </p>
++            </div>
++          )}
++
++          {/* Information */}
++          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
++            <p>
++              <strong>What is reasoning?</strong> This shows how the AI model analyzed your request 
++              and arrived at the generated content. It provides transparency into the AI's decision-making process.
++            </p>
++          </div>
++        </div>
++      )}
++    </div>
++  );
++};
++
++export default ReasoningDisplay; 
+\ No newline at end of file
+diff --git a/src/components/content/ReasoningOptions.tsx b/src/components/content/ReasoningOptions.tsx
+new file mode 100644
+index 0000000..de32931
+--- /dev/null
++++ b/src/components/content/ReasoningOptions.tsx
+@@ -0,0 +1,102 @@
++import React from 'react';
++import { CpuChipIcon, DocumentTextIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
++import { AVAILABLE_MODELS } from '@/lib/models';
++
++interface ReasoningOptionsProps {
++  selectedModel: string;
++  includeReasoning: boolean;
++  reasoningSummary: boolean;
++  encryptedReasoning: boolean;
++  onIncludeReasoningChange: (value: boolean) => void;
++  onReasoningSummaryChange: (value: boolean) => void;
++  onEncryptedReasoningChange: (value: boolean) => void;
++}
++
++const ReasoningOptions: React.FC<ReasoningOptionsProps> = ({
++  selectedModel,
++  includeReasoning,
++  reasoningSummary,
++  encryptedReasoning,
++  onIncludeReasoningChange,
++  onReasoningSummaryChange,
++  onEncryptedReasoningChange,
++}) => {
++  const selectedModelData = AVAILABLE_MODELS.find(m => m.id === selectedModel);
++  const supportsReasoning = selectedModelData?.supportsReasoning;
++
++  if (!supportsReasoning) {
++    return null;
++  }
++
++  return (
++    <div className="space-y-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
++      <div className="flex items-center space-x-2">
++        <CpuChipIcon className="h-5 w-5 text-orange-600" />
++        <h3 className="text-sm font-medium text-orange-900">Advanced Reasoning Options</h3>
++      </div>
++      
++      <div className="space-y-3">
++        {/* Enable Reasoning */}
++        <div className="flex items-center space-x-3">
++          <input
++            type="checkbox"
++            id="includeReasoning"
++            checked={includeReasoning}
++            onChange={(e) => onIncludeReasoningChange(e.target.checked)}
++            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
++          />
++          <label htmlFor="includeReasoning" className="text-sm text-orange-800">
++            Enable advanced reasoning for better content quality
++          </label>
++        </div>
++
++        {/* Reasoning Summary */}
++        {includeReasoning && selectedModelData?.reasoningFeatures?.summaries && (
++          <div className="flex items-center space-x-3 ml-6">
++            <input
++              type="checkbox"
++              id="reasoningSummary"
++              checked={reasoningSummary}
++              onChange={(e) => onReasoningSummaryChange(e.target.checked)}
++              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
++            />
++            <label htmlFor="reasoningSummary" className="text-sm text-blue-800 flex items-center">
++              <DocumentTextIcon className="h-4 w-4 mr-1" />
++              Include reasoning summary (shows AI's thought process)
++            </label>
++          </div>
++        )}
++
++        {/* Encrypted Reasoning */}
++        {includeReasoning && selectedModelData?.reasoningFeatures?.encryptedContent && (
++          <div className="flex items-center space-x-3 ml-6">
++            <input
++              type="checkbox"
++              id="encryptedReasoning"
++              checked={encryptedReasoning}
++              onChange={(e) => onEncryptedReasoningChange(e.target.checked)}
++              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
++            />
++            <label htmlFor="encryptedReasoning" className="text-sm text-green-800 flex items-center">
++              <ShieldCheckIcon className="h-4 w-4 mr-1" />
++              Use encrypted reasoning (enhanced privacy)
++            </label>
++          </div>
++        )}
++      </div>
++
++      {/* Information */}
++      <div className="text-xs text-orange-700 bg-orange-100 p-2 rounded">
++        <p><strong>Benefits:</strong> Reasoning models provide more sophisticated content analysis and generation capabilities.</p>
++        {reasoningSummary && (
++          <p className="mt-1"><strong>Summary:</strong> You'll see the AI's reasoning process for transparency.</p>
++        )}
++        {encryptedReasoning && (
++          <p className="mt-1"><strong>Privacy:</strong> Reasoning data is encrypted and not stored on OpenAI servers.</p>
++        )}
++      </div>
++    </div>
++  );
++};
++
++export default ReasoningOptions; 
+\ No newline at end of file
+diff --git a/src/lib/models.ts b/src/lib/models.ts
+index 0721f85..fc81fc4 100644
+--- a/src/lib/models.ts
++++ b/src/lib/models.ts
+@@ -4,8 +4,14 @@ export interface AIModel {
+   description: string;
+   maxTokens: number;
+   costPerToken: number;
+-  type: 'fast' | 'balanced' | 'advanced';
++  type: 'fast' | 'balanced' | 'advanced' | 'reasoning';
+   api: 'responses' | 'chat';
++  supportsReasoning?: boolean;
++  reasoningFeatures?: {
++    summaries?: boolean;
++    encryptedContent?: boolean;
++    toolUse?: boolean;
++  };
+ }
+ 
+ export const AVAILABLE_MODELS: AIModel[] = [
+@@ -35,5 +41,36 @@ export const AVAILABLE_MODELS: AIModel[] = [
+     costPerToken: 0.00002,
+     type: 'advanced',
+     api: 'chat'
++  },
++  // New reasoning models
++  {
++    id: 'o4-mini',
++    name: 'O4 Mini (Reasoning)',
++    description: 'Advanced reasoning model for complex content analysis and generation',
++    maxTokens: 4096,
++    costPerToken: 0.000015,
++    type: 'reasoning',
++    api: 'responses',
++    supportsReasoning: true,
++    reasoningFeatures: {
++      summaries: true,
++      encryptedContent: true,
++      toolUse: true
++    }
++  },
++  {
++    id: 'o3',
++    name: 'O3 (Advanced Reasoning)',
++    description: 'State-of-the-art reasoning model for sophisticated content creation',
++    maxTokens: 8192,
++    costPerToken: 0.00003,
++    type: 'reasoning',
++    api: 'responses',
++    supportsReasoning: true,
++    reasoningFeatures: {
++      summaries: true,
++      encryptedContent: true,
++      toolUse: true
++    }
+   }
+ ]; 
+\ No newline at end of file
+diff --git a/src/lib/openai.ts b/src/lib/openai.ts
+index 55eaf05..1668d64 100644
+--- a/src/lib/openai.ts
++++ b/src/lib/openai.ts
+@@ -28,12 +28,20 @@ interface GenerateContentOptions {
+   tone?: string;
+   targetAudience?: string;
+   model?: string;
++  includeReasoning?: boolean;
++  reasoningSummary?: boolean;
++  encryptedReasoning?: boolean;
+ }
+ 
+ interface GeneratedContent {
+   postText: string;
+   hashtags: string[];
+   callToAction: string;
++  reasoning?: {
++    summary?: string;
++    reasoningId?: string;
++    encryptedContent?: string;
++  };
+ }
+ 
+ interface ChatResponse {
+@@ -43,6 +51,11 @@ interface ChatResponse {
+     hashtags: string[];
+     callToAction: string;
+   };
++  reasoning?: {
++    summary?: string;
++    reasoningId?: string;
++    encryptedContent?: string;
++  };
+ }
+ 
+ interface ChatRequest {
+@@ -53,8 +66,10 @@ interface ChatRequest {
+     description: string;
+   };
+   model: string;
++  includeReasoning?: boolean;
+ }
+ 
++// Enhanced content generation with reasoning support
+ export async function generateSocialContent({
+   title,
+   description,
+@@ -62,6 +77,9 @@ export async function generateSocialContent({
+   tone = 'professional',
+   targetAudience = 'professionals',
+   model = DEFAULT_MODEL,
++  includeReasoning = false,
++  reasoningSummary = false,
++  encryptedReasoning = false,
+ }: GenerateContentOptions): Promise<GeneratedContent> {
+   try {
+     const selectedModel = AVAILABLE_MODELS.find(m => m.id === model);
+@@ -83,55 +101,17 @@ Call to Action:
+     console.log('Generating content with prompt:', prompt);
+     
+     const openai = getOpenAIClient();
+-    const response = await openai.chat.completions.create({
+-      model: selectedModel.id || DEFAULT_MODEL,
+-      messages: [
+-        {
+-          role: 'system',
+-          content: 'You are a professional content creator who writes engaging and informative content. Your responses must always follow the exact format specified in the user prompt.'
+-        },
+-        {
+-          role: 'user',
+-          content: prompt
+-        }
+-      ],
+-      max_tokens: selectedModel.maxTokens || 4096,
+-      temperature: 0.7,
+-    });
+ 
+-    const content = response.choices[0]?.message?.content || '';
+-    console.log('Raw API response:', content);
+-
+-    if (!content) {
+-      throw new Error('No content generated');
++    // Use Responses API for reasoning models, Chat API for others
++    if (selectedModel.api === 'responses' && selectedModel.supportsReasoning) {
++      return await generateWithReasoningAPI(openai, selectedModel, prompt, {
++        includeReasoning,
++        reasoningSummary,
++        encryptedReasoning
++      });
++    } else {
++      return await generateWithChatAPI(openai, selectedModel, prompt);
+     }
+-
+-    const postTextMatch = content.match(/Post Text:\s*([\s\S]*?)(?=Hashtags:|$)/);
+-    const hashtagsMatch = content.match(/Hashtags:\s*([\s\S]*?)(?=Call to Action:|$)/);
+-    const callToActionMatch = content.match(/Call to Action:\s*([\s\S]*?)$/);
+-
+-    console.log('Content matches:', { postTextMatch, hashtagsMatch, callToActionMatch });
+-
+-    // Provide default values if matches are not found
+-    const postText = (postTextMatch?.[1] || '').trim().replace(/###/g, '');
+-    const hashtags = hashtagsMatch?.[1]
+-      ? hashtagsMatch[1]
+-          .trim()
+-          .replace(/###/g, '')
+-          .split(/\s+/)
+-          .filter((tag: string) => tag.startsWith('#'))
+-          .map((tag: string) => tag.substring(1))
+-      : [];
+-    const callToAction = (callToActionMatch?.[1] || '').trim().replace(/###/g, '');
+-
+-    const result = {
+-      postText,
+-      hashtags,
+-      callToAction,
+-    };
+-
+-    console.log('Processed content:', result);
+-    return result;
+   } catch (error: unknown) {
+     console.error('Error generating content:', error);
+     if (error instanceof Error) {
+@@ -142,6 +122,148 @@ Call to Action:
+   }
+ }
+ 
++// New function for reasoning API
++async function generateWithReasoningAPI(
++  openai: any, 
++  model: any, 
++  prompt: string, 
++  options: {
++    includeReasoning: boolean;
++    reasoningSummary: boolean;
++    encryptedReasoning: boolean;
++  }
++): Promise<GeneratedContent> {
++  const input = [{ role: 'user', content: prompt }];
++  
++  const requestConfig: any = {
++    model: model.id,
++    input,
++    temperature: 0.7,
++  };
++
++  // Add reasoning features based on options
++  if (options.includeReasoning) {
++    requestConfig.reasoning = {};
++    if (options.reasoningSummary) {
++      requestConfig.reasoning.summary = 'auto';
++    }
++  }
++
++  if (options.encryptedReasoning) {
++    requestConfig.include = ['reasoning.encrypted_content'];
++    requestConfig.store = false; // Required for encrypted content
++  }
++
++  console.log('Using Responses API with config:', requestConfig);
++
++  const response = await openai.responses.create(requestConfig);
++  
++  console.log('Responses API response:', JSON.stringify(response.model_dump(), null, 2));
++
++  // Extract content from response
++  const messageOutput = response.output.find((item: any) => item.type === 'message');
++  const reasoningOutput = response.output.find((item: any) => item.type === 'reasoning');
++
++  if (!messageOutput?.content?.[0]?.text) {
++    throw new Error('No content generated from reasoning model');
++  }
++
++  const content = messageOutput.content[0].text;
++  
++  // Parse the structured response
++  const postTextMatch = content.match(/Post Text:\s*([\s\S]*?)(?=Hashtags:|$)/);
++  const hashtagsMatch = content.match(/Hashtags:\s*([\s\S]*?)(?=Call to Action:|$)/);
++  const callToActionMatch = content.match(/Call to Action:\s*([\s\S]*?)$/);
++
++  const postText = (postTextMatch?.[1] || '').trim().replace(/###/g, '');
++  const hashtags = hashtagsMatch?.[1]
++    ? hashtagsMatch[1]
++        .trim()
++        .replace(/###/g, '')
++        .split(/\s+/)
++        .filter((tag: string) => tag.startsWith('#'))
++        .map((tag: string) => tag.substring(1))
++    : [];
++  const callToAction = (callToActionMatch?.[1] || '').trim().replace(/###/g, '');
++
++  const result: GeneratedContent = {
++    postText,
++    hashtags,
++    callToAction,
++  };
++
++  // Add reasoning information if available
++  if (reasoningOutput && options.includeReasoning) {
++    result.reasoning = {
++      reasoningId: reasoningOutput.id,
++    };
++
++    if (options.reasoningSummary && reasoningOutput.summary?.[0]?.text) {
++      result.reasoning.summary = reasoningOutput.summary[0].text;
++    }
++
++    if (options.encryptedReasoning && reasoningOutput.encrypted_content) {
++      result.reasoning.encryptedContent = reasoningOutput.encrypted_content;
++    }
++  }
++
++  console.log('Processed reasoning content:', result);
++  return result;
++}
++
++// Existing function for Chat API (updated)
++async function generateWithChatAPI(openai: any, model: any, prompt: string): Promise<GeneratedContent> {
++  const response = await openai.chat.completions.create({
++    model: model.id || DEFAULT_MODEL,
++    messages: [
++      {
++        role: 'system',
++        content: 'You are a professional content creator who writes engaging and informative content. Your responses must always follow the exact format specified in the user prompt.'
++      },
++      {
++        role: 'user',
++        content: prompt
++      }
++    ],
++    max_tokens: model.maxTokens || 4096,
++    temperature: 0.7,
++  });
++
++  const content = response.choices[0]?.message?.content || '';
++  console.log('Raw API response:', content);
++
++  if (!content) {
++    throw new Error('No content generated');
++  }
++
++  const postTextMatch = content.match(/Post Text:\s*([\s\S]*?)(?=Hashtags:|$)/);
++  const hashtagsMatch = content.match(/Hashtags:\s*([\s\S]*?)(?=Call to Action:|$)/);
++  const callToActionMatch = content.match(/Call to Action:\s*([\s\S]*?)$/);
++
++  console.log('Content matches:', { postTextMatch, hashtagsMatch, callToActionMatch });
++
++  // Provide default values if matches are not found
++  const postText = (postTextMatch?.[1] || '').trim().replace(/###/g, '');
++  const hashtags = hashtagsMatch?.[1]
++    ? hashtagsMatch[1]
++        .trim()
++        .replace(/###/g, '')
++        .split(/\s+/)
++        .filter((tag: string) => tag.startsWith('#'))
++        .map((tag: string) => tag.substring(1))
++      : [];
++  const callToAction = (callToActionMatch?.[1] || '').trim().replace(/###/g, '');
++
++  const result = {
++    postText,
++    hashtags,
++    callToAction,
++  };
++
++  console.log('Processed content:', result);
++  return result;
++}
++
+ export async function generateVisualPrompt(description: string) {
+   try {
+     const openai = getOpenAIClient();

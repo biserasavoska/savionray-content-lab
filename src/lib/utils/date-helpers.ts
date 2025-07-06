@@ -1,10 +1,39 @@
+/**
+ * Format date consistently for both server and client rendering
+ * This prevents hydration errors by using a fixed locale and format
+ */
 export function formatDate(date: Date | string): string {
-  const d = new Date(date)
-  return d.toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  })
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // Use a fixed locale and format to prevent hydration mismatches
+  return dateObj.toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
+
+/**
+ * Format date with time for both server and client rendering
+ */
+export function formatDateTime(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  return dateObj.toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+/**
+ * Format date in ISO format (YYYY-MM-DD) for consistent display
+ */
+export function formatDateISO(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toISOString().split('T')[0];
 }
 
 export function formatRelativeTime(date: Date | string): string {

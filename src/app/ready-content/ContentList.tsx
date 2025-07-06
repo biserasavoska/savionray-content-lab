@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { DraftStatus } from '@prisma/client'
+import { formatDate } from '../../lib/utils/date-helpers'
+import { DRAFT_STATUS } from '../../lib/utils/enum-constants'
 
 interface Creator {
   name: string | null
@@ -19,7 +20,7 @@ interface Feedback {
 interface ContentDraft {
   id: string
   body: string
-  status: DraftStatus
+  status: string
   createdAt: Date
   createdBy: Creator
   feedbacks: Feedback[]
@@ -48,19 +49,19 @@ export default function ContentList({ ideas }: ContentListProps) {
     return idea.contentDrafts[0] || null
   }
 
-  const getDraftStatusColor = (status: DraftStatus) => {
+  const getDraftStatusColor = (status: string) => {
     switch (status) {
-      case DraftStatus.DRAFT:
+      case DRAFT_STATUS.DRAFT:
         return 'bg-yellow-100 text-yellow-800'
-      case DraftStatus.AWAITING_REVISION:
+      case DRAFT_STATUS.AWAITING_REVISION:
         return 'bg-orange-100 text-orange-800'
-      case DraftStatus.AWAITING_FEEDBACK:
+      case DRAFT_STATUS.AWAITING_FEEDBACK:
         return 'bg-blue-100 text-blue-800'
-      case DraftStatus.APPROVED:
+      case DRAFT_STATUS.APPROVED:
         return 'bg-green-100 text-green-800'
-      case DraftStatus.REJECTED:
+      case DRAFT_STATUS.REJECTED:
         return 'bg-red-100 text-red-800'
-      case DraftStatus.PUBLISHED:
+      case DRAFT_STATUS.PUBLISHED:
         return 'bg-purple-100 text-purple-800'
       default:
         return 'bg-gray-100 text-gray-800'
@@ -130,7 +131,7 @@ export default function ContentList({ ideas }: ContentListProps) {
                             {feedback.createdBy.name || feedback.createdBy.email}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {new Date(feedback.createdAt).toLocaleDateString()}
+                            {formatDate(new Date(feedback.createdAt))}
                           </span>
                         </div>
                         <p className="mt-1 text-sm text-gray-600">{feedback.comment}</p>

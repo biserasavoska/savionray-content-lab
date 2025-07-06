@@ -1,7 +1,15 @@
 'use client'
 
-import { ContentDraft, Idea, User, ScheduledPost } from '@prisma/client'
+import type { ContentDraft, Idea, User } from '../../types/content'
 import Link from 'next/link'
+import { formatDate } from '../../lib/utils/date-helpers'
+
+// Local ScheduledPost type
+interface ScheduledPost {
+  id: string
+  scheduledDate: Date
+  status: string
+}
 
 interface PublishedContentListProps {
   publishedContent: (ContentDraft & {
@@ -49,7 +57,7 @@ export default function PublishedContentList({ publishedContent, isCreativeUser 
                   <span className="font-medium">Content Type:</span> {content.contentType}
                 </div>
                 <div>
-                  <span className="font-medium">Published:</span> {new Date(content.updatedAt).toLocaleDateString()}
+                  <span className="font-medium">Published:</span> {formatDate(content.updatedAt)}
                 </div>
               </div>
 
@@ -61,7 +69,7 @@ export default function PublishedContentList({ publishedContent, isCreativeUser 
                     {content.scheduledPosts.map((post) => (
                       <div key={post.id} className="flex items-center space-x-2 text-sm">
                         <span className="text-gray-500">
-                          {new Date(post.scheduledDate).toLocaleDateString()} at{' '}
+                          {formatDate(post.scheduledDate)} at{' '}
                           {new Date(post.scheduledDate).toLocaleTimeString()}
                         </span>
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

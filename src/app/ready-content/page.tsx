@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import ReadyContentList from '@/components/ready-content/ReadyContentList'
 import { isClient, isCreative } from '@/lib/auth'
+import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
 
 export const metadata: Metadata = {
   title: 'Ready Content',
@@ -13,69 +14,134 @@ export const metadata: Metadata = {
 
 export default async function ReadyContentPage() {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+
+  if (!session) {
     redirect('/auth/signin')
   }
 
-  // For creatives, redirect to create content page
-  if (isCreative(session)) {
-    redirect('/create-content')
-  }
+  const isCreativeUser = isCreative(session)
+  const isClientUser = isClient(session)
 
-  // For clients, show ideas with drafts that need review
-  const items = await prisma.idea.findMany({
-    where: {
-      contentDrafts: {
-        some: {
-          OR: [
-            { status: 'DRAFT' },
-            { status: 'AWAITING_FEEDBACK' }
+  try {
+    // Fetch content drafts that are ready for publishing
+    // This includes approved drafts and those awaiting final review
+    const readyContent = await prisma.contentDraft.findMany({
+      where: {
+        ...(isCreativeUser ? { createdById: session.user.id } : {}),
+        status: {
+          in: [
+            DRAFT_STATUS.APPROVED,
+            DRAFT_STATUS.AWAITING_FEEDBACK // Include drafts awaiting final client approval
           ]
         }
-      }
-    },
-    include: {
-      createdBy: {
-        select: {
-          name: true,
-          email: true,
-        },
       },
-      contentDrafts: {
-        orderBy: {
-          createdAt: 'desc',
+      include: {
+        idea: {
+          include: {
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                image: true
+              }
+            }
+          }
         },
-        include: {
-          createdBy: {
-            select: {
-              name: true,
-              email: true,
-            },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            image: true
+          }
+        },
+        feedbacks: {
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+                email: true
+              }
+            }
           },
+          orderBy: {
+            createdAt: 'desc'
+          }
         },
+        media: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
       },
-    },
-    orderBy: [
-      {
-        publishingDateTime: 'asc',
-      },
-      {
-        createdAt: 'desc',
-      },
-    ],
-  })
+      orderBy: [
+        {
+          status: 'asc' // Approved content first
+        },
+        {
+          updatedAt: 'desc'
+        }
+      ]
+    })
 
-  return (
-    <div className="py-6">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Ready Content</h1>
+    console.log(`Ready Content: Found ${readyContent.length} items for user ${session.user.email}`)
+
+    // Patch: Ensure email and name are never null to fix TypeScript type error
+    const safeReadyContent = readyContent.map((item: typeof readyContent[0]) => ({
+      ...item,
+      idea: {
+        ...item.idea,
+        createdBy: {
+          ...item.idea.createdBy,
+          email: item.idea.createdBy.email ?? '',
+          name: item.idea.createdBy.name ?? '',
+        }
+      },
+      createdBy: {
+        ...item.createdBy,
+        email: item.createdBy.email ?? '',
+        name: item.createdBy.name ?? '',
+      },
+      feedbacks: item.feedbacks.map((fb: any) => ({
+        ...fb,
+        contentDraftId: fb.contentDraftId ?? '',
+        createdBy: {
+          ...fb.createdBy,
+          email: fb.createdBy.email ?? '',
+          name: fb.createdBy.name ?? '',
+        }
+      }))
+    })) as any // type assertion to satisfy TS
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Ready Content</h1>
+          <p className="text-gray-600">
+            Content that has been created with AI and is ready for publishing or final review.
+          </p>
         </div>
-
-        <div className="mt-8">
-          <ReadyContentList items={items} />
+        
+        <ReadyContentList 
+          content={safeReadyContent} 
+          isCreativeUser={isCreativeUser}
+          isClientUser={isClientUser}
+        />
+      </div>
+    )
+  } catch (error) {
+    console.error('Error loading ready content page:', error)
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Ready Content</h1>
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Content</h3>
+          <p className="text-red-700">There was an error loading the ready content data. Please try refreshing the page.</p>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 } 
