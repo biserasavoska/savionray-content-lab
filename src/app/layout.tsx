@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import RootClientWrapper from '../components/RootClientWrapper'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,9 +25,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <RootClientWrapper session={session}>
-          {children}
-        </RootClientWrapper>
+        <ErrorBoundary>
+          <RootClientWrapper session={session}>
+            {children}
+          </RootClientWrapper>
+        </ErrorBoundary>
       </body>
     </html>
   )

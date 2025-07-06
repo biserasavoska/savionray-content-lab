@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import IdeaCard from '@/components/ideas/IdeaCard'
 import { IdeaWithCreator } from '@/types/idea'
 import { IDEA_STATUS } from '@/lib/utils/enum-utils'
+import { SimpleErrorDisplay } from '@/components/ui/ErrorDisplay'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 const TABS = [
   { id: 'all', name: 'All Ideas', status: undefined },
@@ -28,12 +30,14 @@ export default function IdeasPage() {
     page: 1,
     limit: 10,
   })
+  const [error, setError] = useState<string | null>(null)
 
   const loadIdeas = async (
     status?: IdeaStatus,
     page: number = 1
   ) => {
     setIsLoading(true)
+    setError(null)
     try {
       const params = new URLSearchParams({
         ...(status && { status }),
@@ -42,12 +46,21 @@ export default function IdeasPage() {
       })
       
       const response = await fetch(`/api/ideas?${params}`)
-      if (!response.ok) throw new Error('Failed to load ideas')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error?.message || 'Failed to load ideas')
+      }
       const data = await response.json()
-      setIdeas(data.ideas)
-      setPagination(data.pagination)
+      
+      if (data.success) {
+        setIdeas(data.data.ideas)
+        setPagination(data.data.pagination)
+      } else {
+        throw new Error(data.error?.message || 'Failed to load ideas')
+      }
     } catch (error) {
       console.error('Failed to load ideas:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load ideas')
     } finally {
       setIsLoading(false)
     }
@@ -153,18 +166,33 @@ export default function IdeasPage() {
           </div>
         </div>
 
-        {/* Ideas Grid */}
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {ideas.map((idea) => (
-            <IdeaCard
-              key={idea.id}
-              idea={idea}
-              onStatusChange={handleStatusChange}
-              onEdit={(idea) => router.push(`/ideas/${idea.id}/edit`)}
-              onDelete={handleDelete}
+        {/* Error Display */}
+        {error && (
+          <div className="mt-6">
+            <SimpleErrorDisplay 
+              message={error} 
+              onRetry={() => {
+                const tab = TABS.find((t) => t.id === activeTab)
+                loadIdeas(tab?.status, currentPage)
+              }}
             />
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Ideas Grid */}
+        {!error && (
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {ideas.map((idea) => (
+              <IdeaCard
+                key={idea.id}
+                idea={idea}
+                onStatusChange={handleStatusChange}
+                onEdit={(idea) => router.push(`/ideas/${idea.id}/edit`)}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Pagination */}
         {pagination.pages > 1 && (
@@ -194,7 +222,9 @@ export default function IdeasPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="mt-6 text-center text-gray-500">Loading...</div>
+          <div className="mt-6">
+            <LoadingSpinner text="Loading ideas..." />
+          </div>
         )}
       </div>
     </div>

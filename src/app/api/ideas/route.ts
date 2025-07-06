@@ -4,28 +4,67 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin, isClient } from '@/lib/auth'
 import { Prisma, IdeaStatus } from '@prisma/client'
-import { IDEA_STATUS, isValidIdeaStatus } from '@/lib/utils/enum-constants'
+import { IDEA_STATUS, isValidIdeaStatus } from '@/lib/utils/enum-utils'
+import { 
+  handleApiError, 
+  generateRequestId, 
+  createAuthenticationError,
+  createAuthorizationError,
+  createValidationError,
+  validateRequired,
+  validateString
+} from '@/lib/utils/error-handling'
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  if (!isCreative(session) && !isAdmin(session)) {
-    return NextResponse.json({ error: 'Only creatives and admins can create ideas' }, { status: 403 })
-  }
-
+  const requestId = generateRequestId()
+  
   try {
-    const { title, description, publishingDateTime, savedForLater, mediaType, contentType } = await req.json()
+    const session = await getServerSession(authOptions)
 
-    if (!title || !description) {
-      return NextResponse.json({ error: 'Title and description are required' }, { status: 400 })
+    if (!session) {
+      const error = createAuthenticationError('Authentication required to create ideas')
+      const { status, body } = await handleApiError(error, requestId)
+      return NextResponse.json(body, { status })
     }
 
-    if (!contentType) {
-      return NextResponse.json({ error: 'Content type is required' }, { status: 400 })
+    if (!isCreative(session) && !isAdmin(session)) {
+      const error = createAuthorizationError('Only creatives and admins can create ideas')
+      const { status, body } = await handleApiError(error, requestId)
+      return NextResponse.json(body, { status })
+    }
+
+    const { title, description, publishingDateTime, savedForLater, mediaType, contentType } = await req.json()
+
+    // Validate required fields
+    const titleError = validateRequired(title, 'title')
+    if (titleError) {
+      const { status, body } = await handleApiError(titleError, requestId)
+      return NextResponse.json(body, { status })
+    }
+
+    const descriptionError = validateRequired(description, 'description')
+    if (descriptionError) {
+      const { status, body } = await handleApiError(descriptionError, requestId)
+      return NextResponse.json(body, { status })
+    }
+
+    const contentTypeError = validateRequired(contentType, 'contentType')
+    if (contentTypeError) {
+      const { status, body } = await handleApiError(contentTypeError, requestId)
+      return NextResponse.json(body, { status })
+    }
+
+    // Validate string lengths
+    const titleLengthError = validateString(title, 'title', 1, 200)
+    if (titleLengthError) {
+      const { status, body } = await handleApiError(titleLengthError, requestId)
+      return NextResponse.json(body, { status })
+    }
+
+    const descriptionLengthError = validateString(description, 'description', 1, 1000)
+    if (descriptionLengthError) {
+      const { status, body } = await handleApiError(descriptionLengthError, requestId)
+      return NextResponse.json(body, { status })
     }
 
     const idea = await prisma.idea.create({
@@ -48,21 +87,28 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return NextResponse.json(idea)
+    return NextResponse.json({
+      success: true,
+      data: idea,
+      requestId
+    })
   } catch (error) {
-    console.error('Failed to create idea:', error)
-    return NextResponse.json({ error: 'Failed to create idea' }, { status: 500 })
+    const { status, body } = await handleApiError(error, requestId)
+    return NextResponse.json(body, { status })
   }
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+  const requestId = generateRequestId()
+  
   try {
+    const session = await getServerSession(authOptions)
+
+    if (!session) {
+      const error = createAuthenticationError('Authentication required to view ideas')
+      const { status, body } = await handleApiError(error, requestId)
+      return NextResponse.json(body, { status })
+    }
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = parseInt(url.searchParams.get('limit') || '10')
@@ -124,19 +170,20 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.json({
-      ideas,
-      pagination: {
-        total: totalCount,
-        pages: Math.ceil(totalCount / limit),
-        current: page,
-        limit,
+      success: true,
+      data: {
+        ideas,
+        pagination: {
+          total: totalCount,
+          pages: Math.ceil(totalCount / limit),
+          current: page,
+          limit,
+        },
       },
+      requestId
     })
   } catch (error) {
-    console.error('Failed to fetch ideas:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch ideas' },
-      { status: 500 }
-    )
+    const { status, body } = await handleApiError(error, requestId)
+    return NextResponse.json(body, { status })
   }
 } 
