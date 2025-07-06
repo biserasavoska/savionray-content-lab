@@ -28,6 +28,7 @@
     "aws-sdk": "^2.1565.0",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "hubspot": "^2.3.14",
     "lodash": "^4.17.21",
@@ -40,6 +41,7 @@
     "react-dropzone": "^14.3.8",
     "react-quill": "^2.0.0",
     "stripe": "^14.17.0",
+    "tailwind-merge": "^3.3.1",
     "unsplash-js": "^7.0.19"
   },
   "devDependencies": {
