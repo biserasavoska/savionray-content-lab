@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { ContentType, DraftStatus } from '@prisma/client';
+import { CONTENT_TYPE, DRAFT_STATUS } from '@/lib/utils/enum-constants';
+import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context';
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,9 @@ export async function POST(request: Request) {
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
+
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext();
 
     const body = await request.json();
     console.log('Creating content draft:', body);
@@ -21,13 +25,16 @@ export async function POST(request: Request) {
     }
 
     // Validate status is a valid DraftStatus
-    if (!Object.values(DraftStatus).includes(status)) {
-      return new NextResponse(`Invalid status. Expected one of: ${Object.values(DraftStatus).join(', ')}`, { status: 400 });
+    if (!Object.values(DRAFT_STATUS).includes(status)) {
+      return new NextResponse(`Invalid status. Expected one of: ${Object.values(DRAFT_STATUS).join(', ')}`, { status: 400 });
     }
 
-    // Validate the idea exists and belongs to the user
+    // Validate the idea exists and belongs to the user's organization
     const idea = await prisma.idea.findUnique({
-      where: { id: ideaId },
+      where: { 
+        id: ideaId,
+        organizationId: orgContext.organizationId // Add organization filter
+      },
       select: { id: true, createdById: true }
     });
 
@@ -38,12 +45,13 @@ export async function POST(request: Request) {
     // Create the content draft
     const contentDraft = await prisma.contentDraft.create({
       data: {
-        status: status as DraftStatus,
-        contentType: contentType as ContentType,
+        status: status as any,
+        contentType: contentType as any,
         body: contentBody,
         metadata: metadata || {},
-        idea: { connect: { id: ideaId } },
-        createdBy: { connect: { id: session.user.id } }
+        ideaId: ideaId,
+        createdById: session.user.id,
+        organizationId: orgContext.organizationId // Add organization isolation
       },
       include: {
         createdBy: {

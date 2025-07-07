@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { Prisma } from '@prisma/client'
+
+import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context'
 
 type ContentType = 'NEWSLETTER' | 'BLOG_POST' | 'SOCIAL_MEDIA_POST' | 'WEBSITE_COPY' | 'EMAIL_CAMPAIGN'
 type DeliveryPlanStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
@@ -32,12 +33,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext();
+
     const data = (await request.json()) as CreateDeliveryPlanData
 
     // Convert targetMonth string (YYYY-MM) to a Date object
     const targetMonthDate = new Date(data.targetMonth + '-01')
 
-    const plan = await prisma.$transaction(async (tx) => {
+    const plan = await prisma.$transaction(async (tx: any) => {
       const createdPlan = await tx.contentDeliveryPlan.create({
         data: {
           name: data.name,
@@ -47,6 +51,7 @@ export async function POST(request: Request) {
           targetMonth: targetMonthDate,
           status: 'DRAFT' as DeliveryPlanStatus,
           clientId: session.user.id,
+          organizationId: orgContext.organizationId, // Add organization isolation
         },
       })
 
@@ -61,6 +66,7 @@ export async function POST(request: Request) {
               notes: item.notes,
               status: 'PENDING' as DeliveryItemStatus,
               planId: createdPlan.id,
+              organizationId: orgContext.organizationId, // Add organization isolation
             },
           })
         )
@@ -90,11 +96,18 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext();
+
     const url = new URL(request.url)
     const month = url.searchParams.get('month') // Format: YYYY-MM
     const showArchived = url.searchParams.get('showArchived') === 'true'
 
-    let where: Prisma.ContentDeliveryPlanWhereInput = {
+    // Create organization-aware filter
+    const orgFilter = createOrgFilter(orgContext.organizationId);
+
+    let where: any = {
+      ...orgFilter, // Add organization filter
       clientId: session.user.id,
     }
 

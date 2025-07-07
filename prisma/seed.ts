@@ -1,53 +1,128 @@
-import { PrismaClient, UserRole, ContentType, IdeaStatus, DraftStatus } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
+import { USER_ROLE, CONTENT_TYPE, IDEA_STATUS, DRAFT_STATUS } from '../src/lib/utils/enum-constants'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  // Delete all existing data
-  await prisma.feedback.deleteMany()
-  await prisma.contentDraft.deleteMany()
-  await prisma.idea.deleteMany()
-  await prisma.contentDeliveryItem.deleteMany()
-  await prisma.contentDeliveryPlan.deleteMany()
-  await prisma.user.deleteMany()
+  // Create default organization
+  const defaultOrg = await prisma.organization.upsert({
+    where: { id: 'default-org-id' },
+    update: {},
+    create: {
+      id: 'default-org-id',
+      name: 'SavionRay',
+      slug: 'savionray',
+      subscriptionPlan: 'PROFESSIONAL',
+      subscriptionStatus: 'ACTIVE',
+      settings: {
+        timezone: 'UTC',
+        language: 'en',
+        features: ['content_creation', 'analytics', 'team_collaboration']
+      }
+    },
+  })
 
   // Create test users
-  const creative = await prisma.user.create({
-    data: {
+  const creative = await prisma.user.upsert({
+    where: { email: 'creative@savionray.com' },
+    update: {},
+    create: {
       name: 'Creative User',
       email: 'creative@savionray.com',
-      role: UserRole.CREATIVE,
+      role: USER_ROLE.CREATIVE,
       password: await bcrypt.hash('password123', 10),
     },
   })
 
-  const client = await prisma.user.create({
-    data: {
+  const client = await prisma.user.upsert({
+    where: { email: 'client@savionray.com' },
+    update: {},
+    create: {
       name: 'Client User',
       email: 'client@savionray.com',
-      role: UserRole.CLIENT,
+      role: USER_ROLE.CLIENT,
       password: await bcrypt.hash('password123', 10),
     },
   })
 
-  const admin = await prisma.user.create({
-    data: {
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@savionray.com' },
+    update: {},
+    create: {
       name: 'Admin User',
       email: 'admin@savionray.com',
-      role: UserRole.ADMIN,
+      role: USER_ROLE.ADMIN,
       password: await bcrypt.hash('password123', 10),
     },
   })
 
-  const bisera = await prisma.user.create({
-    data: {
+  const bisera = await prisma.user.upsert({
+    where: { email: 'bisera@savionray.com' },
+    update: {},
+    create: {
       name: 'Bisera',
       email: 'bisera@savionray.com',
-      role: UserRole.ADMIN,
+      role: USER_ROLE.ADMIN,
       password: await bcrypt.hash('SavionRay2025!', 10),
     },
   })
+
+  // Create organization memberships for all users
+  await Promise.all([
+    prisma.organizationUser.upsert({
+      where: { id: `org-user-${creative.id}` },
+      update: {},
+      create: {
+        id: `org-user-${creative.id}`,
+        organizationId: defaultOrg.id,
+        userId: creative.id,
+        role: 'MEMBER',
+        permissions: ['CREATE_IDEAS', 'CREATE_DRAFTS', 'VIEW_CONTENT'],
+        isActive: true,
+        joinedAt: new Date(),
+      },
+    }),
+    prisma.organizationUser.upsert({
+      where: { id: `org-user-${client.id}` },
+      update: {},
+      create: {
+        id: `org-user-${client.id}`,
+        organizationId: defaultOrg.id,
+        userId: client.id,
+        role: 'ADMIN',
+        permissions: ['APPROVE_IDEAS', 'VIEW_ALL_CONTENT', 'MANAGE_PLANS'],
+        isActive: true,
+        joinedAt: new Date(),
+      },
+    }),
+    prisma.organizationUser.upsert({
+      where: { id: `org-user-${admin.id}` },
+      update: {},
+      create: {
+        id: `org-user-${admin.id}`,
+        organizationId: defaultOrg.id,
+        userId: admin.id,
+        role: 'OWNER',
+        permissions: ['ALL'],
+        isActive: true,
+        joinedAt: new Date(),
+      },
+    }),
+    prisma.organizationUser.upsert({
+      where: { id: `org-user-${bisera.id}` },
+      update: {},
+      create: {
+        id: `org-user-${bisera.id}`,
+        organizationId: defaultOrg.id,
+        userId: bisera.id,
+        role: 'OWNER',
+        permissions: ['ALL'],
+        isActive: true,
+        joinedAt: new Date(),
+      },
+    }),
+  ])
 
   // Create some approved ideas ready for content creation
   const approvedIdeas = await Promise.all([
@@ -55,30 +130,33 @@ async function main() {
       data: {
         title: 'Summer Marketing Campaign',
         description: 'Create engaging social media content highlighting our summer products and special offers. Focus on outdoor activities and seasonal trends.',
-        status: IdeaStatus.APPROVED,
-        contentType: ContentType.SOCIAL_MEDIA_POST,
+        status: IDEA_STATUS.APPROVED,
+        contentType: CONTENT_TYPE.SOCIAL_MEDIA_POST,
         publishingDateTime: new Date('2024-07-01'),
         createdById: creative.id,
+        organizationId: defaultOrg.id,
       },
     }),
     prisma.idea.create({
       data: {
         title: 'Industry Insights Newsletter',
         description: 'Monthly newsletter covering the latest trends in digital marketing, featuring expert interviews and case studies.',
-        status: IdeaStatus.APPROVED,
-        contentType: ContentType.NEWSLETTER,
+        status: IDEA_STATUS.APPROVED,
+        contentType: CONTENT_TYPE.NEWSLETTER,
         publishingDateTime: new Date('2024-07-15'),
         createdById: creative.id,
+        organizationId: defaultOrg.id,
       },
     }),
     prisma.idea.create({
       data: {
         title: 'Product Launch Blog Series',
         description: 'A series of blog posts introducing our new product line, including features, benefits, and customer success stories.',
-        status: IdeaStatus.APPROVED,
-        contentType: ContentType.BLOG_POST,
+        status: IDEA_STATUS.APPROVED,
+        contentType: CONTENT_TYPE.BLOG_POST,
         publishingDateTime: new Date('2024-07-10'),
         createdById: creative.id,
+        organizationId: defaultOrg.id,
       },
     }),
   ])
@@ -88,10 +166,11 @@ async function main() {
     prisma.contentDraft.create({
       data: {
         body: '🌞 Summer is here! Discover our amazing summer collection with exclusive offers that will make your season unforgettable. From beach essentials to outdoor adventures, we\'ve got everything you need to make the most of the sunshine! ☀️ #SummerVibes #SavionRay #SummerCollection',
-        status: DraftStatus.AWAITING_FEEDBACK,
-        contentType: ContentType.SOCIAL_MEDIA_POST,
+        status: DRAFT_STATUS.AWAITING_FEEDBACK,
+        contentType: CONTENT_TYPE.SOCIAL_MEDIA_POST,
         createdById: creative.id,
         ideaId: approvedIdeas[0].id,
+        organizationId: defaultOrg.id,
         metadata: {
           platform: 'Instagram',
           hashtags: ['#SummerVibes', '#SavionRay', '#SummerCollection'],
@@ -115,10 +194,11 @@ We sat down with Sarah Johnson, a leading digital marketing strategist, to discu
 Learn how Company XYZ increased their conversion rate by 150% using our innovative marketing strategies.
 
 Stay tuned for more insights next month!`,
-        status: DraftStatus.AWAITING_FEEDBACK,
-        contentType: ContentType.NEWSLETTER,
+        status: DRAFT_STATUS.AWAITING_FEEDBACK,
+        contentType: CONTENT_TYPE.NEWSLETTER,
         createdById: creative.id,
         ideaId: approvedIdeas[1].id,
+        organizationId: defaultOrg.id,
         metadata: {
           subject: 'Industry Insights Newsletter - July 2024',
           targetAudience: 'Marketing professionals',
@@ -141,10 +221,11 @@ Our new products feature cutting-edge technology that addresses the most pressin
 Hear from early adopters who have already experienced the benefits of our new product line. Their stories demonstrate the real-world impact of our innovations.
 
 Stay tuned for more details and exclusive launch offers!`,
-        status: DraftStatus.AWAITING_FEEDBACK,
-        contentType: ContentType.BLOG_POST,
+        status: DRAFT_STATUS.AWAITING_FEEDBACK,
+        contentType: CONTENT_TYPE.BLOG_POST,
         createdById: creative.id,
         ideaId: approvedIdeas[2].id,
+        organizationId: defaultOrg.id,
         metadata: {
           seoTitle: 'Revolutionary Product Line Launch - Transform Your Business',
           keywords: ['product launch', 'innovation', 'business transformation'],
@@ -163,10 +244,11 @@ Stay tuned for more details and exclusive launch offers!`,
       endDate: new Date('2024-09-30'),
       targetMonth: new Date('2024-07-01'), // First month of the quarter
       clientId: client.id,
+      organizationId: defaultOrg.id,
       items: {
         create: [
           {
-            contentType: ContentType.BLOG_POST,
+            contentType: CONTENT_TYPE.BLOG_POST,
             quantity: 4,
             dueDate: new Date('2024-07-15'),
             priority: 1,
@@ -176,15 +258,16 @@ Stay tuned for more details and exclusive launch offers!`,
                 {
                   title: 'Summer Marketing Trends',
                   description: 'A comprehensive guide to summer marketing strategies',
-                  status: IdeaStatus.PENDING,
+                  status: IDEA_STATUS.PENDING,
                   createdById: creative.id,
-                  contentType: ContentType.BLOG_POST,
+                  contentType: CONTENT_TYPE.BLOG_POST,
+                  organizationId: defaultOrg.id,
                 },
               ],
             },
           },
           {
-            contentType: ContentType.SOCIAL_MEDIA_POST,
+            contentType: CONTENT_TYPE.SOCIAL_MEDIA_POST,
             quantity: 12,
             dueDate: new Date('2024-07-10'),
             priority: 2,
@@ -194,15 +277,16 @@ Stay tuned for more details and exclusive launch offers!`,
                 {
                   title: 'Instagram Summer Campaign',
                   description: 'Series of Instagram posts highlighting summer products',
-                  status: IdeaStatus.PENDING,
+                  status: IDEA_STATUS.PENDING,
                   createdById: creative.id,
-                  contentType: ContentType.SOCIAL_MEDIA_POST,
+                  contentType: CONTENT_TYPE.SOCIAL_MEDIA_POST,
+                  organizationId: defaultOrg.id,
                 },
               ],
             },
           },
           {
-            contentType: ContentType.NEWSLETTER,
+            contentType: CONTENT_TYPE.NEWSLETTER,
             quantity: 2,
             dueDate: new Date('2024-07-20'),
             priority: 3,
@@ -212,9 +296,10 @@ Stay tuned for more details and exclusive launch offers!`,
                 {
                   title: 'July Newsletter: Summer Edition',
                   description: 'Mid-summer newsletter featuring seasonal content',
-                  status: IdeaStatus.PENDING,
+                  status: IDEA_STATUS.PENDING,
                   createdById: creative.id,
-                  contentType: ContentType.NEWSLETTER,
+                  contentType: CONTENT_TYPE.NEWSLETTER,
+                  organizationId: defaultOrg.id,
                 },
               ],
             },

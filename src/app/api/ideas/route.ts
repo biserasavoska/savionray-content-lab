@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin, isClient } from '@/lib/auth'
-import { Prisma, IdeaStatus } from '@prisma/client'
+
 import { IDEA_STATUS, isValidIdeaStatus } from '@/lib/utils/enum-utils'
 import { 
   handleApiError, 
@@ -16,6 +16,7 @@ import {
 } from '@/lib/utils/error-handling'
 import { withLogging, withDbLogging } from '@/lib/middleware/logger'
 import { logger } from '@/lib/utils/logger'
+import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context'
 
 export async function POST(req: NextRequest) {
   const requestId = generateRequestId()
@@ -34,6 +35,9 @@ export async function POST(req: NextRequest) {
       const { status, body } = await handleApiError(error, requestId)
       return NextResponse.json(body, { status })
     }
+
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext()
 
     const { title, description, publishingDateTime, savedForLater, mediaType, contentType } = await req.json()
 
@@ -79,6 +83,7 @@ export async function POST(req: NextRequest) {
           mediaType: mediaType || null,
           contentType,
           createdById: session.user.id,
+          organizationId: orgContext.organizationId, // Add organization isolation
         },
         include: {
           createdBy: {
@@ -115,6 +120,10 @@ export async function GET(req: NextRequest) {
       const { status, body } = await handleApiError(error, requestId)
       return NextResponse.json(body, { status })
     }
+
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext()
+
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
     const limit = parseInt(url.searchParams.get('limit') || '10')
@@ -124,15 +133,22 @@ export async function GET(req: NextRequest) {
     // Use centralized enum constants instead of hardcoded strings
     const statusFilter = status && isValidIdeaStatus(status) ? { status: { equals: status } } : undefined;
 
+    // Create organization-aware filter
+    const orgFilter = createOrgFilter(orgContext.organizationId)
+    const whereClause = {
+      ...orgFilter,
+      ...statusFilter
+    }
+
     const countIdeas = withDbLogging('count', 'Idea', async () => {
       return await prisma.idea.count({
-        where: statusFilter,
+        where: whereClause,
       })
     })
 
     const findIdeas = withDbLogging('findMany', 'Idea', async () => {
       return await prisma.idea.findMany({
-        where: statusFilter,
+        where: whereClause,
         orderBy: {
           createdAt: 'desc',
         },

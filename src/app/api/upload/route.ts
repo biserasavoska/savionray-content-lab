@@ -4,6 +4,7 @@ import { S3Client } from '@aws-sdk/client-s3'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION!,
@@ -21,6 +22,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext();
+
     const formData = await req.formData()
     const file = formData.get('file') as File
     const contentDraftId = formData.get('contentDraftId') as string
@@ -85,6 +89,7 @@ export async function POST(req: NextRequest) {
         size: file.size,
         uploadedById: session.user.id,
         contentDraftId,
+        organizationId: orgContext.organizationId,
       },
     })
 

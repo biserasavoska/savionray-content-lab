@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getOrganizationContext, requireOrganizationContext } from '@/lib/utils/organization-context'
 import ScheduledPostsList from './ScheduledPostsList'
 
 export default async function ScheduledPostsPage() {
@@ -16,9 +17,15 @@ export default async function ScheduledPostsPage() {
     redirect('/dashboard')
   }
 
+  const orgContext = await requireOrganizationContext()
+  if (!orgContext) {
+    redirect('/auth/signin')
+  }
+
   const scheduledPosts = await prisma.scheduledPost.findMany({
     where: {
       contentDraft: {
+        organizationId: orgContext.organizationId,
         ...(isCreative(session) ? { createdById: session.user.id } : {}),
       },
     },

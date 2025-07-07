@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin } from '@/lib/auth'
-import { ContentType } from '@prisma/client'
+import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
+import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context'
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -27,17 +28,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Idea ID is required' }, { status: 400 })
     }
 
-    if (!contentType || !Object.values(ContentType).includes(contentType)) {
+    if (!contentType || !Object.values(CONTENT_TYPE).includes(contentType)) {
       return NextResponse.json({ error: 'Valid content type is required' }, { status: 400 })
     }
+
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext();
 
     const draft = await prisma.contentDraft.create({
       data: {
         body,
         ideaId,
-        contentType: contentType as ContentType,
+        contentType: contentType as any,
         status: 'DRAFT',
         createdById: session.user.id,
+        organizationId: orgContext.organizationId,
         metadata: metadata || {},
       },
       include: {
@@ -71,9 +76,13 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * limit
 
   try {
+    // Get organization context for multi-tenant isolation
+    const orgContext = await requireOrganizationContext();
+    
     const where = {
       ...(ideaId ? { ideaId } : {}),
       ...(isCreative(session) ? { createdById: session.user.id } : {}),
+      ...createOrgFilter(orgContext.organizationId), // Add organization filter
     }
 
     const [drafts, total] = await Promise.all([

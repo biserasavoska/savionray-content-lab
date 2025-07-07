@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { isAdmin, isClient, isCreative } from '@/lib/auth'
 import Image from 'next/image'
+import OrganizationSwitcher from './OrganizationSwitcher'
 
 export default function Navigation() {
   const { data: session } = useSession()
@@ -35,6 +36,17 @@ export default function Navigation() {
 
             {/* Right side navigation items */}
             <div className="flex items-center space-x-4">
+              {/* Organization Switcher */}
+              {session && (
+                <OrganizationSwitcher 
+                  currentOrganizationId="default" // This will be updated with real context
+                  onOrganizationChange={(orgId) => {
+                    // Handle organization change - will implement in Phase 4
+                    console.log('Organization changed to:', orgId)
+                  }}
+                />
+              )}
+
               {/* Language Toggle */}
               <button className="p-2 text-gray-400 hover:text-gray-500">
                 <span className="sr-only">Toggle language</span>
@@ -66,6 +78,14 @@ export default function Navigation() {
                     >
                       Profile Settings
                     </Link>
+                    {isAdmin(session) && (
+                      <Link
+                        href="/organization/settings"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Organization Settings
+                      </Link>
+                    )}
                     <button
                       onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -109,6 +129,18 @@ export default function Navigation() {
                 className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/ready-content')}`}
               >
                 Ready Content
+              </Link>
+              <Link
+                href="/scheduled-posts"
+                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/scheduled-posts')}`}
+              >
+                Scheduled Posts
+              </Link>
+              <Link
+                href="/delivery-plans"
+                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/delivery-plans')}`}
+              >
+                Delivery Plans
               </Link>
               <Link
                 href="/published"
