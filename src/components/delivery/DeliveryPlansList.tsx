@@ -1,56 +1,64 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ContentDeliveryPlan, ContentDeliveryItem, DeliveryPlanStatus, DeliveryItemStatus } from '@prisma/client'
 import { formatDistanceToNow, format } from 'date-fns'
 import { useState } from 'react'
+import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
+import Badge from '@/components/ui/common/Badge'
+import Button from '@/components/ui/common/Button'
 
 interface DeliveryPlansListProps {
-  plans: (ContentDeliveryPlan & {
-    items: (ContentDeliveryItem & {
-      ideas: {
-        contentDrafts: {
+  plans: Array<{
+    id: string
+    name: string
+    description?: string | null
+    startDate: string | Date
+    endDate: string | Date
+    status: string
+    createdAt: string | Date
+    updatedAt: string | Date
+    clientId: string
+    targetMonth: string | Date
+    isArchived: boolean
+    items: Array<{
+      id: string
+      contentType: string
+      quantity: number
+      dueDate: string | Date
+      status: string
+      priority: number
+      notes?: string | null
+      createdAt: string | Date
+      updatedAt: string | Date
+      planId: string
+      ideas: Array<{
+        contentDrafts: Array<{
           status: string
-        }[]
-      }[]
-    })[]
+        }>
+      }>
+    }>
     client: {
       name: string | null
       email: string | null
     }
-  })[]
+  }>
 }
 
-const STATUS_COLORS = {
-  DRAFT: { bg: 'bg-gray-100', text: 'text-gray-800' },
-  ACTIVE: { bg: 'bg-green-100', text: 'text-green-800' },
-  COMPLETED: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  CANCELLED: { bg: 'bg-red-100', text: 'text-red-800' },
-  ARCHIVED: { bg: 'bg-purple-100', text: 'text-purple-800' },
+const STATUS_BADGE_VARIANT = {
+  DRAFT: 'default',
+  ACTIVE: 'success',
+  COMPLETED: 'info',
+  CANCELLED: 'error',
+  ARCHIVED: 'warning',
 } as const
 
-const ITEM_STATUS_COLORS: Record<DeliveryItemStatus, { bg: string; text: string }> = {
-  PENDING: {
-    bg: 'bg-gray-100',
-    text: 'text-gray-800',
-  },
-  IN_PROGRESS: {
-    bg: 'bg-yellow-100',
-    text: 'text-yellow-800',
-  },
-  REVIEW: {
-    bg: 'bg-blue-100',
-    text: 'text-blue-800',
-  },
-  APPROVED: {
-    bg: 'bg-green-100',
-    text: 'text-green-800',
-  },
-  DELIVERED: {
-    bg: 'bg-purple-100',
-    text: 'text-purple-800',
-  },
-}
+const ITEM_STATUS_BADGE_VARIANT = {
+  PENDING: 'default',
+  IN_PROGRESS: 'warning',
+  REVIEW: 'info',
+  APPROVED: 'success',
+  DELIVERED: 'info',
+} as const
 
 export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
   const router = useRouter()
@@ -153,7 +161,7 @@ export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
 
       <div className="space-y-6">
         {filteredPlans.map((plan) => {
-          const statusColor = STATUS_COLORS[plan.status]
+          const badgeVariant = STATUS_BADGE_VARIANT[plan.status as keyof typeof STATUS_BADGE_VARIANT] || 'default'
           const totalItems = plan.items.length
           const completedItems = plan.items.filter(
             (item) => item.status === 'DELIVERED'
@@ -161,31 +169,31 @@ export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
           const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
 
           return (
-            <div key={plan.id} className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="px-4 py-5 sm:px-6">
+            <Card key={plan.id} className="overflow-hidden">
+              <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900">{plan.name}</h3>
+                    <CardTitle as="h3" className="text-lg">{plan.name}</CardTitle>
                     <p className="mt-1 text-sm text-gray-500">
                       {plan.client.name || plan.client.email}
                     </p>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor.bg} ${statusColor.text}`}>
-                      {plan.status}
-                    </span>
-                    <button
+                    <Badge variant={badgeVariant}>{plan.status}</Badge>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleArchiveToggle(plan.id, !plan.isArchived)
                       }}
-                      className={`text-sm text-gray-500 hover:text-gray-700 ${plan.isArchived ? 'bg-yellow-100' : 'bg-gray-100'}`}
+                      className={plan.isArchived ? 'bg-yellow-100' : 'bg-gray-100'}
                     >
                       {plan.isArchived ? 'Unarchive' : 'Archive'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
-
                 <div className="mt-4">
                   <div className="flex justify-between text-sm text-gray-500">
                     <span>Progress ({completedItems}/{totalItems} items)</span>
@@ -200,7 +208,6 @@ export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
                     </div>
                   </div>
                 </div>
-
                 <div className="mt-4 text-sm text-gray-500">
                   <div className="flex space-x-4">
                     <span>
@@ -214,80 +221,75 @@ export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
                     </span>
                   </div>
                 </div>
-              </div>
-
-              <div className="border-t border-gray-200">
-                <div className="px-4 py-5 sm:px-6">
-                  <h4 className="text-sm font-medium text-gray-900">Delivery Items</h4>
-                  <div className="mt-2 divide-y divide-gray-200">
-                    {plan.items.map((item) => {
-                      const itemStatusColor = ITEM_STATUS_COLORS[item.status]
-                      const completedIdeas = item.ideas.filter(idea => 
-                        idea.contentDrafts[0]?.status === 'APPROVED'
-                      ).length
-                      const itemProgress = item.quantity > 0 ? (completedIdeas / item.quantity) * 100 : 0
-
-                      return (
-                        <div key={item.id} className="py-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <span className="text-sm font-medium text-gray-900">
-                                {item.contentType}
-                              </span>
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${itemStatusColor.bg} ${itemStatusColor.text}`}
-                              >
-                                {item.status}
-                              </span>
-                            </div>
-                            <span className="text-sm text-gray-500">
-                              Due {format(new Date(item.dueDate), 'MMM d, yyyy')}
+              </CardHeader>
+              <CardContent>
+                <h4 className="text-sm font-medium text-gray-900">Delivery Items</h4>
+                <div className="mt-2 divide-y divide-gray-200">
+                  {plan.items.map((item) => {
+                    const itemBadgeVariant = ITEM_STATUS_BADGE_VARIANT[item.status as keyof typeof ITEM_STATUS_BADGE_VARIANT] || 'default'
+                    const completedIdeas = item.ideas.filter((idea) => 
+                      idea.contentDrafts[0]?.status === 'APPROVED'
+                    ).length
+                    const itemProgress = item.quantity > 0 ? (completedIdeas / item.quantity) * 100 : 0
+                    return (
+                      <div key={item.id} className="py-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-sm font-medium text-gray-900">
+                              {item.contentType}
                             </span>
+                            <Badge variant={itemBadgeVariant}>{item.status}</Badge>
                           </div>
-                          <div className="mt-2">
-                            <div className="flex justify-between text-sm text-gray-500">
-                              <span>Progress ({completedIdeas}/{item.quantity})</span>
-                              <span>{Math.round(itemProgress)}%</span>
-                            </div>
-                            <div className="mt-1 relative">
-                              <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
-                                <div
-                                  style={{ width: `${itemProgress}%` }}
-                                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
-                                />
-                              </div>
+                          <span className="text-sm text-gray-500">
+                            Due {format(new Date(item.dueDate), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                        <div className="mt-2">
+                          <div className="flex justify-between text-sm text-gray-500">
+                            <span>Progress ({completedIdeas}/{item.quantity})</span>
+                            <span>{Math.round(itemProgress)}%</span>
+                          </div>
+                          <div className="mt-1 relative">
+                            <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                              <div
+                                style={{ width: `${itemProgress}%` }}
+                                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
+                              />
                             </div>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
+                      </div>
+                    )
+                  })}
                 </div>
-              </div>
-
-              <div className="bg-gray-50 px-4 py-4 sm:px-6">
+              </CardContent>
+              <CardFooter>
                 <div className="flex space-x-3">
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
                       handlePlanClick(plan.id)
                     }}
-                    className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                   >
                     View Details
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
                       router.push(`/delivery-plans/${plan.id}/edit`)
                     }}
-                    className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                   >
                     Edit Plan
-                  </button>
+                  </Button>
                 </div>
-              </div>
-            </div>
+              </CardFooter>
+            </Card>
           )
         })}
       </div>

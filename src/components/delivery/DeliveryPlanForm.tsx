@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import FormField, { Input, Textarea, Select } from '@/components/ui/forms/FormField'
+import Button from '@/components/ui/common/Button'
+import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
 
 const ContentType = {
   NEWSLETTER: 'NEWSLETTER',
@@ -89,195 +92,162 @@ export default function DeliveryPlanForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="space-y-6 bg-white p-6 rounded-lg shadow">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Plan Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
-          <textarea
-            name="description"
-            id="description"
-            rows={3}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="targetMonth" className="block text-sm font-medium text-gray-700">
-            Target Month
-          </label>
-          <input
-            type="month"
-            name="targetMonth"
-            id="targetMonth"
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            Select the month this content is intended for
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-              Content Delivery Start
-            </label>
-            <input
-              type="date"
-              name="startDate"
-              id="startDate"
+    <Card>
+      <form onSubmit={handleSubmit}>
+        <CardHeader>
+          <CardTitle>Create Delivery Plan</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          <FormField label="Plan Name" required>
+            <Input
+              type="text"
+              name="name"
+              id="name"
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+              placeholder="Enter plan name"
+            />
+          </FormField>
+
+          <FormField label="Description">
+            <Textarea
+              name="description"
+              id="description"
+              rows={3}
+              placeholder="Describe the plan"
+            />
+          </FormField>
+
+          <FormField label="Target Month" required>
+            <Input
+              type="month"
+              name="targetMonth"
+              id="targetMonth"
+              required
             />
             <p className="mt-1 text-sm text-gray-500">
-              Usually 5-10 days before the first item is published
+              Select the month this content is intended for
             </p>
+          </FormField>
+
+          <div className="grid grid-cols-2 gap-6">
+            <FormField label="Content Delivery Start" required>
+              <Input
+                type="date"
+                name="startDate"
+                id="startDate"
+                required
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Usually 5-10 days before the first item is published
+              </p>
+            </FormField>
+            <FormField label="Content Delivery End" required>
+              <Input
+                type="date"
+                name="endDate"
+                id="endDate"
+                required
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                When all content for the month should be delivered
+              </p>
+            </FormField>
+          </div>
+        </CardContent>
+
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">Delivery Items</h3>
+            <Button
+              type="button"
+              size="sm"
+              onClick={addItem}
+            >
+              Add Item
+            </Button>
           </div>
 
-          <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-              Content Delivery End
-            </label>
-            <input
-              type="date"
-              name="endDate"
-              id="endDate"
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-            />
-            <p className="mt-1 text-sm text-gray-500">
-              When all content for the month should be delivered
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-6 bg-white p-6 rounded-lg shadow">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-gray-900">Delivery Items</h3>
-          <button
-            type="button"
-            onClick={addItem}
-            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700"
-          >
-            Add Item
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {items.map((item, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
-                <button
-                  type="button"
-                  onClick={() => removeItem(index)}
-                  className="text-sm text-red-600 hover:text-red-500"
-                >
-                  Remove
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Content Type</label>
-                  <select
-                    value={item.contentType}
-                    onChange={(e) => updateItem(index, 'contentType', e.target.value as ContentType)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+          <div className="space-y-4">
+            {items.map((item, index) => (
+              <Card key={index} className="border border-gray-200 rounded-lg p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    onClick={() => removeItem(index)}
                   >
-                    {Object.values(ContentType).map((type) => (
-                      <option key={type} value={type}>
-                        {type.replace(/_/g, ' ')}
-                      </option>
-                    ))}
-                  </select>
+                    Remove
+                  </Button>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Quantity</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField label="Content Type" required>
+                    <Select
+                      options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
+                      value={item.contentType}
+                      onChange={(e) => updateItem(index, 'contentType', e.target.value as ContentType)}
+                    />
+                  </FormField>
+                  <FormField label="Quantity" required>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
+                    />
+                  </FormField>
+                  <FormField label="Due Date" required>
+                    <Input
+                      type="date"
+                      value={item.dueDate}
+                      onChange={(e) => updateItem(index, 'dueDate', e.target.value)}
+                    />
+                  </FormField>
+                  <FormField label="Priority" required>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.priority}
+                      onChange={(e) => updateItem(index, 'priority', parseInt(e.target.value))}
+                    />
+                  </FormField>
+                </div>
+                <FormField label="Notes">
+                  <Textarea
+                    value={item.notes}
+                    onChange={(e) => updateItem(index, 'notes', e.target.value)}
+                    rows={2}
                   />
-                </div>
+                </FormField>
+              </Card>
+            ))}
+            {items.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No items yet. Click "Add Item" to create your first delivery item.
+              </p>
+            )}
+          </div>
+        </CardContent>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Due Date</label>
-                  <input
-                    type="date"
-                    value={item.dueDate}
-                    onChange={(e) => updateItem(index, 'dueDate', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Priority</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.priority}
-                    onChange={(e) => updateItem(index, 'priority', parseInt(e.target.value))}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Notes</label>
-                <textarea
-                  value={item.notes}
-                  onChange={(e) => updateItem(index, 'notes', e.target.value)}
-                  rows={2}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                />
-              </div>
-            </div>
-          ))}
-
-          {items.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-4">
-              No items yet. Click "Add Item" to create your first delivery item.
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isSubmitting || items.length === 0}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
-        >
-          {isSubmitting ? 'Creating...' : 'Create Plan'}
-        </button>
-      </div>
-    </form>
+        <CardFooter>
+          <div className="flex justify-end space-x-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || items.length === 0}
+            >
+              {isSubmitting ? 'Creating...' : 'Create Plan'}
+            </Button>
+          </div>
+        </CardFooter>
+      </form>
+    </Card>
   )
 } 

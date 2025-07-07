@@ -2,15 +2,43 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import { Idea, ContentDraft, ContentType, IdeaStatus, User } from '@prisma/client'
+import type { Idea, ContentDraft, User } from '@/types/content'
+import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
-type CreateContentItem = Idea & {
-  createdBy: Pick<User, 'name' | 'email'>
-  contentDrafts: (ContentDraft & {
-    createdBy: Pick<User, 'name' | 'email'>
-  })[]
+type CreateContentItem = {
+  id: string
+  title: string
+  description: string
+  status: string
+  createdAt: Date
+  updatedAt: Date
+  createdById: string
+  mediaType: string | null
+  publishingDateTime: Date | null
+  savedForLater: boolean
+  contentType: string | null
+  deliveryItemId: string | null
+  createdBy: {
+    name: string | null
+    email: string | null
+  }
+  contentDrafts: Array<{
+    id: string
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    createdById: string
+    body: string
+    metadata: any
+    ideaId: string
+    contentType: string
+    createdBy: {
+      name: string | null
+      email: string | null
+    }
+  }>
 }
 
 interface CreateContentListProps {
@@ -19,7 +47,7 @@ interface CreateContentListProps {
 
 export default function CreateContentList({ items }: CreateContentListProps) {
   const { data: session } = useSession()
-  const [selectedType, setSelectedType] = useState<ContentType | 'ALL'>('ALL')
+  const [selectedType, setSelectedType] = useState<string>('ALL')
   const [selectedMonth, setSelectedMonth] = useState<string>('')
 
   const filteredItems = items.filter(item => {
@@ -48,11 +76,11 @@ export default function CreateContentList({ items }: CreateContentListProps) {
         <div className="flex items-center space-x-4">
           <select
             value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value as ContentType | 'ALL')}
+            onChange={(e) => setSelectedType(e.target.value)}
             className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
           >
             <option value="ALL">All Types</option>
-            {Object.values(ContentType).map(type => (
+            {Object.values(CONTENT_TYPE).map(type => (
               <option key={type} value={type}>
                 {type.replace(/_/g, ' ')}
               </option>

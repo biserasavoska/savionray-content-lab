@@ -3,14 +3,31 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { ContentDraft, Idea } from '@prisma/client'
+import type { ContentDraft, Idea } from '@/types/content'
 import RichTextEditor from '../editor/RichTextEditor'
 import { debounce } from 'lodash'
+import FormField, { Select } from '@/components/ui/forms/FormField'
+import Button from '@/components/ui/common/Button'
+import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
+import Badge from '@/components/ui/common/Badge'
 
 type ContentType = 'social-media' | 'blog' | 'newsletter'
 
 interface ContentDraftFormProps {
-  idea: Idea
+  idea: {
+    id: string
+    title: string
+    description: string
+    status: string
+    publishingDateTime: Date | null
+    savedForLater: boolean
+    mediaType: string | null
+    createdAt: Date
+    updatedAt: Date
+    createdById: string
+    contentType: string | null
+    deliveryItemId?: string | null
+  }
   draft?: ContentDraft
   onSuccess?: () => void
 }
@@ -22,6 +39,12 @@ const CHARACTER_LIMITS: Record<ContentType, number | undefined> = {
 }
 
 const AUTO_SAVE_DELAY = 2000 // 2 seconds
+
+const contentTypeOptions = [
+  { value: 'social-media', label: 'Social Media Post' },
+  { value: 'blog', label: 'Blog Article' },
+  { value: 'newsletter', label: 'Newsletter' },
+]
 
 export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraftFormProps) {
   const router = useRouter()
@@ -121,78 +144,76 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">{error}</h3>
-            </div>
-          </div>
-        </div>
-      )}
+  const getSaveStatusBadge = () => {
+    switch (saveStatus) {
+      case 'saving':
+        return <Badge variant="warning">Saving...</Badge>
+      case 'saved':
+        return <Badge variant="success">All changes saved</Badge>
+      case 'error':
+        return <Badge variant="error">Failed to save changes</Badge>
+      default:
+        return null
+    }
+  }
 
-      <div className="flex justify-between items-center">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700">
-            Content Type
-          </label>
-          <div className="mt-1">
-            <select
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>{draft ? 'Edit Draft' : 'Create New Draft'}</CardTitle>
+          {getSaveStatusBadge()}
+        </div>
+      </CardHeader>
+
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-6">
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <FormField label="Content Type">
+            <Select
+              options={contentTypeOptions}
               value={contentType}
               onChange={(e) => setContentType(e.target.value as ContentType)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+            />
+          </FormField>
+
+          <FormField label="Content">
+            <RichTextEditor
+              content={formData.body}
+              onChange={(content) => setFormData((prev) => ({ ...prev, body: content }))}
+              maxLength={CHARACTER_LIMITS[contentType]}
+              placeholder="Write your content here..."
+            />
+          </FormField>
+        </CardContent>
+
+        <CardFooter>
+          <div className="flex justify-end space-x-3 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push(`/ideas/${idea.id}/drafts`)}
             >
-              <option value="social-media">Social Media Post</option>
-              <option value="blog">Blog Article</option>
-              <option value="newsletter">Newsletter</option>
-            </select>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || saveStatus === 'saving'}
+            >
+              {isSubmitting ? 'Saving...' : draft ? 'Update Draft' : 'Create Draft'}
+            </Button>
           </div>
-        </div>
-        <div className="ml-4 flex items-center">
-          {saveStatus === 'saving' && (
-            <span className="text-sm text-gray-500">Saving...</span>
-          )}
-          {saveStatus === 'saved' && (
-            <span className="text-sm text-green-600">All changes saved</span>
-          )}
-          {saveStatus === 'error' && (
-            <span className="text-sm text-red-600">Failed to save changes</span>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Content
-        </label>
-        <div className="mt-1">
-          <RichTextEditor
-            content={formData.body}
-            onChange={(content) => setFormData((prev) => ({ ...prev, body: content }))}
-            maxLength={CHARACTER_LIMITS[contentType]}
-            placeholder="Write your content here..."
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-3">
-        <button
-          type="button"
-          onClick={() => router.push(`/ideas/${idea.id}/drafts`)}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isSubmitting || saveStatus === 'saving'}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
-        >
-          {isSubmitting ? 'Saving...' : draft ? 'Update Draft' : 'Create Draft'}
-        </button>
-      </div>
-    </form>
+        </CardFooter>
+      </form>
+    </Card>
   )
 } 

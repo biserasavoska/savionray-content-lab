@@ -8,6 +8,10 @@ import { isClient, isAdmin } from '@/lib/auth'
 import IdeaFeedbackPanel from './IdeaFeedbackPanel'
 import { IdeaWithCreator } from '@/types/idea'
 import { formatDate } from '../../lib/utils/date-helpers'
+import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
+import Badge from '@/components/ui/common/Badge'
+import Button from '@/components/ui/common/Button'
+import { cn } from '@/lib/utils/cn'
 
 // Local types
 type IdeaStatus = typeof IDEA_STATUS[keyof typeof IDEA_STATUS]
@@ -33,9 +37,16 @@ interface IdeaCardProps {
   onStatusChange?: (id: string, status: IdeaStatus) => void
   onEdit?: (idea: IdeaWithCreator) => void
   onDelete?: (id: string) => void
+  variant?: 'default' | 'elevated' | 'bordered'
 }
 
-export default function IdeaCard({ idea, onStatusChange, onEdit, onDelete }: IdeaCardProps) {
+export default function IdeaCard({ 
+  idea, 
+  onStatusChange, 
+  onEdit, 
+  onDelete, 
+  variant = 'default' 
+}: IdeaCardProps) {
   const { data: session } = useSession()
   const isCreator = session?.user?.id === idea.createdById
 
@@ -46,80 +57,102 @@ export default function IdeaCard({ idea, onStatusChange, onEdit, onDelete }: Ide
     }
   }
 
+  // Get status badge variant based on status
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return 'success'
+      case 'PENDING':
+        return 'warning'
+      case 'REJECTED':
+        return 'error'
+      case 'DRAFT':
+        return 'info'
+      default:
+        return 'default'
+    }
+  }
+
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <h3 className="text-lg font-medium text-gray-900">{idea.title}</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            by {idea.createdBy.name || idea.createdBy.email} •{' '}
-            {formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true })}
-          </p>
-        </div>
-        <div className="ml-4 flex-shrink-0">
-          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClasses(idea.status)}`}>
+    <Card variant={variant} className="hover:shadow-md transition-shadow duration-200">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle as="h3" className="text-lg">
+            {idea.title}
+          </CardTitle>
+          <Badge variant={getStatusBadgeVariant(idea.status)}>
             {idea.status.replace(/_/g, ' ')}
-          </span>
+          </Badge>
         </div>
-      </div>
+        <p className="text-sm text-gray-500">
+          by {idea.createdBy.name || idea.createdBy.email} •{' '}
+          {formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true })}
+        </p>
+      </CardHeader>
 
-      <p className="mt-3 text-sm text-gray-600">{idea.description}</p>
+      <CardContent>
+        <p className="text-sm text-gray-600 mb-4">{idea.description}</p>
 
-      {/* Additional idea details */}
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        {idea.publishingDateTime && (
-          <div>
-            <span className="text-sm font-medium text-gray-500">Publishing Date:</span>
-            <span className="ml-2 text-sm text-gray-900">
-              {formatDate(idea.publishingDateTime)}
-            </span>
-          </div>
-        )}
-        {idea.mediaType && (
-          <div>
-            <span className="text-sm font-medium text-gray-500">Media Type:</span>
-            <span className="ml-2 text-sm text-gray-900">
-              {idea.mediaType.replace(/_/g, ' ')}
-            </span>
-          </div>
-        )}
-        {idea.contentType && (
-          <div>
-            <span className="text-sm font-medium text-gray-500">Content Type:</span>
-            <span className="ml-2 text-sm text-gray-900">
-              {idea.contentType.replace(/_/g, ' ')}
-            </span>
-          </div>
-        )}
-        {idea.savedForLater && (
-          <div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-              Saved for Later
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Action buttons for creator */}
-      {(isCreator || isAdmin(session)) && (
-        <div className="mt-4 flex justify-end space-x-3">
-          <button
-            onClick={() => onEdit?.(idea)}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Edit
-          </button>
-          <button
-            onClick={handleDelete}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Delete
-          </button>
+        {/* Additional idea details */}
+        <div className="grid grid-cols-2 gap-4">
+          {idea.publishingDateTime && (
+            <div>
+              <span className="text-sm font-medium text-gray-500">Publishing Date:</span>
+              <span className="ml-2 text-sm text-gray-900">
+                {formatDate(idea.publishingDateTime)}
+              </span>
+            </div>
+          )}
+          {idea.mediaType && (
+            <div>
+              <span className="text-sm font-medium text-gray-500">Media Type:</span>
+              <span className="ml-2 text-sm text-gray-900">
+                {idea.mediaType.replace(/_/g, ' ')}
+              </span>
+            </div>
+          )}
+          {idea.contentType && (
+            <div>
+              <span className="text-sm font-medium text-gray-500">Content Type:</span>
+              <span className="ml-2 text-sm text-gray-900">
+                {idea.contentType.replace(/_/g, ' ')}
+              </span>
+            </div>
+          )}
+          {idea.savedForLater && (
+            <div>
+              <Badge variant="info">Saved for Later</Badge>
+            </div>
+          )}
         </div>
-      )}
+      </CardContent>
 
-      {/* Feedback Panel */}
-      <IdeaFeedbackPanel idea={idea} />
-    </div>
+      <CardFooter>
+        <div className="w-full">
+          {/* Action buttons for creator */}
+          {(isCreator || isAdmin(session)) && (
+            <div className="flex justify-end space-x-3 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit?.(idea)}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={handleDelete}
+              >
+                Delete
+              </Button>
+            </div>
+          )}
+
+          {/* Feedback Panel */}
+          <IdeaFeedbackPanel idea={idea} />
+        </div>
+      </CardFooter>
+    </Card>
   )
 } 

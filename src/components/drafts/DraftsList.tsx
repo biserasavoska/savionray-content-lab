@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ContentDraft, DraftStatus, User } from '@prisma/client'
+import type { ContentStatus } from '@/types/content'
 import { formatDistanceToNow, format } from 'date-fns'
 import { DraftMetadata } from '@/types/draft'
 import DraftActions from './DraftActions'
 
 interface Draft {
   id: string
-  status: DraftStatus
+  status: ContentStatus
   createdAt: Date
   ideaId: string
   createdBy: {
@@ -27,7 +27,7 @@ interface Draft {
   }[]
 }
 
-const STATUS_COLORS: Record<DraftStatus, { bg: string; text: string; label: string }> = {
+const STATUS_COLORS: Record<ContentStatus, { bg: string; text: string; label: string }> = {
   DRAFT: {
     bg: 'bg-yellow-100',
     text: 'text-yellow-800',
