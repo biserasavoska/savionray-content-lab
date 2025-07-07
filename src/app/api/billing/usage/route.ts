@@ -14,18 +14,26 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user with organization
-    const user = await prisma.user.findUnique({
+    // Get user with organization through OrganizationUser
+    const userWithOrg = await prisma.user.findUnique({
       where: { id: session.user.id },
-      include: { organization: true }
+      include: { 
+        organizations: {
+          include: {
+            organization: true
+          }
+        }
+      }
     })
 
-    if (!user?.organization) {
+    if (!userWithOrg?.organizations?.[0]?.organization) {
       return NextResponse.json(
         { error: 'Organization not found' },
         { status: 404 }
       )
     }
+
+    const organization = userWithOrg.organizations[0].organization
 
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || '30d'
@@ -59,18 +67,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get current subscription and plan limits
-    const subscription = await prisma.subscription.findFirst({
-      where: { organizationId: user.organization.id },
-      include: { plan: true },
-      orderBy: { createdAt: 'desc' }
+    // Get current subscription plan details
+    const plan = await prisma.subscriptionPlan.findFirst({
+      where: { 
+        name: organization.subscriptionPlan,
+        isActive: true
+      }
     })
 
-    const limits = subscription?.plan || {
-      contentItemsLimit: 100,
+    const limits = {
+      contentItemsLimit: 100, // Default limits
       aiGenerationsLimit: 1000,
-      storageLimitGB: 10,
-      teamMembersLimit: 3
+      storageLimitGB: organization.maxStorageGB,
+      teamMembersLimit: organization.maxUsers
     }
 
     // Get current usage metrics
@@ -83,7 +92,7 @@ export async function GET(request: NextRequest) {
       // Content items created in the period
       prisma.idea.count({
         where: {
-          organizationId: user.organization.id,
+          organizationId: organization.id,
           createdAt: { gte: start, lte: end }
         }
       }),
@@ -92,7 +101,7 @@ export async function GET(request: NextRequest) {
       prisma.contentDraft.count({
         where: {
           idea: {
-            organizationId: user.organization.id
+            organizationId: organization.id
           },
           createdAt: { gte: start, lte: end },
           metadata: {
@@ -103,30 +112,31 @@ export async function GET(request: NextRequest) {
       }),
 
       // Storage usage (this would need to be calculated from actual file sizes)
-      prisma.idea.aggregate({
+      prisma.media.aggregate({
         where: {
-          organizationId: user.organization.id,
+          organizationId: organization.id,
           createdAt: { gte: start, lte: end }
         },
         _sum: {
-          // This is a placeholder - in real app, you'd track actual file sizes
-          // For now, we'll estimate based on content length
+          size: true
         }
       }),
 
       // Team members count
-      prisma.user.count({
+      prisma.organizationUser.count({
         where: {
-          organizationId: user.organization.id
+          organizationId: organization.id,
+          isActive: true
         }
       })
     ])
 
     // Get historical data for charts
-    const historicalData = await getHistoricalUsageData(user.organization.id, start, end)
+    const historicalData = await getHistoricalUsageData(organization.id, start, end)
 
-    // Calculate storage usage (mock calculation)
-    const estimatedStorageGB = Math.round((contentItemsCount * 0.1) * 100) / 100 // 0.1GB per content item
+    // Calculate storage usage (convert bytes to GB)
+    const storageBytes = storageUsage._sum.size || 0
+    const estimatedStorageGB = Math.round((storageBytes / (1024 * 1024 * 1024)) * 100) / 100
 
     const currentUsage = {
       contentItems: contentItemsCount,
@@ -191,11 +201,24 @@ async function getHistoricalUsageData(organizationId: string, start: Date, end: 
       }
     })
 
+    // Get storage usage for this day
+    const storageUsage = await prisma.media.aggregate({
+      where: {
+        organizationId,
+        createdAt: { gte: date, lt: nextDate }
+      },
+      _sum: {
+        size: true
+      }
+    })
+
+    const storageGB = Math.round(((storageUsage._sum.size || 0) / (1024 * 1024 * 1024)) * 100) / 100
+
     data.push({
       period: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       contentItems,
       aiGenerations,
-      storageGB: Math.round((contentItems * 0.1) * 100) / 100,
+      storageGB,
       teamMembers: 0 // This would be constant, so we'll set it to 0 for the chart
     })
   }

@@ -203,7 +203,7 @@ export default function TestBillingPage() {
               {(['CREATIVE', 'CLIENT', 'ADMIN', 'OWNER'] as UserRole[]).map((role) => (
                 <Button
                   key={role}
-                  variant={currentRole === role ? 'default' : 'outline'}
+                  variant={currentRole === role ? 'primary' : 'outline'}
                   onClick={() => setCurrentRole(role)}
                   className="capitalize"
                 >

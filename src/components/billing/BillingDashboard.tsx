@@ -193,7 +193,7 @@ export function BillingDashboard({
                 </div>
                 {onCancelSubscription && (
                   <Button
-                    variant="destructive"
+                    variant="danger"
                     size="sm"
                     className="mt-4 w-full"
                     onClick={onCancelSubscription}
@@ -319,7 +319,7 @@ export function BillingDashboard({
                         <Badge
                           variant={
                             invoice.status === 'paid' ? 'success' :
-                            invoice.status === 'pending' ? 'default' : 'destructive'
+                            invoice.status === 'pending' ? 'default' : 'danger'
                           }
                         >
                           {invoice.status}

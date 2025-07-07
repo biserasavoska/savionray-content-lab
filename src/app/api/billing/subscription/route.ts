@@ -35,36 +35,25 @@ export async function GET(request: NextRequest) {
 
     const organization = userWithOrg.organizations[0].organization
 
-    // Get current subscription
-    const subscription = await prisma.subscription.findFirst({
-      where: { organizationId: organization.id },
-      include: {
-        plan: true,
-        organization: true
-      },
-      orderBy: { createdAt: 'desc' }
+    // Get subscription plan details
+    const plan = await prisma.subscriptionPlan.findFirst({
+      where: { 
+        name: organization.subscriptionPlan,
+        isActive: true
+      }
     })
-
-    if (!subscription) {
-      return NextResponse.json({
-        subscription: null,
-        message: 'No active subscription found'
-      })
-    }
 
     return NextResponse.json({
       subscription: {
-        id: subscription.id,
-        status: subscription.status,
-        planId: subscription.planId,
-        planName: subscription.plan.name,
-        planPrice: subscription.plan.price,
-        billingCycle: subscription.billingCycle,
-        currentPeriodStart: subscription.currentPeriodStart,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-        stripeSubscriptionId: subscription.stripeSubscriptionId,
-        organizationId: subscription.organizationId
+        id: organization.id,
+        status: organization.subscriptionStatus,
+        planName: organization.subscriptionPlan,
+        planPrice: plan?.price || 0,
+        billingCycle: organization.billingCycle,
+        trialEndsAt: organization.trialEndsAt,
+        maxUsers: organization.maxUsers,
+        maxStorageGB: organization.maxStorageGB,
+        organizationId: organization.id
       }
     })
   } catch (error) {
@@ -88,11 +77,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { planId, billingCycle = 'monthly' } = body
+    const { planType, billingCycle = 'MONTHLY' } = body
 
-    if (!planId) {
+    if (!planType) {
       return NextResponse.json(
-        { error: 'Plan ID is required' },
+        { error: 'Plan type is required' },
         { status: 400 }
       )
     }
@@ -118,68 +107,51 @@ export async function POST(request: NextRequest) {
 
     const organization = userWithOrg.organizations[0].organization
 
-    // Verify plan exists
-    const plan = await prisma.subscriptionPlan.findUnique({
-      where: { id: planId }
-    })
-
-    if (!plan) {
-      return NextResponse.json(
-        { error: 'Invalid plan ID' },
-        { status: 400 }
-      )
-    }
-
     // Check if user has permission to manage billing
-    if (userWithOrg.role !== 'ADMIN' && userWithOrg.role !== 'OWNER') {
+    if (userWithOrg.organizations[0].role !== 'ADMIN' && userWithOrg.organizations[0].role !== 'OWNER') {
       return NextResponse.json(
         { error: 'Insufficient permissions to manage billing' },
         { status: 403 }
       )
     }
 
-    // In a real implementation, this would integrate with Stripe
-    // For now, we'll create a mock subscription
-    const now = new Date()
-    const periodEnd = new Date(now)
-    periodEnd.setMonth(periodEnd.getMonth() + 1)
-
-    const subscription = await prisma.subscription.create({
+    // Update organization subscription
+    const updatedOrganization = await prisma.organization.update({
+      where: { id: organization.id },
       data: {
-        organizationId: organization.id,
-        planId: planId,
-        status: 'ACTIVE',
-        billingCycle: billingCycle as 'monthly' | 'yearly',
-        currentPeriodStart: now,
-        currentPeriodEnd: periodEnd,
-        cancelAtPeriodEnd: false,
-        stripeSubscriptionId: `sub_${Date.now()}`, // Mock Stripe ID
-        stripeCustomerId: `cus_${Date.now()}`, // Mock Stripe customer ID
-        metadata: {}
-      },
-      include: {
-        plan: true
+        subscriptionPlan: planType,
+        subscriptionStatus: 'ACTIVE',
+        billingCycle: billingCycle as 'MONTHLY' | 'YEARLY',
+        trialEndsAt: null // End trial when upgrading
+      }
+    })
+
+    // Get updated plan details
+    const plan = await prisma.subscriptionPlan.findFirst({
+      where: { 
+        name: planType,
+        isActive: true
       }
     })
 
     return NextResponse.json({
       subscription: {
-        id: subscription.id,
-        status: subscription.status,
-        planId: subscription.planId,
-        planName: subscription.plan.name,
-        planPrice: subscription.plan.price,
-        billingCycle: subscription.billingCycle,
-        currentPeriodStart: subscription.currentPeriodStart,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd
+        id: updatedOrganization.id,
+        status: updatedOrganization.subscriptionStatus,
+        planName: updatedOrganization.subscriptionPlan,
+        planPrice: plan?.price || 0,
+        billingCycle: updatedOrganization.billingCycle,
+        trialEndsAt: updatedOrganization.trialEndsAt,
+        maxUsers: updatedOrganization.maxUsers,
+        maxStorageGB: updatedOrganization.maxStorageGB,
+        organizationId: updatedOrganization.id
       },
-      message: 'Subscription created successfully'
+      message: 'Subscription updated successfully'
     })
   } catch (error) {
-    console.error('Error creating subscription:', error)
+    console.error('Error updating subscription:', error)
     return NextResponse.json(
-      { error: 'Failed to create subscription' },
+      { error: 'Failed to update subscription' },
       { status: 500 }
     )
   }
@@ -197,14 +169,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { action, planId, cancelAtPeriodEnd } = body
-
-    if (!action) {
-      return NextResponse.json(
-        { error: 'Action is required' },
-        { status: 400 }
-      )
-    }
+    const { action, planType, cancelAtPeriodEnd } = body
 
     // Get user with organization through OrganizationUser
     const userWithOrg = await prisma.user.findUnique({
@@ -228,85 +193,53 @@ export async function PATCH(request: NextRequest) {
     const organization = userWithOrg.organizations[0].organization
 
     // Check if user has permission to manage billing
-    if (userWithOrg.role !== 'ADMIN' && userWithOrg.role !== 'OWNER') {
+    if (userWithOrg.organizations[0].role !== 'ADMIN' && userWithOrg.organizations[0].role !== 'OWNER') {
       return NextResponse.json(
         { error: 'Insufficient permissions to manage billing' },
         { status: 403 }
       )
     }
 
-    // Get current subscription
-    const currentSubscription = await prisma.subscription.findFirst({
-      where: { organizationId: organization.id },
-      orderBy: { createdAt: 'desc' }
-    })
-
-    if (!currentSubscription) {
-      return NextResponse.json(
-        { error: 'No active subscription found' },
-        { status: 404 }
-      )
-    }
-
-    let updatedSubscription
+    let updateData: any = {}
 
     switch (action) {
       case 'upgrade':
-        if (!planId) {
+        if (!planType) {
           return NextResponse.json(
-            { error: 'Plan ID is required for upgrade' },
+            { error: 'Plan type is required for upgrade' },
             { status: 400 }
           )
         }
+        updateData = {
+          subscriptionPlan: planType,
+          subscriptionStatus: 'ACTIVE',
+          trialEndsAt: null
+        }
+        break
 
-        // Verify new plan exists
-        const newPlan = await prisma.subscriptionPlan.findUnique({
-          where: { id: planId }
-        })
-
-        if (!newPlan) {
+      case 'downgrade':
+        if (!planType) {
           return NextResponse.json(
-            { error: 'Invalid plan ID' },
+            { error: 'Plan type is required for downgrade' },
             { status: 400 }
           )
         }
-
-        // In a real implementation, this would update the Stripe subscription
-        updatedSubscription = await prisma.subscription.update({
-          where: { id: currentSubscription.id },
-          data: {
-            planId: planId,
-            status: 'ACTIVE',
-            cancelAtPeriodEnd: false
-          },
-          include: {
-            plan: true
-          }
-        })
+        updateData = {
+          subscriptionPlan: planType,
+          subscriptionStatus: 'ACTIVE'
+        }
         break
 
       case 'cancel':
-        updatedSubscription = await prisma.subscription.update({
-          where: { id: currentSubscription.id },
-          data: {
-            cancelAtPeriodEnd: true
-          },
-          include: {
-            plan: true
-          }
-        })
+        updateData = {
+          subscriptionStatus: 'CANCELLED'
+        }
         break
 
       case 'reactivate':
-        updatedSubscription = await prisma.subscription.update({
-          where: { id: currentSubscription.id },
-          data: {
-            cancelAtPeriodEnd: false
-          },
-          include: {
-            plan: true
-          }
-        })
+        updateData = {
+          subscriptionStatus: 'ACTIVE'
+        }
         break
 
       default:
@@ -316,17 +249,30 @@ export async function PATCH(request: NextRequest) {
         )
     }
 
+    const updatedOrganization = await prisma.organization.update({
+      where: { id: organization.id },
+      data: updateData
+    })
+
+    // Get updated plan details
+    const plan = await prisma.subscriptionPlan.findFirst({
+      where: { 
+        name: updatedOrganization.subscriptionPlan,
+        isActive: true
+      }
+    })
+
     return NextResponse.json({
       subscription: {
-        id: updatedSubscription.id,
-        status: updatedSubscription.status,
-        planId: updatedSubscription.planId,
-        planName: updatedSubscription.plan.name,
-        planPrice: updatedSubscription.plan.price,
-        billingCycle: updatedSubscription.billingCycle,
-        currentPeriodStart: updatedSubscription.currentPeriodStart,
-        currentPeriodEnd: updatedSubscription.currentPeriodEnd,
-        cancelAtPeriodEnd: updatedSubscription.cancelAtPeriodEnd
+        id: updatedOrganization.id,
+        status: updatedOrganization.subscriptionStatus,
+        planName: updatedOrganization.subscriptionPlan,
+        planPrice: plan?.price || 0,
+        billingCycle: updatedOrganization.billingCycle,
+        trialEndsAt: updatedOrganization.trialEndsAt,
+        maxUsers: updatedOrganization.maxUsers,
+        maxStorageGB: updatedOrganization.maxStorageGB,
+        organizationId: updatedOrganization.id
       },
       message: `Subscription ${action} successful`
     })

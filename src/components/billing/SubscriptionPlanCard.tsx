@@ -62,7 +62,7 @@ export function SubscriptionPlanCard({
           )}
           {onCancel && (
             <Button
-              variant="destructive"
+              variant="danger"
               size="sm"
               onClick={() => onCancel(plan.id)}
               disabled={loading}
@@ -77,7 +77,7 @@ export function SubscriptionPlanCard({
     if (onSelect) {
       return (
         <Button
-          variant={plan.isPopular ? "default" : "outline"}
+          variant={plan.isPopular ? "primary" : "outline"}
           onClick={() => onSelect(plan.id)}
           disabled={loading}
           className="w-full"
