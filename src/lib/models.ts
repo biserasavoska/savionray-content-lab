@@ -15,24 +15,6 @@ export interface AIModel {
 }
 
 export const AVAILABLE_MODELS: AIModel[] = [
-  // {
-  //   id: 'gpt-3.5-turbo',
-  //   name: 'GPT-3.5 Turbo',
-  //   description: 'Fast and cost-effective for most content generation tasks',
-  //   maxTokens: 4096,
-  //   costPerToken: 0.000002,
-  //   type: 'fast',
-  //   api: 'chat'
-  // },
-  // {
-  //   id: 'gpt-4o-mini',
-  //   name: 'GPT-4o Mini',
-  //   description: 'Most capable model for high-quality content generation',
-  //   maxTokens: 4096,
-  //   costPerToken: 0.00001,
-  //   type: 'balanced',
-  //   api: 'chat'
-  // },
   {
     id: 'gpt-4o',
     name: 'GPT-4o',
@@ -42,7 +24,25 @@ export const AVAILABLE_MODELS: AIModel[] = [
     type: 'advanced',
     api: 'chat'
   },
-  // New reasoning models
+  {
+    id: 'gpt-4o-mini',
+    name: 'GPT-4o Mini',
+    description: 'Most capable model for high-quality content generation',
+    maxTokens: 4096,
+    costPerToken: 0.00001,
+    type: 'balanced',
+    api: 'chat'
+  },
+  {
+    id: 'gpt-3.5-turbo',
+    name: 'GPT-3.5 Turbo',
+    description: 'Fast and cost-effective for most content generation tasks',
+    maxTokens: 4096,
+    costPerToken: 0.000002,
+    type: 'fast',
+    api: 'chat'
+  },
+  // New reasoning models (require organization verification)
   {
     id: 'o4-mini',
     name: 'O4 Mini (Reasoning)',

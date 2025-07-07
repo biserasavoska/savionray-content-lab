@@ -17,7 +17,7 @@ const isApiKeyAvailable = () => {
 };
 
 // Default model configuration
-const DEFAULT_MODEL = "gpt-3.5-turbo";
+const DEFAULT_MODEL = "gpt-4o";
 
 type ContentFormat = 'linkedin' | 'twitter' | 'instagram' | 'facebook';
 
@@ -81,11 +81,24 @@ Call to Action:
 
     // Use Responses API for reasoning models, Chat API for others
     if (selectedModel.api === 'responses' && selectedModel.supportsReasoning) {
-      return await generateWithReasoningAPI(openai, selectedModel, prompt, {
-        includeReasoning,
-        reasoningSummary,
-        encryptedReasoning
-      });
+      try {
+        return await generateWithReasoningAPI(openai, selectedModel, prompt, {
+          includeReasoning,
+          reasoningSummary,
+          encryptedReasoning
+        });
+      } catch (reasoningError: any) {
+        // If reasoning model fails (e.g., organization not verified), fallback to GPT-4o
+        console.warn(`Reasoning model ${selectedModel.id} failed:`, reasoningError.message);
+        console.log('Falling back to GPT-4o model...');
+        
+        const fallbackModel = AVAILABLE_MODELS.find(m => m.id === 'gpt-4o');
+        if (!fallbackModel) {
+          throw new Error('Fallback model not available');
+        }
+        
+        return await generateWithChatAPI(openai, fallbackModel, prompt);
+      }
     } else {
       return await generateWithChatAPI(openai, selectedModel, prompt);
     }
