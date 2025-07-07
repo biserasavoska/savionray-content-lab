@@ -6,10 +6,11 @@ import { useSession } from 'next-auth/react'
 import type { ContentDraft, Idea } from '@/types/content'
 import RichTextEditor from '../editor/RichTextEditor'
 import { debounce } from 'lodash'
-import FormField, { Select } from '@/components/ui/forms/FormField'
+import { FormField, Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
-import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
+import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
+import { useFormData } from '@/components/ui/common/hooks'
 
 type ContentType = 'social-media' | 'blog' | 'newsletter'
 
@@ -49,20 +50,57 @@ const contentTypeOptions = [
 export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraftFormProps) {
   const router = useRouter()
   const { data: session } = useSession()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved')
-  const [contentType, setContentType] = useState<ContentType>(
-    draft?.metadata ? (draft.metadata as any).contentType : 'social-media'
-  )
-  const [formData, setFormData] = useState({
-    body: draft?.body || '',
-  })
   const [draftId, setDraftId] = useState<string | undefined>(draft?.id)
+
+  // Use the new form hook
+  const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
+    initialData: {
+      contentType: draft?.metadata ? (draft.metadata as any).contentType : 'social-media',
+      body: draft?.body || '',
+    },
+    onValidate: (data) => {
+      const validationErrors: Record<string, string> = {}
+      
+      if (!data.body.trim()) {
+        validationErrors.body = 'Content is required'
+      }
+      
+      if (!data.contentType) {
+        validationErrors.contentType = 'Content type is required'
+      }
+      
+      return Object.keys(validationErrors).length > 0 ? validationErrors : null
+    },
+    onSubmit: async (data) => {
+      if (!session?.user?.id) return
+
+      // Wait for any pending auto-saves to complete
+      await autoSave.flush()
+
+      const response = await fetch(draftId ? `/api/drafts/${draftId}/submit` : '/api/drafts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          ideaId: idea.id,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save draft')
+      }
+
+      onSuccess?.()
+      router.push(`/ideas/${idea.id}/drafts`)
+    }
+  })
 
   // Auto-save function
   const autoSave = useCallback(
-    debounce(async (data: typeof formData, type: ContentType, id?: string) => {
+    debounce(async (data: typeof formData, id?: string) => {
       if (!session?.user?.id) return
 
       setSaveStatus('saving')
@@ -75,7 +113,6 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
           body: JSON.stringify({
             ...data,
             ideaId: idea.id,
-            contentType: type,
             status: 'PENDING_FEEDBACK', // Use existing status
           }),
         })
@@ -100,49 +137,12 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
   // Trigger auto-save when content changes
   useEffect(() => {
     if (formData.body) {
-      autoSave(formData, contentType, draftId)
+      autoSave(formData, draftId)
     }
     return () => {
       autoSave.cancel()
     }
-  }, [formData, contentType, draftId, autoSave])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!session?.user?.id) return
-
-    setIsSubmitting(true)
-    setError('')
-
-    try {
-      // Wait for any pending auto-saves to complete
-      await autoSave.flush()
-
-      const response = await fetch(draftId ? `/api/drafts/${draftId}/submit` : '/api/drafts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          ideaId: idea.id,
-          contentType,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save draft')
-      }
-
-      onSuccess?.()
-      router.push(`/ideas/${idea.id}/drafts`)
-    } catch (error) {
-      console.error('Failed to save draft:', error)
-      setError('Failed to save draft. Please try again.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  }, [formData, draftId, autoSave])
 
   const getSaveStatusBadge = () => {
     switch (saveStatus) {
@@ -161,36 +161,42 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>{draft ? 'Edit Draft' : 'Create New Draft'}</CardTitle>
+          <h2 className="text-xl font-semibold">{draft ? 'Edit Draft' : 'Create New Draft'}</h2>
           {getSaveStatusBadge()}
         </div>
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
-          {error && (
+          {errors.submit && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="flex">
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                  <h3 className="text-sm font-medium text-red-800">{errors.submit}</h3>
                 </div>
               </div>
             </div>
           )}
 
-          <FormField label="Content Type">
+          <FormField 
+            label="Content Type"
+            error={errors.contentType}
+          >
             <Select
               options={contentTypeOptions}
-              value={contentType}
-              onChange={(e) => setContentType(e.target.value as ContentType)}
+              value={formData.contentType}
+              onChange={(value) => updateFormData('contentType', value as ContentType)}
             />
           </FormField>
 
-          <FormField label="Content">
+          <FormField 
+            label="Content"
+            error={errors.body}
+          >
             <RichTextEditor
               content={formData.body}
-              onChange={(content) => setFormData((prev) => ({ ...prev, body: content }))}
-              maxLength={CHARACTER_LIMITS[contentType]}
+              onChange={(content) => updateFormData('body', content)}
+              maxLength={CHARACTER_LIMITS[formData.contentType as ContentType]}
               placeholder="Write your content here..."
             />
           </FormField>
@@ -207,9 +213,9 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || saveStatus === 'saving'}
+              loading={loading || saveStatus === 'saving'}
             >
-              {isSubmitting ? 'Saving...' : draft ? 'Update Draft' : 'Create Draft'}
+              {draft ? 'Update Draft' : 'Create Draft'}
             </Button>
           </div>
         </CardFooter>

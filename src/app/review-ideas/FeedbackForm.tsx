@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { FormField, Textarea } from '@/components/ui/common/FormField'
+import Button from '@/components/ui/common/Button'
+import { useFormData } from '@/components/ui/common/hooks'
 
 interface FeedbackFormProps {
   ideaId: string
@@ -8,22 +10,35 @@ interface FeedbackFormProps {
 }
 
 export default function FeedbackForm({ ideaId, onSubmit }: FeedbackFormProps) {
-  const [comment, setComment] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError('')
-
-    try {
+  // Use the new form hook
+  const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
+    initialData: {
+      comment: '',
+    },
+    onValidate: (data) => {
+      const validationErrors: Record<string, string> = {}
+      
+      if (!data.comment.trim()) {
+        validationErrors.comment = 'Feedback comment is required'
+      }
+      
+      if (data.comment.length < 10) {
+        validationErrors.comment = 'Feedback must be at least 10 characters long'
+      }
+      
+      if (data.comment.length > 1000) {
+        validationErrors.comment = 'Feedback must be less than 1000 characters'
+      }
+      
+      return Object.keys(validationErrors).length > 0 ? validationErrors : null
+    },
+    onSubmit: async (data) => {
       const response = await fetch(`/api/ideas/${ideaId}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ comment }),
+        body: JSON.stringify({ comment: data.comment }),
       })
 
       if (!response.ok) {
@@ -32,51 +47,34 @@ export default function FeedbackForm({ ideaId, onSubmit }: FeedbackFormProps) {
 
       const feedback = await response.json()
       onSubmit(ideaId, feedback)
-      setComment('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setIsSubmitting(false)
     }
-  }
+  })
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
-
-      <div>
-        <label htmlFor="comment" className="block text-sm font-medium text-gray-700">
-          Feedback
-        </label>
-        <textarea
-          id="comment"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
+      <FormField 
+        label="Feedback"
+        error={errors.comment}
+      >
+        <Textarea
+          value={formData.comment}
+          onChange={(e) => updateFormData('comment', e.target.value)}
           rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           placeholder="Provide your feedback..."
           required
           minLength={10}
           maxLength={1000}
+          disabled={loading}
         />
-      </div>
+      </FormField>
 
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
-          disabled={isSubmitting}
-          className={`inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm
-            ${isSubmitting 
-              ? 'bg-blue-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-            }`}
+          loading={loading}
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
-        </button>
+          Submit Feedback
+        </Button>
       </div>
     </form>
   )

@@ -8,10 +8,9 @@ import { isClient, isAdmin } from '@/lib/auth'
 import IdeaFeedbackPanel from './IdeaFeedbackPanel'
 import { IdeaWithCreator } from '@/types/idea'
 import { formatDate } from '../../lib/utils/date-helpers'
-import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
+import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
-import { cn } from '@/lib/utils/cn'
 
 // Local types
 type IdeaStatus = typeof IDEA_STATUS[keyof typeof IDEA_STATUS]
@@ -37,7 +36,7 @@ interface IdeaCardProps {
   onStatusChange?: (id: string, status: IdeaStatus) => void
   onEdit?: (idea: IdeaWithCreator) => void
   onDelete?: (id: string) => void
-  variant?: 'default' | 'elevated' | 'bordered'
+  variant?: 'default' | 'elevated' | 'outlined'
 }
 
 export default function IdeaCard({ 
@@ -77,9 +76,9 @@ export default function IdeaCard({
     <Card variant={variant} className="hover:shadow-md transition-shadow duration-200">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle as="h3" className="text-lg">
+          <h3 className="text-lg font-semibold">
             {idea.title}
-          </CardTitle>
+          </h3>
           <Badge variant={getStatusBadgeVariant(idea.status)}>
             {idea.status.replace(/_/g, ' ')}
           </Badge>

@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import FormField, { Input, Textarea, Select } from '@/components/ui/forms/FormField'
+import { FormField, Input, Textarea, Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
-import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
+import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
+import { useFormData } from '@/components/ui/common/hooks'
 
 const ContentType = {
   NEWSLETTER: 'NEWSLETTER',
@@ -24,32 +25,64 @@ interface DeliveryItem {
   notes?: string
 }
 
+interface FormData {
+  name: string
+  description: string
+  startDate: string
+  endDate: string
+  targetMonth: string
+  items: DeliveryItem[]
+}
+
 export default function DeliveryPlanForm() {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [items, setItems] = useState<DeliveryItem[]>([])
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    const formData = new FormData(e.currentTarget)
-    const data = {
-      name: formData.get('name'),
-      description: formData.get('description'),
-      startDate: formData.get('startDate'),
-      endDate: formData.get('endDate'),
-      targetMonth: formData.get('targetMonth'),
-      items,
-    }
-
-    try {
+  // Use the new form hook
+  const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
+    initialData: {
+      name: '',
+      description: '',
+      startDate: '',
+      endDate: '',
+      targetMonth: '',
+      items: [],
+    },
+    onValidate: (data) => {
+      const validationErrors: Record<string, string> = {}
+      
+      if (!data.name.trim()) {
+        validationErrors.name = 'Plan name is required'
+      }
+      
+      if (!data.targetMonth) {
+        validationErrors.targetMonth = 'Target month is required'
+      }
+      
+      if (!data.startDate) {
+        validationErrors.startDate = 'Start date is required'
+      }
+      
+      if (!data.endDate) {
+        validationErrors.endDate = 'End date is required'
+      }
+      
+      if (items.length === 0) {
+        validationErrors.items = 'At least one delivery item is required'
+      }
+      
+      return Object.keys(validationErrors).length > 0 ? validationErrors : null
+    },
+    onSubmit: async (data) => {
       const response = await fetch('/api/delivery-plans', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          items,
+        }),
       })
 
       if (!response.ok) {
@@ -58,13 +91,8 @@ export default function DeliveryPlanForm() {
 
       const result = await response.json()
       router.push(`/delivery-plans/${result.id}`)
-    } catch (error) {
-      console.error('Error creating delivery plan:', error)
-      // Handle error (show toast, etc.)
-    } finally {
-      setIsSubmitting(false)
     }
-  }
+  })
 
   const addItem = () => {
     setItems([
@@ -95,34 +123,42 @@ export default function DeliveryPlanForm() {
     <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle>Create Delivery Plan</CardTitle>
+          <h2 className="text-xl font-semibold">Create Delivery Plan</h2>
         </CardHeader>
         <CardContent className="space-y-8">
-          <FormField label="Plan Name" required>
+          <FormField 
+            label="Plan Name" 
+            error={errors.name}
+            required
+          >
             <Input
-              type="text"
-              name="name"
-              id="name"
-              required
+              value={formData.name}
+              onChange={(e) => updateFormData('name', e.target.value)}
               placeholder="Enter plan name"
             />
           </FormField>
 
-          <FormField label="Description">
+          <FormField 
+            label="Description"
+            error={errors.description}
+          >
             <Textarea
-              name="description"
-              id="description"
+              value={formData.description}
+              onChange={(e) => updateFormData('description', e.target.value)}
               rows={3}
               placeholder="Describe the plan"
             />
           </FormField>
 
-          <FormField label="Target Month" required>
+          <FormField 
+            label="Target Month" 
+            error={errors.targetMonth}
+            required
+          >
             <Input
               type="month"
-              name="targetMonth"
-              id="targetMonth"
-              required
+              value={formData.targetMonth}
+              onChange={(e) => updateFormData('targetMonth', e.target.value)}
             />
             <p className="mt-1 text-sm text-gray-500">
               Select the month this content is intended for
@@ -130,23 +166,29 @@ export default function DeliveryPlanForm() {
           </FormField>
 
           <div className="grid grid-cols-2 gap-6">
-            <FormField label="Content Delivery Start" required>
+            <FormField 
+              label="Content Delivery Start" 
+              error={errors.startDate}
+              required
+            >
               <Input
                 type="date"
-                name="startDate"
-                id="startDate"
-                required
+                value={formData.startDate}
+                onChange={(e) => updateFormData('startDate', e.target.value)}
               />
               <p className="mt-1 text-sm text-gray-500">
                 Usually 5-10 days before the first item is published
               </p>
             </FormField>
-            <FormField label="Content Delivery End" required>
+            <FormField 
+              label="Content Delivery End" 
+              error={errors.endDate}
+              required
+            >
               <Input
                 type="date"
-                name="endDate"
-                id="endDate"
-                required
+                value={formData.endDate}
+                onChange={(e) => updateFormData('endDate', e.target.value)}
               />
               <p className="mt-1 text-sm text-gray-500">
                 When all content for the month should be delivered
@@ -167,9 +209,19 @@ export default function DeliveryPlanForm() {
             </Button>
           </div>
 
+          {errors.items && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">{errors.items}</h3>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             {items.map((item, index) => (
-              <Card key={index} className="border border-gray-200 rounded-lg p-4 space-y-4">
+              <Card key={index} variant="outlined" className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
                   <Button
@@ -186,7 +238,7 @@ export default function DeliveryPlanForm() {
                     <Select
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
-                      onChange={(e) => updateItem(index, 'contentType', e.target.value as ContentType)}
+                      onChange={(value) => updateItem(index, 'contentType', value as ContentType)}
                     />
                   </FormField>
                   <FormField label="Quantity" required>
@@ -215,7 +267,7 @@ export default function DeliveryPlanForm() {
                 </div>
                 <FormField label="Notes">
                   <Textarea
-                    value={item.notes}
+                    value={item.notes || ''}
                     onChange={(e) => updateItem(index, 'notes', e.target.value)}
                     rows={2}
                   />
@@ -241,9 +293,10 @@ export default function DeliveryPlanForm() {
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || items.length === 0}
+              loading={loading}
+              disabled={items.length === 0}
             >
-              {isSubmitting ? 'Creating...' : 'Create Plan'}
+              Create Plan
             </Button>
           </div>
         </CardFooter>
