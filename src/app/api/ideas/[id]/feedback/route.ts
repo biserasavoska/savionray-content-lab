@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isClient, isAdmin } from '@/lib/auth'
-import { ContentType, DraftStatus } from '@prisma/client'
+import { CONTENT_TYPE, DRAFT_STATUS } from '@/lib/utils/enum-constants'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   try {
+    const orgContext = await requireOrganizationContext()
     const { comment } = await req.json()
 
     if (!comment) {
@@ -35,10 +37,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const contentDraft = await prisma.contentDraft.create({
       data: {
         body: '',
-        contentType: ContentType.SOCIAL_MEDIA_POST,
-        status: DraftStatus.DRAFT,
+        contentType: CONTENT_TYPE.SOCIAL_MEDIA_POST,
+        status: DRAFT_STATUS.DRAFT,
         ideaId: params.id,
         createdById: session.user.id,
+        organizationId: orgContext.organizationId,
       },
     })
 

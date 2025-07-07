@@ -114,10 +114,41 @@ export async function validateOrganizationAccess(
   organizationId: string
 ): Promise<boolean> {
   try {
-    const resource = await prisma[resourceType].findUnique({
-      where: { id: resourceId },
-      select: { organizationId: true }
-    });
+    let resource: { organizationId: string } | null = null;
+    switch (resourceType) {
+      case 'idea':
+        resource = await prisma.idea.findUnique({
+          where: { id: resourceId },
+          select: { organizationId: true }
+        });
+        break;
+      case 'contentDraft':
+        resource = await prisma.contentDraft.findUnique({
+          where: { id: resourceId },
+          select: { organizationId: true }
+        });
+        break;
+      case 'media':
+        resource = await prisma.media.findUnique({
+          where: { id: resourceId },
+          select: { organizationId: true }
+        });
+        break;
+      case 'contentDeliveryPlan':
+        resource = await prisma.contentDeliveryPlan.findUnique({
+          where: { id: resourceId },
+          select: { organizationId: true }
+        });
+        break;
+      case 'contentItem':
+        resource = await prisma.contentItem.findUnique({
+          where: { id: resourceId },
+          select: { organizationId: true }
+        });
+        break;
+      default:
+        return false;
+    }
 
     if (!resource) {
       return false;

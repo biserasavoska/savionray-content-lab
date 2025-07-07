@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { isCreative, isAdmin } from '@/lib/auth'
-import { ContentType } from '@prisma/client'
+import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 
 export async function POST(
   req: NextRequest,
@@ -20,6 +21,7 @@ export async function POST(
   }
 
   try {
+    const orgContext = await requireOrganizationContext()
     const { body, contentType } = await req.json()
 
     // Check if idea exists
@@ -35,13 +37,10 @@ export async function POST(
     const draft = await prisma.contentDraft.create({
       data: {
         body: body || '',
-        contentType: contentType as ContentType || ContentType.BLOG_POST,
-        idea: {
-          connect: { id: params.id },
-        },
-        createdBy: {
-          connect: { id: session.user.id },
-        },
+        contentType: contentType as any || CONTENT_TYPE.BLOG_POST,
+        organizationId: orgContext.organizationId,
+        ideaId: params.id,
+        createdById: session.user.id,
       },
       include: {
         createdBy: {

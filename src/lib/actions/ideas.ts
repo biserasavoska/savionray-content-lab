@@ -146,7 +146,7 @@ export async function updateIdea(
 
 export async function updateIdeaStatus(
   id: string,
-  status: string
+  status: IdeaStatus
 ) {
   // Get organization context and validate access
   const orgContext = await requireOrganizationContext();
