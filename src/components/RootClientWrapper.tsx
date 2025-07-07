@@ -4,7 +4,7 @@ import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import Sidebar from './Sidebar'
+import RoleBasedNavigation from './navigation/RoleBasedNavigation'
 import TopNavigation from './TopNavigation'
 
 export default function RootClientWrapper({
@@ -39,9 +39,9 @@ export default function RootClientWrapper({
   return (
     <SessionProvider session={session}>
       <div className="min-h-screen bg-gray-50 flex flex-row">
-        {/* Sidebar (hidden on auth pages) */}
+        {/* Role-based Sidebar (hidden on auth pages) */}
         {!isAuthPage && (
-          <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+          <RoleBasedNavigation isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         )}
         {/* Main content area */}
         <div className="flex-1 flex flex-col min-h-screen">
