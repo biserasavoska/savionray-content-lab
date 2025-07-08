@@ -20,7 +20,8 @@ import {
   UsersIcon,
   BuildingOfficeIcon,
   CreditCardIcon,
-  EnvelopeIcon
+  EnvelopeIcon,
+  ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 import { useInterface } from '@/hooks/useInterface'
 
@@ -49,6 +50,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     // Client-specific items
     { name: 'Content Review', href: '/content-review', icon: EyeIcon, roles: ['CLIENT'] },
     { name: 'Approved Content', href: '/approved', icon: DocumentTextIcon, roles: ['CLIENT'] },
+    { name: 'Feedback Management', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT', 'ADMIN'] },
     
     // Creative/Agency items
     { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CREATIVE', 'ADMIN'] },

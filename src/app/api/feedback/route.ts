@@ -43,6 +43,10 @@ export async function POST(req: NextRequest) {
     const feedback = await prisma.feedback.create({
       data: {
         comment,
+        rating: 0,
+        category: 'general',
+        priority: 'medium',
+        actionable: false,
         contentDraftId,
         createdById: session.user.id,
       },

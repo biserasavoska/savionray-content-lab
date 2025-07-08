@@ -111,6 +111,10 @@ model ContentDraft {
 model Feedback {
   id             String        @id @default(cuid())
   comment        String
+  rating         Int?          @default(0)
+  category       String?       @default("general")
+  priority       String?       @default("medium")
+  actionable     Boolean       @default(false)
   createdAt      DateTime      @default(now())
   contentDraftId String?
   createdById    String
