@@ -9,7 +9,7 @@ interface Invitation {
   role: string
   message: string | null
   status: string
-  expiresAt: string
+  expiresAt: Date
   organization: {
     id: string
     name: string

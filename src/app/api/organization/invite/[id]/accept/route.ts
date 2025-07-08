@@ -119,7 +119,7 @@ export async function POST(
     })
 
   } catch (error) {
-    logger.error('Error accepting invitation', error)
+    logger.error('Error accepting invitation', error instanceof Error ? error : new Error(String(error)))
     
     return NextResponse.json(
       { error: 'Internal server error' },

@@ -103,7 +103,19 @@ export async function POST(request: NextRequest) {
           emailVerified: new Date() // Auto-verify for now
         }
       })
-      user = newUser
+      
+      // Fetch the user with organizations to match the expected type
+      user = await prisma.user.findUnique({
+        where: { id: newUser.id },
+        include: {
+          organizations: {
+            where: { 
+              organizationId: orgContext.organizationId,
+              isActive: true
+            }
+          }
+        }
+      })
     }
 
     if (!user) {
@@ -136,7 +148,7 @@ export async function POST(request: NextRequest) {
         message: message
       })
     } catch (emailError) {
-      logger.error('Failed to send invitation email', emailError)
+      logger.error('Failed to send invitation email', emailError instanceof Error ? emailError : new Error(String(emailError)))
       // Don't fail the request if email fails
     }
 
@@ -161,7 +173,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('Error inviting user to organization', error)
+    logger.error('Error inviting user to organization', error instanceof Error ? error : new Error(String(error)))
     
     return NextResponse.json(
       { error: 'Internal server error' },
