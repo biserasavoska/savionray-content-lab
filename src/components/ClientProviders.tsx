@@ -1,6 +1,7 @@
 'use client'
 
 import { SessionProvider } from 'next-auth/react'
+import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
 import Navigation from './Navigation'
 
 export default function ClientProviders({
@@ -10,8 +11,10 @@ export default function ClientProviders({
 }) {
   return (
     <SessionProvider>
-      <Navigation />
-      {children}
+      <OrganizationProvider>
+        <Navigation />
+        {children}
+      </OrganizationProvider>
     </SessionProvider>
   )
 } 

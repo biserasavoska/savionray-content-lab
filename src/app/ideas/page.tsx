@@ -9,6 +9,7 @@ import { IdeaWithCreator } from '@/types/idea'
 import { IDEA_STATUS } from '@/lib/utils/enum-utils'
 import { SimpleErrorDisplay } from '@/components/ui/ErrorDisplay'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 
 const TABS = [
   { id: 'all', name: 'All Ideas', status: undefined },
@@ -19,6 +20,7 @@ const TABS = [
 
 export default function IdeasPage() {
   const { data: session } = useSession()
+  const { organizationId, isLoading: orgLoading } = useCurrentOrganization()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -36,6 +38,8 @@ export default function IdeasPage() {
     status?: IdeaStatus,
     page: number = 1
   ) => {
+    if (!organizationId) return
+    
     setIsLoading(true)
     setError(null)
     try {
@@ -67,8 +71,10 @@ export default function IdeasPage() {
   }
 
   useEffect(() => {
-    loadIdeas()
-  }, [])
+    if (organizationId) {
+      loadIdeas()
+    }
+  }, [organizationId])
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
@@ -121,6 +127,18 @@ export default function IdeasPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <LoadingSpinner text="Loading session..." />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (orgLoading || !organizationId) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <LoadingSpinner text="Loading organization..." />
           </div>
         </div>
       </div>
@@ -202,36 +220,63 @@ export default function IdeasPage() {
           </div>
         )}
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="mt-6 text-center">
+            <LoadingSpinner text="Loading ideas..." />
+          </div>
+        )}
+
         {/* Pagination */}
-        {pagination.pages > 1 && (
+        {!isLoading && pagination.pages > 1 && (
           <div className="mt-8 flex justify-center">
             <nav className="flex items-center space-x-2">
-              {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`
-                      px-3 py-1 rounded-md text-sm font-medium
-                      ${
-                        currentPage === page
-                          ? 'bg-red-600 text-white'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    page === currentPage
+                      ? 'bg-red-600 text-white'
+                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === pagination.pages}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </nav>
           </div>
         )}
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="mt-6">
-            <LoadingSpinner text="Loading ideas..." />
+        {/* Empty State */}
+        {!isLoading && !error && ideas.length === 0 && (
+          <div className="mt-8 text-center">
+            <div className="text-gray-500">
+              <p className="text-lg font-medium">No ideas found</p>
+              <p className="mt-2">Get started by creating your first content idea.</p>
+              <button
+                onClick={() => router.push('/ideas/new')}
+                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+              >
+                Create First Idea
+              </button>
+            </div>
           </div>
         )}
       </div>

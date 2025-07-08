@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { isAdmin, isClient, isCreative } from '@/lib/auth'
 import Image from 'next/image'
-import OrganizationSwitcher from './OrganizationSwitcher'
+import { OrganizationSwitcher } from './navigation/OrganizationSwitcher'
 
 export default function Navigation() {
   const { data: session } = useSession()
@@ -38,13 +38,9 @@ export default function Navigation() {
             <div className="flex items-center space-x-4">
               {/* Organization Switcher */}
               {session && (
-                <OrganizationSwitcher 
-                  currentOrganizationId="default" // This will be updated with real context
-                  onOrganizationChange={(orgId) => {
-                    // Handle organization change - will implement in Phase 4
-                    console.log('Organization changed to:', orgId)
-                  }}
-                />
+                <div className="w-64">
+                  <OrganizationSwitcher />
+                </div>
               )}
 
               {/* Language Toggle */}
