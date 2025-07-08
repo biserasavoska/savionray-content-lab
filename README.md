@@ -1,5 +1,21 @@
 # SavionRay Content Lab
 
+A comprehensive content management platform for agencies and clients.
+
+## Features
+
+- Multi-tenant organization management
+- Role-based access control
+- Content creation and approval workflows
+- Billing and subscription management
+- Client invitation system
+
+## Recent Updates
+
+- Fixed TypeScript errors for production deployment
+- Implemented comprehensive client invitation system
+- Added billing and subscription management
+
 A Next.js + TypeScript + Prisma/Tailwind content management app for managing and scheduling social media content.
 
 ## Description
