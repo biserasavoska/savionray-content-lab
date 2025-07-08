@@ -19,7 +19,8 @@ import {
   FolderIcon,
   UsersIcon,
   BuildingOfficeIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  EnvelopeIcon
 } from '@heroicons/react/24/outline'
 import { useInterface } from '@/hooks/useInterface'
 
@@ -58,6 +59,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     { name: 'Delivery Plans', href: '/delivery-plans', icon: ChartBarIcon, roles: ['CREATIVE', 'ADMIN'] },
     
     // Admin-only items
+    { name: 'Organizations', href: '/admin/organizations', icon: BuildingOfficeIcon, roles: ['ADMIN'] },
     { name: 'Clients', href: '/clients', icon: BuildingOfficeIcon, roles: ['ADMIN'] },
     { name: 'Team', href: '/team', icon: UsersIcon, roles: ['ADMIN'] },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, roles: ['ADMIN'] },
@@ -167,13 +169,22 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
                 
                 {/* Show organization settings for admins */}
                 {interfaceContext.isAdmin && (
-                  <Link
-                    href="/organization/settings"
-                    className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
-                  >
-                    <CogIcon className="mr-3 h-4 w-4" />
-                    Organization
-                  </Link>
+                  <>
+                    <Link
+                      href="/organization/settings"
+                      className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
+                    >
+                      <CogIcon className="mr-3 h-4 w-4" />
+                      Organization
+                    </Link>
+                    <Link
+                      href="/organization/settings/invitations"
+                      className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
+                    >
+                      <EnvelopeIcon className="mr-3 h-4 w-4" />
+                      Invitations
+                    </Link>
+                  </>
                 )}
                 
                 <button

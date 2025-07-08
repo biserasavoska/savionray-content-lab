@@ -72,4 +72,39 @@ export async function getFeedbackEmailContent(
       <p>Best regards,<br>Savion Ray Content Lab Team</p>
     </div>
   `
+}
+
+export async function sendInvitationEmail({
+  to,
+  organizationName,
+  inviterName,
+  invitationLink,
+  message
+}: {
+  to: string
+  organizationName: string
+  inviterName: string
+  invitationLink: string
+  message?: string
+}) {
+  const subject = `You've been invited to join ${organizationName}`
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Organization Invitation</h2>
+      <p>Hello!</p>
+      <p>${inviterName} has invited you to join <strong>${organizationName}</strong> on Savion Ray Content Lab.</p>
+      ${message ? `<p><strong>Message:</strong> ${message}</p>` : ''}
+      <p>Click the button below to accept the invitation and join the organization:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${invitationLink}" style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">
+          Accept Invitation
+        </a>
+      </div>
+      <p>This invitation will expire in 7 days.</p>
+      <p>Best regards,<br>Savion Ray Content Lab Team</p>
+    </div>
+  `
+
+  return sendEmail({ to, subject, html })
 } 

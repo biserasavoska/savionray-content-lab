@@ -47,6 +47,7 @@ model User {
   // Relations
   organizations        OrganizationUser[]
   invitedUsers         OrganizationUser[]    @relation("UserInvites")
+  sentInvitations      OrganizationInvitation[] @relation("UserSentInvitations")
   accounts             Account[]
   deliveryPlans        ContentDeliveryPlan[]
   contentDrafts        ContentDraft[]
@@ -416,6 +417,13 @@ enum BillingStatus {
   REFUNDED
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
 // Multi-tenant models
 model Organization {
   id                String   @id @default(cuid())
@@ -442,6 +450,7 @@ model Organization {
   contentItems      ContentItem[]
   media             Media[]
   billingHistory    BillingRecord[]
+  invitations       OrganizationInvitation[]
 }
 
 model OrganizationUser {
@@ -488,4 +497,23 @@ model BillingRecord {
   
   // Relations
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model OrganizationInvitation {
+  id             String           @id @default(cuid())
+  organizationId String
+  email          String
+  role           OrganizationRole @default(MEMBER)
+  invitedBy      String
+  message        String?
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedByUser  User         @relation("UserSentInvitations", fields: [invitedBy], references: [id])
+  
+  @@unique([organizationId, email])
 }
