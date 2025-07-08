@@ -8,6 +8,9 @@ export const PERMISSIONS = {
     canEditOwnContent: true,
     canDeleteOwnContent: true,
     canViewDashboard: true,
+    canProvideFeedback: true,
+    canViewOrganizationData: true,
+    canManageOrganization: false,
   },
   CLIENT: {
     canCreateContent: false,
@@ -16,6 +19,9 @@ export const PERMISSIONS = {
     canEditOwnContent: false,
     canDeleteOwnContent: false,
     canViewDashboard: true,
+    canProvideFeedback: true,
+    canViewOrganizationData: true,
+    canManageOrganization: false,
   },
   ADMIN: {
     canCreateContent: true,
@@ -24,6 +30,9 @@ export const PERMISSIONS = {
     canEditOwnContent: true,
     canDeleteOwnContent: true,
     canViewDashboard: true,
+    canProvideFeedback: true,
+    canViewOrganizationData: true,
+    canManageOrganization: true,
   },
 } as const
 
@@ -43,7 +52,35 @@ export function canUserAccess(userRole: UserRole, feature: string): boolean {
       return hasPermission(userRole, 'canDeleteOwnContent')
     case 'view-dashboard':
       return hasPermission(userRole, 'canViewDashboard')
+    case 'provide-feedback':
+      return hasPermission(userRole, 'canProvideFeedback')
+    case 'view-organization-data':
+      return hasPermission(userRole, 'canViewOrganizationData')
+    case 'manage-organization':
+      return hasPermission(userRole, 'canManageOrganization')
     default:
       return false
   }
+}
+
+/**
+ * Check if user has access to organization-scoped data
+ * This ensures users can only access data from their own organization
+ */
+export function hasOrganizationAccess(userOrganizationId: string, resourceOrganizationId: string): boolean {
+  return userOrganizationId === resourceOrganizationId
+}
+
+/**
+ * Check if user can provide feedback on content
+ */
+export function canProvideFeedback(userRole: UserRole): boolean {
+  return hasPermission(userRole, 'canProvideFeedback')
+}
+
+/**
+ * Check if user can view organization data
+ */
+export function canViewOrganizationData(userRole: UserRole): boolean {
+  return hasPermission(userRole, 'canViewOrganizationData')
 } 

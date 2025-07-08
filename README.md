@@ -1,6 +1,15 @@
 # SavionRay Content Lab
 
-A comprehensive content management platform for agencies and clients.
+A comprehensive content management platform for agencies and organizations.
+
+## 🏢 **Terminology Clarification**
+
+**Important**: In this codebase, we use the following terminology consistently:
+- **"Organization"** = **"Client"** - Each organization in the system represents a client company
+- **"Agency"** = The team managing multiple organizations/clients
+- **"Users"** = People within organizations (admins, creatives, clients)
+
+When we refer to "clients" in UI text or documentation, we mean "organizations" in the backend models.
 
 ## Features
 
@@ -8,7 +17,7 @@ A comprehensive content management platform for agencies and clients.
 - Role-based access control
 - Content creation and approval workflows
 - Billing and subscription management
-- Client invitation system
+- Organization invitation system
 
 ## Recent Updates
 

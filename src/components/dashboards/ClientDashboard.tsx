@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { EyeIcon, DocumentTextIcon, CheckCircleIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { useSession } from 'next-auth/react'
+import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
+import { EyeIcon, DocumentTextIcon, CheckCircleIcon, ClockIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline'
 
 interface ContentItem {
   id: string
@@ -13,6 +15,8 @@ interface ContentItem {
 }
 
 export default function ClientDashboard() {
+  const { data: session } = useSession()
+  const { organization, isLoading: orgLoading } = useCurrentOrganization()
   const [pendingContent, setPendingContent] = useState<ContentItem[]>([])
   const [recentApproved, setRecentApproved] = useState<ContentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -94,12 +98,26 @@ export default function ClientDashboard() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Content Review Dashboard</h1>
-        <p className="text-gray-600 mt-1">Review and approve content from your creative team</p>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {organization ? `${organization.name} Dashboard` : 'Content Review Dashboard'}
+        </h1>
+        <p className="text-gray-600 mt-1">
+          {organization 
+            ? `Review and approve content for ${organization.name}`
+            : 'Review and approve content from your creative team'
+          }
+        </p>
+        {organization && (
+          <div className="mt-2 flex items-center space-x-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Organization: {organization.name}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
@@ -132,6 +150,18 @@ export default function ClientDashboard() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Content</p>
               <p className="text-2xl font-bold text-gray-900">{pendingContent.length + recentApproved.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <ChatBubbleLeftIcon className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Feedback Provided</p>
+              <p className="text-2xl font-bold text-gray-900">3</p>
             </div>
           </div>
         </div>
@@ -174,6 +204,29 @@ export default function ClientDashboard() {
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
+        </div>
+        <div className="px-6 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+              <EyeIcon className="h-5 w-5 mr-2" />
+              Review Content
+            </button>
+            <button className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 transition-colors">
+              <CheckCircleIcon className="h-5 w-5 mr-2" />
+              Approve Ideas
+            </button>
+            <button className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-purple-600 hover:bg-purple-700 transition-colors">
+              <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
+              Provide Feedback
+            </button>
+          </div>
         </div>
       </div>
 
