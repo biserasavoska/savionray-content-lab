@@ -57,6 +57,8 @@ model User {
   media                Media[]
   sessions             Session[]
   stageTransitions     StageTransition[]
+  organizationUsers    OrganizationUser[]
+  organizationInvitations OrganizationUser[] @relation("OrganizationInvitations")
 }
 
 model Idea {
@@ -67,6 +69,7 @@ model Idea {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   createdById        String
+  organizationId     String
   mediaType          MediaType?
   publishingDateTime DateTime?
   savedForLater      Boolean              @default(false)
@@ -74,8 +77,11 @@ model Idea {
   deliveryItemId     String?
   contentDrafts      ContentDraft[]
   createdBy          User                 @relation(fields: [createdById], references: [id])
+  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   deliveryItem       ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
   comments           IdeaComment[]
+
+  @@index([organizationId])
 }
 
 model ContentDraft {
@@ -84,15 +90,19 @@ model ContentDraft {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   createdById    String
+  organizationId String
   body           String
   metadata       Json?           @default("{\"contentType\": \"social-media\"}")
   ideaId         String
   contentType    ContentType
   createdBy      User            @relation(fields: [createdById], references: [id])
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   idea           Idea            @relation(fields: [ideaId], references: [id])
   feedbacks      Feedback[]
   media          Media[]
   scheduledPosts ScheduledPost[]
+
+  @@index([organizationId])
 }
 
 model Feedback {
@@ -116,9 +126,13 @@ model Media {
   size           Int
   createdAt      DateTime     @default(now())
   contentDraftId String
+  organizationId String
   uploadedById   String
   contentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   uploadedBy     User         @relation(fields: [uploadedById], references: [id])
+
+  @@index([organizationId])
 }
 
 model ScheduledPost {
@@ -141,19 +155,23 @@ model VerificationToken {
 }
 
 model ContentDeliveryPlan {
-  id          String                @id @default(cuid())
-  name        String
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  status      DeliveryPlanStatus    @default(DRAFT)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
-  clientId    String
-  targetMonth DateTime
-  isArchived  Boolean               @default(false)
-  items       ContentDeliveryItem[]
-  client      User                  @relation(fields: [clientId], references: [id])
+  id             String                @id @default(cuid())
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  status         DeliveryPlanStatus    @default(DRAFT)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  clientId       String
+  organizationId String
+  targetMonth    DateTime
+  isArchived     Boolean               @default(false)
+  items          ContentDeliveryItem[]
+  client         User                  @relation(fields: [clientId], references: [id])
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }
 
 model ContentDeliveryItem {
@@ -194,12 +212,14 @@ model ContentItem {
   currentStage   WorkflowStage              @default(IDEA)
   createdById    String
   assignedToId   String?
+  organizationId String
   deliveryItemId String?
   createdAt      DateTime                   @default(now())
   updatedAt      DateTime                   @updatedAt
   publishedAt    DateTime?
   assignedTo     User?                      @relation("AssignedContentItems", fields: [assignedToId], references: [id])
   createdBy      User                       @relation("CreatedContentItems", fields: [createdById], references: [id])
+  organization   Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   deliveryItem   ContentDeliveryItem?       @relation(fields: [deliveryItemId], references: [id])
   comments       ContentItemComment[]
   feedbacks      ContentItemFeedback[]
@@ -211,6 +231,7 @@ model ContentItem {
   @@index([status])
   @@index([createdById])
   @@index([assignedToId])
+  @@index([organizationId])
 }
 
 model StageTransition {
@@ -279,6 +300,75 @@ model ContentItemComment {
 
   @@index([contentItemId])
   @@index([createdById])
+}
+
+model Organization {
+  id                String                @id @default(cuid())
+  name              String
+  slug              String                @unique
+  domain            String?               @unique
+  logo              String?
+  primaryColor      String?
+  settings          Json                  @default("{}")
+  subscriptionPlan  SubscriptionPlanType  @default(FREE)
+  subscriptionStatus SubscriptionStatus   @default(ACTIVE)
+  trialEndsAt       DateTime?
+  billingCycle      BillingCycle          @default(MONTHLY)
+  maxUsers          Int                   @default(5)
+  maxStorageGB      Int                   @default(10)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  users             OrganizationUser[]
+  ideas             Idea[]
+  contentDrafts     ContentDraft[]
+  media             Media[]
+  deliveryPlans     ContentDeliveryPlan[]
+  contentItems      ContentItem[]
+  billingRecords    BillingRecord[]
+}
+
+model OrganizationUser {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrganizationRole @default(MEMBER)
+  permissions    Json             @default("[]")
+  isActive       Boolean          @default(true)
+  invitedBy      String?
+  invitedAt      DateTime         @default(now())
+  joinedAt       DateTime?
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedByUser  User?            @relation("OrganizationInvitations", fields: [invitedBy], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model SubscriptionPlan {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  price        Float
+  currency     String        @default("USD")
+  interval     BillingCycle
+  maxUsers     Int
+  maxStorageGB Int
+  features     Json          @default("[]")
+  isActive     Boolean       @default(true)
+}
+
+model BillingRecord {
+  id             String        @id @default(cuid())
+  organizationId String
+  amount         Float
+  currency       String        @default("USD")
+  status         BillingStatus @default(PENDING)
+  description    String
+  invoiceUrl     String?
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {
@@ -354,4 +444,39 @@ enum WorkflowStage {
   APPROVED
   REJECTED
   PUBLISHED
+}
+
+enum SubscriptionPlanType {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIAL
+  PAST_DUE
+  CANCELLED
+  SUSPENDED
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum BillingStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }

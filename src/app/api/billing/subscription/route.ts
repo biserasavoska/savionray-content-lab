@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const userWithOrg = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { 
-        organizations: {
+        organizationUsers: {
           include: {
             organization: true
           }
@@ -26,14 +26,14 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    if (!userWithOrg?.organizations?.[0]?.organization) {
+    if (!userWithOrg?.organizationUsers?.[0]?.organization) {
       return NextResponse.json(
         { error: 'Organization not found' },
         { status: 404 }
       )
     }
 
-    const organization = userWithOrg.organizations[0].organization
+    const organization = userWithOrg.organizationUsers[0].organization
 
     // Get subscription plan details
     const plan = await prisma.subscriptionPlan.findFirst({
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const userWithOrg = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { 
-        organizations: {
+        organizationUsers: {
           include: {
             organization: true
           }
@@ -98,17 +98,17 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (!userWithOrg?.organizations?.[0]?.organization) {
+    if (!userWithOrg?.organizationUsers?.[0]?.organization) {
       return NextResponse.json(
         { error: 'Organization not found' },
         { status: 404 }
       )
     }
 
-    const organization = userWithOrg.organizations[0].organization
+    const organization = userWithOrg.organizationUsers[0].organization
 
     // Check if user has permission to manage billing
-    if (userWithOrg.organizations[0].role !== 'ADMIN' && userWithOrg.organizations[0].role !== 'OWNER') {
+    if (userWithOrg.organizationUsers[0].role !== 'ADMIN' && userWithOrg.organizationUsers[0].role !== 'OWNER') {
       return NextResponse.json(
         { error: 'Insufficient permissions to manage billing' },
         { status: 403 }
@@ -175,7 +175,7 @@ export async function PATCH(request: NextRequest) {
     const userWithOrg = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { 
-        organizations: {
+        organizationUsers: {
           include: {
             organization: true
           }
@@ -183,17 +183,17 @@ export async function PATCH(request: NextRequest) {
       }
     })
 
-    if (!userWithOrg?.organizations?.[0]?.organization) {
+    if (!userWithOrg?.organizationUsers?.[0]?.organization) {
       return NextResponse.json(
         { error: 'Organization not found' },
         { status: 404 }
       )
     }
 
-    const organization = userWithOrg.organizations[0].organization
+    const organization = userWithOrg.organizationUsers[0].organization
 
     // Check if user has permission to manage billing
-    if (userWithOrg.organizations[0].role !== 'ADMIN' && userWithOrg.organizations[0].role !== 'OWNER') {
+    if (userWithOrg.organizationUsers[0].role !== 'ADMIN' && userWithOrg.organizationUsers[0].role !== 'OWNER') {
       return NextResponse.json(
         { error: 'Insufficient permissions to manage billing' },
         { status: 403 }
