@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const userWithOrg = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { 
-        organizations: {
+        organizationUsers: {
           include: {
             organization: true
           }
@@ -26,14 +26,14 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    if (!userWithOrg?.organizations?.[0]?.organization) {
+    if (!userWithOrg?.organizationUsers?.[0]?.organization) {
       return NextResponse.json(
         { error: 'Organization not found' },
         { status: 404 }
       )
     }
 
-    const organization = userWithOrg.organizations[0].organization
+    const organization = userWithOrg.organizationUsers[0].organization
 
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || '30d'

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {
-        organizations: {
+        organizationUsers: {
           where: { isActive: true },
           include: {
             organization: {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const organizations = user.organizations.map((orgUser: any) => ({
+    const organizations = user.organizationUsers.map((orgUser: any) => ({
       id: orgUser.organization.id,
       name: orgUser.organization.name,
       slug: orgUser.organization.slug,

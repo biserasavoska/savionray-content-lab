@@ -1,3 +1,4 @@
+import 'next-auth'
 import { Session } from 'next-auth'
 import { Prisma } from '@prisma/client'
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
@@ -105,8 +106,8 @@ export const authOptions: NextAuthOptions = {
             } // If user.password is null, allow login (legacy users)
             return {
               id: user.id,
-              email: user.email,
-              name: user.name,
+              email: user.email || '',
+              name: user.name || '',
               role: user.role,
               isSuperAdmin: user.isSuperAdmin
             }
@@ -141,8 +142,8 @@ export const authOptions: NextAuthOptions = {
 
           return {
             id: newUser.id,
-            email: newUser.email,
-            name: newUser.name,
+            email: newUser.email || '',
+            name: newUser.name || '',
             role: newUser.role,
             isSuperAdmin: newUser.isSuperAdmin
           }
@@ -153,4 +154,23 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ]
+} 
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name: string
+      role: UserRole
+      isSuperAdmin?: boolean
+    }
+  }
+  interface User {
+    id: string
+    email: string
+    name: string
+    role: UserRole
+    isSuperAdmin?: boolean
+  }
 } 

@@ -77,10 +77,6 @@ export async function GET(request: NextRequest) {
     const transformedFeedbacks = feedbacks.map(feedback => ({
       id: feedback.id,
       comment: feedback.comment,
-      rating: feedback.rating || 0,
-      category: feedback.category || 'general',
-      priority: (feedback.priority as 'low' | 'medium' | 'high') || 'medium',
-      actionable: feedback.actionable || false,
       createdAt: feedback.createdAt.toISOString(),
       createdBy: feedback.createdBy,
       targetType: 'content' as const,
@@ -90,17 +86,11 @@ export async function GET(request: NextRequest) {
 
     // Calculate stats
     const total = transformedFeedbacks.length
-    const averageRating = total > 0 
-      ? transformedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / total 
-      : 0
-    const actionable = transformedFeedbacks.filter(f => f.actionable).length
-    const highPriority = transformedFeedbacks.filter(f => f.priority === 'high').length
+    const averageRating = 0 // Rating field doesn't exist in current schema
+    const actionable = 0 // Actionable field doesn't exist in current schema
+    const highPriority = 0 // Priority field doesn't exist in current schema
     
-    const byCategory = transformedFeedbacks.reduce((acc, feedback) => {
-      const category = feedback.category
-      acc[category] = (acc[category] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byCategory = { 'general': total } // Category field doesn't exist in current schema
 
     const stats = {
       total,

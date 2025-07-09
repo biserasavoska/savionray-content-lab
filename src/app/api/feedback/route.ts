@@ -14,11 +14,7 @@ export async function POST(req: NextRequest) {
   try {
     const { 
       contentDraftId, 
-      comment, 
-      rating = 0, 
-      category = 'general', 
-      priority = 'medium', 
-      actionable = false 
+      comment
     } = await req.json()
 
     if (!contentDraftId || !comment) {
@@ -50,10 +46,6 @@ export async function POST(req: NextRequest) {
     const feedback = await prisma.feedback.create({
       data: {
         comment,
-        rating: rating || 0,
-        category: category || 'general',
-        priority: priority || 'medium',
-        actionable: actionable || false,
         contentDraftId,
         createdById: session.user.id,
       },

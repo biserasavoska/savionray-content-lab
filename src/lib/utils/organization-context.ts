@@ -27,7 +27,7 @@ export async function getOrganizationContext(): Promise<OrganizationContext | nu
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {
-        organizations: {
+        organizationUsers: {
           where: { isActive: true },
           include: {
             organization: true
@@ -43,7 +43,7 @@ export async function getOrganizationContext(): Promise<OrganizationContext | nu
 
     // For now, we'll use the first active organization
     // In Phase 3, we'll add organization switching
-    const organizationUser = user.organizations[0];
+    const organizationUser = user.organizationUsers[0];
     
     if (!organizationUser) {
       logger.warn(`No active organization found for user: ${session.user.email}`);
