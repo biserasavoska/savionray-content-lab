@@ -40,6 +40,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role as UserRole
+        token.isSuperAdmin = (user as any).isSuperAdmin
       }
       return token
     },
@@ -47,6 +48,7 @@ export const authOptions: NextAuthOptions = {
       if (session?.user) {
         session.user.id = token.sub as string
         session.user.role = token.role as UserRole
+        session.user.isSuperAdmin = token.isSuperAdmin as boolean
       }
       return session
     },
@@ -82,7 +84,15 @@ export const authOptions: NextAuthOptions = {
         try {
           // Find user by email
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
+            where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              password: true,
+              isSuperAdmin: true
+            }
           })
 
           // If user exists, check password
@@ -97,7 +107,8 @@ export const authOptions: NextAuthOptions = {
               id: user.id,
               email: user.email,
               name: user.name,
-              role: user.role
+              role: user.role,
+              isSuperAdmin: user.isSuperAdmin
             }
           }
 
@@ -123,7 +134,8 @@ export const authOptions: NextAuthOptions = {
               email: credentials.email,
               name: credentials.email.split('@')[0],
               role: role as UserRole,
-              password: hashedPassword
+              password: hashedPassword,
+              isSuperAdmin: credentials.email === 'admin@savionray.com'
             }
           })
 
@@ -131,7 +143,8 @@ export const authOptions: NextAuthOptions = {
             id: newUser.id,
             email: newUser.email,
             name: newUser.name,
-            role: newUser.role
+            role: newUser.role,
+            isSuperAdmin: newUser.isSuperAdmin
           }
         } catch (error) {
           console.error('Auth error:', error)

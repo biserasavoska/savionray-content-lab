@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://postgres:GcJJcUnmSCAjMJySweloMmdZVtwxpbNq@nozomi.proxy.rlwy.net:47902/railway"
 }
 
 model Account {
@@ -43,11 +43,6 @@ model User {
   role                 UserRole              @default(CREATIVE)
   password             String?
   isSuperAdmin         Boolean               @default(false)
-  
-  // Relations
-  organizations        OrganizationUser[]
-  invitedUsers         OrganizationUser[]    @relation("UserInvites")
-  sentInvitations      OrganizationInvitation[] @relation("UserSentInvitations")
   accounts             Account[]
   deliveryPlans        ContentDeliveryPlan[]
   contentDrafts        ContentDraft[]
@@ -66,7 +61,6 @@ model User {
 
 model Idea {
   id                 String               @id @default(cuid())
-  organizationId     String               // NEW: Organization isolation
   title              String
   description        String
   status             IdeaStatus           @default(PENDING)
@@ -78,9 +72,6 @@ model Idea {
   savedForLater      Boolean              @default(false)
   contentType        ContentType?
   deliveryItemId     String?
-  
-  // Relations
-  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   contentDrafts      ContentDraft[]
   createdBy          User                 @relation(fields: [createdById], references: [id])
   deliveryItem       ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
@@ -89,7 +80,6 @@ model Idea {
 
 model ContentDraft {
   id             String          @id @default(cuid())
-  organizationId String          // NEW: Organization isolation
   status         DraftStatus     @default(DRAFT)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -98,9 +88,6 @@ model ContentDraft {
   metadata       Json?           @default("{\"contentType\": \"social-media\"}")
   ideaId         String
   contentType    ContentType
-  
-  // Relations
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   createdBy      User            @relation(fields: [createdById], references: [id])
   idea           Idea            @relation(fields: [ideaId], references: [id])
   feedbacks      Feedback[]
@@ -111,10 +98,6 @@ model ContentDraft {
 model Feedback {
   id             String        @id @default(cuid())
   comment        String
-  rating         Int?          @default(0)
-  category       String?       @default("general")
-  priority       String?       @default("medium")
-  actionable     Boolean       @default(false)
   createdAt      DateTime      @default(now())
   contentDraftId String?
   createdById    String
@@ -127,7 +110,6 @@ model Feedback {
 
 model Media {
   id             String       @id @default(cuid())
-  organizationId String       // NEW: Organization isolation
   url            String
   filename       String
   contentType    String
@@ -135,9 +117,6 @@ model Media {
   createdAt      DateTime     @default(now())
   contentDraftId String
   uploadedById   String
-  
-  // Relations
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   contentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
   uploadedBy     User         @relation(fields: [uploadedById], references: [id])
 }
@@ -163,7 +142,6 @@ model VerificationToken {
 
 model ContentDeliveryPlan {
   id          String                @id @default(cuid())
-  organizationId String              // NEW: Organization isolation
   name        String
   description String?
   startDate   DateTime
@@ -174,9 +152,6 @@ model ContentDeliveryPlan {
   clientId    String
   targetMonth DateTime
   isArchived  Boolean               @default(false)
-  
-  // Relations
-  organization Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   items       ContentDeliveryItem[]
   client      User                  @relation(fields: [clientId], references: [id])
 }
@@ -209,7 +184,6 @@ model IdeaComment {
 
 model ContentItem {
   id             String                     @id @default(cuid())
-  organizationId String                     // NEW: Organization isolation
   title          String
   description    String
   body           String?
@@ -224,9 +198,6 @@ model ContentItem {
   createdAt      DateTime                   @default(now())
   updatedAt      DateTime                   @updatedAt
   publishedAt    DateTime?
-  
-  // Relations
-  organization   Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   assignedTo     User?                      @relation("AssignedContentItems", fields: [assignedToId], references: [id])
   createdBy      User                       @relation("CreatedContentItems", fields: [createdById], references: [id])
   deliveryItem   ContentDeliveryItem?       @relation(fields: [deliveryItemId], references: [id])
@@ -383,141 +354,4 @@ enum WorkflowStage {
   APPROVED
   REJECTED
   PUBLISHED
-}
-
-// Multi-tenant enums
-enum SubscriptionPlanType {
-  FREE
-  STARTER
-  PROFESSIONAL
-  ENTERPRISE
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  TRIAL
-  PAST_DUE
-  CANCELLED
-  SUSPENDED
-}
-
-enum BillingCycle {
-  MONTHLY
-  YEARLY
-}
-
-enum OrganizationRole {
-  OWNER
-  ADMIN
-  MANAGER
-  MEMBER
-  VIEWER
-}
-
-enum BillingStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
-  EXPIRED
-}
-
-// Multi-tenant models
-model Organization {
-  id                String   @id @default(cuid())
-  name              String
-  slug              String   @unique
-  domain            String?  @unique
-  logo              String?
-  primaryColor      String?
-  settings          Json     @default("{}")
-  subscriptionPlan  SubscriptionPlanType @default(FREE)
-  subscriptionStatus SubscriptionStatus @default(ACTIVE)
-  trialEndsAt       DateTime?
-  billingCycle      BillingCycle @default(MONTHLY)
-  maxUsers          Int      @default(5)
-  maxStorageGB      Int      @default(10)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  // Relations
-  users             OrganizationUser[]
-  ideas             Idea[]
-  contentDrafts     ContentDraft[]
-  deliveryPlans     ContentDeliveryPlan[]
-  contentItems      ContentItem[]
-  media             Media[]
-  billingHistory    BillingRecord[]
-  invitations       OrganizationInvitation[]
-}
-
-model OrganizationUser {
-  id             String   @id @default(cuid())
-  organizationId String
-  userId         String
-  role           OrganizationRole @default(MEMBER)
-  permissions    Json     @default("[]")
-  isActive       Boolean  @default(true)
-  invitedBy      String?
-  invitedAt      DateTime @default(now())
-  joinedAt       DateTime?
-  
-  // Relations
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invitedByUser  User?        @relation("UserInvites", fields: [invitedBy], references: [id])
-  
-  @@unique([organizationId, userId])
-}
-
-model SubscriptionPlan {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  price       Float
-  currency    String   @default("USD")
-  interval    BillingCycle
-  maxUsers    Int
-  maxStorageGB Int
-  features    Json     @default("[]")
-  isActive    Boolean  @default(true)
-}
-
-model BillingRecord {
-  id             String   @id @default(cuid())
-  organizationId String
-  amount         Float
-  currency       String   @default("USD")
-  status         BillingStatus @default(PENDING)
-  description    String
-  invoiceUrl     String?
-  paidAt         DateTime?
-  createdAt      DateTime @default(now())
-  
-  // Relations
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-}
-
-model OrganizationInvitation {
-  id             String           @id @default(cuid())
-  organizationId String
-  email          String
-  role           OrganizationRole @default(MEMBER)
-  invitedBy      String
-  message        String?
-  status         InvitationStatus @default(PENDING)
-  expiresAt      DateTime
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  
-  // Relations
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invitedByUser  User         @relation("UserSentInvitations", fields: [invitedBy], references: [id])
-  
-  @@unique([organizationId, email])
 }
