@@ -24,6 +24,7 @@ import {
   ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 import { useInterface } from '@/hooks/useInterface'
+import OrganizationSwitcher from './OrganizationSwitcher'
 
 interface NavigationItem {
   name: string
@@ -53,9 +54,9 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     { name: 'Feedback Management', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT', 'ADMIN'] },
     
     // Creative/Agency items
-    { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CREATIVE', 'ADMIN'] },
+    { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CREATIVE', 'ADMIN', 'CLIENT'] },
     { name: 'Content Review', href: '/content-review', icon: EyeIcon, roles: ['CREATIVE', 'ADMIN'] },
-    { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon, roles: ['CREATIVE', 'ADMIN'] },
+    { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon, roles: ['CREATIVE', 'ADMIN', 'CLIENT'] },
     { name: 'Published', href: '/published', icon: FolderIcon, roles: ['CREATIVE', 'ADMIN'] },
     { name: 'Scheduled Posts', href: '/scheduled-posts', icon: CalendarIcon, roles: ['CREATIVE', 'ADMIN'] },
     { name: 'Delivery Plans', href: '/delivery-plans', icon: ChartBarIcon, roles: ['CREATIVE', 'ADMIN'] },
@@ -112,6 +113,11 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
+          </div>
+
+          {/* Organization Switcher */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <OrganizationSwitcher />
           </div>
 
           {/* Navigation */}

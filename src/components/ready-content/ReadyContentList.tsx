@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS, CONTENT_TYPE } from '@/lib/utils/enum-utils'
 import type { ContentDraft, Idea, User, Media, ContentType } from '../../types/content'
 import { formatDate } from '../../lib/utils/date-helpers'
+import EnhancedFeedbackForm from '@/components/feedback/EnhancedFeedbackForm'
+import FeedbackList from '@/components/feedback/FeedbackList'
 
 interface ReadyContentListProps {
   content: (Omit<ContentDraft, 'status'> & {
@@ -27,6 +29,10 @@ interface ReadyContentListProps {
 type Feedback = {
   id: string
   comment: string
+  rating: number
+  category: string
+  priority: string
+  actionable: boolean
   createdAt: Date
   contentDraftId: string
   createdById: string
@@ -36,6 +42,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
   const { data: session } = useSession()
   const [selectedType, setSelectedType] = useState<ContentType | 'ALL'>('ALL')
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
+  const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
 
   console.log('ReadyContentList: Rendering with', {
     contentCount: content.length,
@@ -50,8 +57,6 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
     }
     return true
   })
-
-
 
   const getContentTypeLabel = (contentType: string) => {
     switch (contentType) {
@@ -96,6 +101,18 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
     } finally {
       setIsSubmitting(null)
     }
+  }
+
+  const toggleFeedbackForm = (itemId: string) => {
+    setShowFeedbackForm(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }))
+  }
+
+  const handleFeedbackSuccess = () => {
+    // Refresh the page to show updated feedback
+    window.location.reload()
   }
 
   const truncateText = (text: string, maxLength: number = 150) => {
@@ -315,14 +332,14 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                 {isClientUser && item.status === DRAFT_STATUS.AWAITING_FEEDBACK && (
                   <div className="flex space-x-2">
                     <button
-                                              onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.APPROVED)}
+                      onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.APPROVED)}
                       disabled={isSubmitting === item.id}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting === item.id ? 'Updating...' : 'Approve'}
                     </button>
                     <button
-                                              onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.AWAITING_REVISION)}
+                      onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.AWAITING_REVISION)}
                       disabled={isSubmitting === item.id}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -333,7 +350,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
 
                 {item.status === DRAFT_STATUS.APPROVED && (
                   <button
-                                          onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.PUBLISHED)}
+                    onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.PUBLISHED)}
                     disabled={isSubmitting === item.id}
                     className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -342,6 +359,41 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                 )}
               </div>
             </div>
+
+            {/* Feedback Section for Clients */}
+            {isClientUser && (
+              <div className="mt-6 border-t pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-lg font-medium text-gray-900">Feedback</h4>
+                  <button
+                    onClick={() => toggleFeedbackForm(item.id)}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    {showFeedbackForm[item.id] ? 'Hide Feedback Form' : 'Give Feedback'}
+                  </button>
+                </div>
+
+                {/* Feedback Form */}
+                {showFeedbackForm[item.id] && (
+                  <div className="mb-6">
+                    <EnhancedFeedbackForm
+                      targetId={item.id}
+                      targetType="content"
+                      onSuccess={handleFeedbackSuccess}
+                      onCancel={() => toggleFeedbackForm(item.id)}
+                    />
+                  </div>
+                )}
+
+                {/* Feedback History */}
+                {item.feedbacks && item.feedbacks.length > 0 && (
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({item.feedbacks.length})</h5>
+                    <FeedbackList feedbacks={item.feedbacks} />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

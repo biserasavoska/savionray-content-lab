@@ -25,6 +25,7 @@ interface OrganizationContextType {
   userOrganizations: Organization[]
   isLoading: boolean
   switchOrganization: (organizationId: string) => Promise<void>
+  setCurrentOrganization: (organization: Organization | null) => void
   refreshOrganizations: () => Promise<void>
 }
 
@@ -106,6 +107,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     userOrganizations,
     isLoading,
     switchOrganization,
+    setCurrentOrganization,
     refreshOrganizations
   }
 

@@ -8,6 +8,7 @@ import { logger } from '@/lib/utils/logger'
 import { isClient, isCreative } from '@/lib/auth'
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
+import { getOrganizationContext } from '@/lib/utils/organization-context'
 
 export const metadata: Metadata = {
   title: 'Ready Content',
@@ -24,12 +25,16 @@ export default async function ReadyContentPage() {
   const isCreativeUser = isCreative(session)
   const isClientUser = isClient(session)
 
+  // Get organization context for clients
+  const orgContext = isClientUser ? await getOrganizationContext() : null
+
   try {
     // Fetch content drafts that are ready for publishing
     // This includes approved drafts and those awaiting final review
     const readyContent = await prisma.contentDraft.findMany({
       where: {
         ...(isCreativeUser ? { createdById: session.user.id } : {}),
+        ...(isClientUser && orgContext ? { organizationId: orgContext.organizationId } : {}),
         status: {
           in: [
             DRAFT_STATUS.APPROVED,

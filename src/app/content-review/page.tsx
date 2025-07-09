@@ -6,6 +6,7 @@ import { isCreative, isClient } from '@/lib/auth'
 import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import ContentReviewList from './ContentReviewList'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
+import { getOrganizationContext } from '@/lib/utils/organization-context'
 
 export default async function ContentReviewPage() {
   const session = await getServerSession(authOptions)
@@ -17,11 +18,15 @@ export default async function ContentReviewPage() {
   const isCreativeUser = isCreative(session)
   const isClientUser = isClient(session)
 
+  // Get organization context for clients
+  const orgContext = isClientUser ? await getOrganizationContext() : null
+
   try {
     // Fetch content drafts for review - show drafts for approved ideas
     const drafts = await prisma.contentDraft.findMany({
       where: {
         ...(isCreativeUser ? { createdById: session.user.id } : {}),
+        ...(isClientUser && orgContext ? { organizationId: orgContext.organizationId } : {}),
         idea: {
           status: IDEA_STATUS.APPROVED
         },

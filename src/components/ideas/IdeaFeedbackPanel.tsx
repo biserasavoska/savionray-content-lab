@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react'
 import { format } from 'date-fns'
 import { isClient } from '@/lib/auth'
 import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-utils'
+import EnhancedFeedbackForm from '@/components/feedback/EnhancedFeedbackForm'
+import FeedbackList from '@/components/feedback/FeedbackList'
 
 type IdeaWithDrafts = any
 
@@ -14,10 +16,9 @@ interface IdeaFeedbackPanelProps {
 
 export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
   const { data: session } = useSession()
-  const [feedback, setFeedback] = useState('')
   const [comment, setComment] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
 
   const handleIdeaApproval = async (approve: boolean) => {
     if (!session?.user?.id) return
@@ -112,30 +113,16 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
     }
   }
 
-  const handleSubmitFeedback = async (draftId: string) => {
-    if (!feedback.trim() || !session?.user?.id) return
+  const toggleFeedbackForm = (draftId: string) => {
+    setShowFeedbackForm(prev => ({
+      ...prev,
+      [draftId]: !prev[draftId]
+    }))
+  }
 
-    setIsSubmitting(true)
-    try {
-      const response = await fetch(`/api/ideas/${idea.id}/drafts/${draftId}/feedback`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ comment: feedback }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to submit feedback')
-      }
-
-      setFeedback('')
-      window.location.reload()
-    } catch (error) {
-      console.error('Error submitting feedback:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleFeedbackSuccess = () => {
+    // Refresh the page to show updated feedback
+    window.location.reload()
   }
 
   const latestDraft = idea.contentDrafts?.[0]
@@ -263,42 +250,42 @@ export default function IdeaFeedbackPanel({ idea }: IdeaFeedbackPanelProps) {
                 <div dangerouslySetInnerHTML={{ __html: draft.body }} />
               </div>
 
-              {/* Feedback Section */}
-              <div className="mt-6">
-                <h5 className="text-sm font-medium text-gray-900">Feedback</h5>
-                {draft.feedbacks?.map((feedback: any) => (
-                  <div key={feedback.id} className="mt-2 text-sm text-gray-700">
-                    <p className="font-medium">
-                      {feedback.createdBy?.name || feedback.createdBy?.email || 'Unknown User'} -{' '}
-                      {format(new Date(feedback.createdAt), 'MMM d, yyyy')}:
-                    </p>
-                    <p className="mt-1">{feedback.comment}</p>
+              {/* Enhanced Feedback Section */}
+              {isClient(session) && 
+                (draft.status === DRAFT_STATUS.DRAFT || 
+                 draft.status === DRAFT_STATUS.AWAITING_FEEDBACK) && (
+                <div className="mt-6 border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h5 className="text-lg font-medium text-gray-900">Feedback</h5>
+                    <button
+                      onClick={() => toggleFeedbackForm(draft.id)}
+                      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      {showFeedbackForm[draft.id] ? 'Hide Feedback Form' : 'Give Feedback'}
+                    </button>
                   </div>
-                ))}
 
-                {isClient(session) && 
-                  (draft.status === DRAFT_STATUS.DRAFT || 
-                   draft.status === DRAFT_STATUS.AWAITING_FEEDBACK) && (
-                    <div className="mt-4">
-                      <textarea
-                        rows={3}
-                        className="shadow-sm block w-full focus:ring-red-500 focus:border-red-500 sm:text-sm border border-gray-300 rounded-md"
-                        placeholder="Write feedback..."
-                        value={feedback}
-                        onChange={(e) => setFeedback(e.target.value)}
+                  {/* Enhanced Feedback Form */}
+                  {showFeedbackForm[draft.id] && (
+                    <div className="mb-6">
+                      <EnhancedFeedbackForm
+                        targetId={draft.id}
+                        targetType="content"
+                        onSuccess={handleFeedbackSuccess}
+                        onCancel={() => toggleFeedbackForm(draft.id)}
                       />
-                      <div className="mt-3">
-                        <button
-                          onClick={() => handleSubmitFeedback(draft.id)}
-                          disabled={isSubmitting || !feedback.trim()}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-300"
-                        >
-                          {isSubmitting ? 'Sending...' : 'Send'}
-                        </button>
-                      </div>
                     </div>
                   )}
-              </div>
+
+                  {/* Feedback History */}
+                  {draft.feedbacks && draft.feedbacks.length > 0 && (
+                    <div>
+                      <h6 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({draft.feedbacks.length})</h6>
+                      <FeedbackList feedbacks={draft.feedbacks} />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

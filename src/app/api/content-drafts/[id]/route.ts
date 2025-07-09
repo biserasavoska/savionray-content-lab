@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { DraftStatus } from '@prisma/client'
-import { isCreative, isAdmin } from '@/lib/auth'
+import { isCreative, isAdmin, isClient } from '@/lib/auth'
+import { getOrganizationContext } from '@/lib/utils/organization-context'
 
 export async function GET(
   req: NextRequest,
@@ -60,15 +61,16 @@ export async function GET(
       return NextResponse.json({ error: 'Content draft not found' }, { status: 404 })
     }
 
-    // Check permissions - only creator, admin, or client can view
+    // Check permissions - only creator, admin, or client from same organization can view
     if (!isAdmin(session) && contentDraft.createdById !== session.user.id) {
-      // For clients, they can view content drafts for ideas they created
-      const idea = await prisma.idea.findUnique({
-        where: { id: contentDraft.ideaId },
-        select: { createdById: true }
-      })
-      
-      if (!idea || idea.createdById !== session.user.id) {
+      // For clients, they can view content drafts from their organization
+      if (isClient(session)) {
+        const orgContext = await getOrganizationContext()
+        if (contentDraft.organizationId !== orgContext?.organizationId) {
+          return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
+        }
+      } else {
+        // For creatives, they can only view their own drafts
         return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
       }
     }

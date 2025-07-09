@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS } from '@/lib/utils/enum-utils'
+import EnhancedFeedbackForm from '@/components/feedback/EnhancedFeedbackForm'
+import FeedbackList from '@/components/feedback/FeedbackList'
 
 interface ContentDraft {
   id: string
@@ -15,6 +17,9 @@ interface ContentDraft {
   metadata: any
   ideaId: string | null
   contentType: string
+  feedbacks?: (Feedback & {
+    createdBy: Pick<User, 'name' | 'email'>
+  })[]
 }
 
 interface Idea {
@@ -33,6 +38,18 @@ interface User {
   email: string
 }
 
+interface Feedback {
+  id: string
+  comment: string
+  rating: number
+  category: string
+  priority: string
+  actionable: boolean
+  createdAt: Date
+  contentDraftId: string
+  createdById: string
+}
+
 interface ContentReviewListProps {
   drafts: (ContentDraft & {
     idea: Idea
@@ -45,8 +62,7 @@ interface ContentReviewListProps {
 export default function ContentReviewList({ drafts, isCreativeUser, isClientUser }: ContentReviewListProps) {
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
-
-
+  const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
 
   const handleStatusUpdate = async (draftId: string, newStatus: string) => {
     if (!session) return
@@ -74,6 +90,18 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
     } finally {
       setIsSubmitting(null)
     }
+  }
+
+  const toggleFeedbackForm = (draftId: string) => {
+    setShowFeedbackForm(prev => ({
+      ...prev,
+      [draftId]: !prev[draftId]
+    }))
+  }
+
+  const handleFeedbackSuccess = () => {
+    // Refresh the page to show updated feedback
+    window.location.reload()
   }
 
   if (!drafts || drafts.length === 0) {
@@ -157,6 +185,41 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
               )}
             </div>
           </div>
+
+          {/* Feedback Section for Clients */}
+          {isClientUser && (
+            <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-medium text-gray-900">Feedback</h4>
+                <button
+                  onClick={() => toggleFeedbackForm(draft.id)}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  {showFeedbackForm[draft.id] ? 'Hide Feedback Form' : 'Give Feedback'}
+                </button>
+              </div>
+
+              {/* Feedback Form */}
+              {showFeedbackForm[draft.id] && (
+                <div className="mb-6">
+                  <EnhancedFeedbackForm
+                    targetId={draft.id}
+                    targetType="content"
+                    onSuccess={handleFeedbackSuccess}
+                    onCancel={() => toggleFeedbackForm(draft.id)}
+                  />
+                </div>
+              )}
+
+              {/* Feedback History */}
+              {draft.feedbacks && draft.feedbacks.length > 0 && (
+                <div>
+                  <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({draft.feedbacks.length})</h5>
+                  <FeedbackList feedbacks={draft.feedbacks} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

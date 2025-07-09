@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { isAdmin, isClient, isCreative } from '@/lib/auth'
 import Image from 'next/image'
-import { OrganizationSwitcher } from './navigation/OrganizationSwitcher'
+import OrganizationSwitcher from './navigation/OrganizationSwitcher'
 
 export default function Navigation() {
   const { data: session } = useSession()

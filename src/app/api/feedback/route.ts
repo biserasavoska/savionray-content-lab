@@ -12,7 +12,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { contentDraftId, comment } = await req.json()
+    const { 
+      contentDraftId, 
+      comment, 
+      rating = 0, 
+      category = 'general', 
+      priority = 'medium', 
+      actionable = false 
+    } = await req.json()
 
     if (!contentDraftId || !comment) {
       return NextResponse.json(
@@ -39,14 +46,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create feedback
+    // Create enhanced feedback
     const feedback = await prisma.feedback.create({
       data: {
         comment,
-        rating: 0,
-        category: 'general',
-        priority: 'medium',
-        actionable: false,
+        rating: rating || 0,
+        category: category || 'general',
+        priority: priority || 'medium',
+        actionable: actionable || false,
         contentDraftId,
         createdById: session.user.id,
       },
@@ -60,13 +67,9 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Update draft status if needed
-    await prisma.contentDraft.update({
-      where: { id: contentDraftId },
-      data: {
-        status: DraftStatus.DRAFT,
-      },
-    })
+    // Don't automatically change status when feedback is submitted
+    // The status should remain as is, allowing the content to stay in Ready Content
+    // Status changes should be done explicitly by users through the UI
 
     return NextResponse.json(feedback)
   } catch (error) {
