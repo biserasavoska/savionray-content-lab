@@ -22,6 +22,7 @@ describe('IdeaCard', () => {
     title: 'Test Idea',
     description: 'Test Description',
     status: 'PENDING' as IdeaStatus,
+    organizationId: 'test-org-id',
     publishingDateTime: null,
     savedForLater: false,
     mediaType: null,
