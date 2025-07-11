@@ -37,6 +37,14 @@ export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
   const router = useRouter()
   const { data: session } = useSession()
 
+  if (!session) {
+    return (
+      <div className="p-6 text-center text-red-600 bg-red-50 rounded-lg">
+        You must be logged in to create or edit ideas.
+      </div>
+    )
+  }
+
   const mediaTypes = [
     { value: 'PHOTO' as MediaType, label: 'Photo' },
     { value: 'GRAPH_OR_INFOGRAPHIC' as MediaType, label: 'Graph or Infographic' },
