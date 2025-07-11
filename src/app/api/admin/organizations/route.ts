@@ -165,8 +165,8 @@ export async function POST(request: NextRequest) {
       primaryColor = '#3B82F6',
       subscriptionPlan = 'FREE',
       maxUsers = 5,
-      clientEmails = [],
-      adminEmails = []
+      welcomeMessage = '',
+      clientUsers = []
     } = body
 
     if (!name || !slug) {
@@ -197,6 +197,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate client users
+    if (!Array.isArray(clientUsers) || clientUsers.length === 0) {
+      return NextResponse.json(
+        { error: 'At least one client user is required' },
+        { status: 400 }
+      )
+    }
+
+    // Check for duplicate emails in client users
+    const emails = clientUsers.map(user => user.email.toLowerCase())
+    const uniqueEmails = new Set(emails)
+    if (emails.length !== uniqueEmails.size) {
+      return NextResponse.json(
+        { error: 'Duplicate email addresses are not allowed' },
+        { status: 400 }
+      )
+    }
+
     // Create organization
     const organization = await prisma.organization.create({
       data: {
@@ -208,7 +226,7 @@ export async function POST(request: NextRequest) {
         subscriptionStatus: 'ACTIVE',
         maxUsers,
         settings: {
-          welcomeMessage: `Welcome to ${name}!`,
+          welcomeMessage: welcomeMessage || `Welcome to ${name}!`,
           defaultContentTypes: ['SOCIAL_MEDIA_POST', 'BLOG_POST'],
           approvalWorkflow: 'SIMPLE'
         }
@@ -228,58 +246,36 @@ export async function POST(request: NextRequest) {
     })
 
     // Add client users
-    for (const email of clientEmails) {
-      let clientUser = await prisma.user.findUnique({
-        where: { email }
+    for (const clientUser of clientUsers) {
+      let user = await prisma.user.findUnique({
+        where: { email: clientUser.email }
       })
 
-      if (!clientUser) {
-        clientUser = await prisma.user.create({
+      if (!user) {
+        user = await prisma.user.create({
           data: {
-            email,
-            name: email.split('@')[0],
-            role: 'CLIENT',
+            email: clientUser.email,
+            name: clientUser.name,
+            role: clientUser.role,
             emailVerified: new Date()
           }
         })
-      }
-
-      await prisma.organizationUser.create({
-        data: {
-          organizationId: organization.id,
-          userId: clientUser.id,
-          role: 'ADMIN', // Give clients admin access to their organization
-          permissions: ['APPROVE_IDEAS', 'VIEW_ALL_CONTENT', 'MANAGE_PLANS'],
-          isActive: true,
-          invitedBy: session.user.id,
-          joinedAt: new Date()
+      } else {
+        // Update existing user's name if provided
+        if (clientUser.name && user.name !== clientUser.name) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { name: clientUser.name }
+          })
         }
-      })
-    }
-
-    // Add admin users
-    for (const email of adminEmails) {
-      let adminUser = await prisma.user.findUnique({
-        where: { email }
-      })
-
-      if (!adminUser) {
-        adminUser = await prisma.user.create({
-          data: {
-            email,
-            name: email.split('@')[0],
-            role: 'ADMIN',
-            emailVerified: new Date()
-          }
-        })
       }
 
       await prisma.organizationUser.create({
         data: {
           organizationId: organization.id,
-          userId: adminUser.id,
-          role: 'MANAGER',
-          permissions: ['CREATE_CONTENT', 'VIEW_ALL', 'MANAGE_WORKFLOWS'],
+          userId: user.id,
+          role: clientUser.organizationRole,
+          permissions: getPermissionsForRole(clientUser.organizationRole),
           isActive: true,
           invitedBy: session.user.id,
           joinedAt: new Date()
@@ -291,8 +287,8 @@ export async function POST(request: NextRequest) {
       organizationId: organization.id,
       organizationName: organization.name,
       createdBy: session.user.id,
-      clientCount: clientEmails.length,
-      adminCount: adminEmails.length
+      clientCount: clientUsers.length,
+      welcomeMessage: welcomeMessage ? 'Custom' : 'Default'
     })
 
     return NextResponse.json({
@@ -302,7 +298,8 @@ export async function POST(request: NextRequest) {
         name: organization.name,
         slug: organization.slug,
         domain: organization.domain,
-        primaryColor: organization.primaryColor
+        primaryColor: organization.primaryColor,
+        clientUsers: clientUsers.length
       }
     })
 
@@ -313,5 +310,23 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  }
+}
+
+// Helper function to get permissions for organization roles
+function getPermissionsForRole(role: string): string[] {
+  switch (role) {
+    case 'OWNER':
+      return ['ALL']
+    case 'ADMIN':
+      return ['APPROVE_IDEAS', 'VIEW_ALL_CONTENT', 'MANAGE_PLANS', 'MANAGE_USERS', 'MANAGE_SETTINGS']
+    case 'MANAGER':
+      return ['CREATE_CONTENT', 'VIEW_ALL', 'MANAGE_WORKFLOWS', 'APPROVE_CONTENT']
+    case 'MEMBER':
+      return ['CREATE_CONTENT', 'VIEW_OWN_CONTENT', 'SUBMIT_FOR_REVIEW']
+    case 'VIEWER':
+      return ['VIEW_ALL_CONTENT']
+    default:
+      return ['VIEW_OWN_CONTENT']
   }
 } 

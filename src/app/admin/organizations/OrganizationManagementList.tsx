@@ -221,6 +221,12 @@ export default function OrganizationManagementList({}: OrganizationManagementLis
                   View Details
                 </Link>
                 <Link
+                  href={`/admin/organizations/${org.id}/users`}
+                  className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 text-center"
+                >
+                  Manage Users
+                </Link>
+                <Link
                   href={`/admin/organizations/${org.id}/edit`}
                   className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 text-center"
                 >

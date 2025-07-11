@@ -3,6 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface ClientUser {
+  id: string
+  email: string
+  name: string
+  role: 'CLIENT' | 'ADMIN' | 'CREATIVE'
+  organizationRole: 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER' | 'VIEWER'
+}
+
 interface CreateOrganizationFormProps {}
 
 export default function CreateOrganizationForm({}: CreateOrganizationFormProps) {
@@ -18,11 +26,11 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
     primaryColor: '#3B82F6',
     subscriptionPlan: 'FREE',
     maxUsers: 5,
-    clientEmails: '',
-    adminEmails: ''
+    welcomeMessage: '',
+    clientUsers: [] as ClientUser[]
   })
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
@@ -43,6 +51,36 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
     }
   }
 
+  const addClientUser = () => {
+    const newUser: ClientUser = {
+      id: Date.now().toString(),
+      email: '',
+      name: '',
+      role: 'CLIENT',
+      organizationRole: 'ADMIN'
+    }
+    setFormData(prev => ({
+      ...prev,
+      clientUsers: [...prev.clientUsers, newUser]
+    }))
+  }
+
+  const removeClientUser = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      clientUsers: prev.clientUsers.filter(user => user.id !== id)
+    }))
+  }
+
+  const updateClientUser = (id: string, field: keyof ClientUser, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      clientUsers: prev.clientUsers.map(user => 
+        user.id === id ? { ...user, [field]: value } : user
+      )
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -50,16 +88,25 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
     setSuccess(null)
 
     try {
-      // Parse email lists
-      const clientEmails = formData.clientEmails
-        .split(',')
-        .map(email => email.trim())
-        .filter(email => email.length > 0)
-      
-      const adminEmails = formData.adminEmails
-        .split(',')
-        .map(email => email.trim())
-        .filter(email => email.length > 0)
+      // Validate client users
+      const validClientUsers = formData.clientUsers.filter(user => 
+        user.email.trim() && user.name.trim()
+      )
+
+      if (validClientUsers.length === 0) {
+        setError('At least one client user is required')
+        setIsLoading(false)
+        return
+      }
+
+      // Check for duplicate emails
+      const emails = validClientUsers.map(user => user.email.toLowerCase())
+      const uniqueEmails = new Set(emails)
+      if (emails.length !== uniqueEmails.size) {
+        setError('Duplicate email addresses are not allowed')
+        setIsLoading(false)
+        return
+      }
 
       const response = await fetch('/api/admin/organizations', {
         method: 'POST',
@@ -68,8 +115,8 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
         },
         body: JSON.stringify({
           ...formData,
-          clientEmails,
-          adminEmails
+          clientUsers: validClientUsers,
+          welcomeMessage: formData.welcomeMessage || `Welcome to ${formData.name}!`
         }),
       })
 
@@ -199,42 +246,124 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
           </div>
         </div>
 
-        {/* Team Setup */}
+        {/* Welcome Message */}
         <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Team Setup</h3>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="clientEmails" className="block text-sm font-medium text-gray-700">
-                Client Email Addresses
-              </label>
-              <textarea
-                name="clientEmails"
-                id="clientEmails"
-                value={formData.clientEmails}
-                onChange={(e) => setFormData(prev => ({ ...prev, clientEmails: e.target.value }))}
-                placeholder="client1@example.com, client2@example.com"
-                rows={3}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">Comma-separated list of client email addresses</p>
-            </div>
-
-            <div>
-              <label htmlFor="adminEmails" className="block text-sm font-medium text-gray-700">
-                Admin Email Addresses
-              </label>
-              <textarea
-                name="adminEmails"
-                id="adminEmails"
-                value={formData.adminEmails}
-                onChange={(e) => setFormData(prev => ({ ...prev, adminEmails: e.target.value }))}
-                placeholder="admin1@example.com, admin2@example.com"
-                rows={3}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <p className="mt-1 text-xs text-gray-500">Comma-separated list of admin email addresses</p>
-            </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Welcome Message</h3>
+          <div>
+            <label htmlFor="welcomeMessage" className="block text-sm font-medium text-gray-700">
+              Custom Welcome Message
+            </label>
+            <textarea
+              name="welcomeMessage"
+              id="welcomeMessage"
+              value={formData.welcomeMessage}
+              onChange={handleInputChange}
+              placeholder={`Welcome to ${formData.name || 'your organization'}!`}
+              rows={3}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="mt-1 text-xs text-gray-500">This message will be shown to users when they first access the organization</p>
           </div>
+        </div>
+
+        {/* Client Users Setup */}
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Client Users</h3>
+            <button
+              type="button"
+              onClick={addClientUser}
+              className="px-3 py-1 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              + Add User
+            </button>
+          </div>
+          
+          {formData.clientUsers.length === 0 ? (
+            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+              <p className="text-gray-500">No client users added yet</p>
+              <p className="text-sm text-gray-400 mt-1">Click "Add User" to add the first client user</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {formData.clientUsers.map((user, index) => (
+                <div key={user.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-start mb-3">
+                    <h4 className="text-sm font-medium text-gray-900">User {index + 1}</h4>
+                    <button
+                      type="button"
+                      onClick={() => removeClientUser(user.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={user.name}
+                        onChange={(e) => updateClientUser(user.id, 'name', e.target.value)}
+                        placeholder="Full Name"
+                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        value={user.email}
+                        onChange={(e) => updateClientUser(user.id, 'email', e.target.value)}
+                        placeholder="user@example.com"
+                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        System Role
+                      </label>
+                      <select
+                        value={user.role}
+                        onChange={(e) => updateClientUser(user.id, 'role', e.target.value)}
+                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="CLIENT">Client</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="CREATIVE">Creative</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Organization Role
+                      </label>
+                      <select
+                        value={user.organizationRole}
+                        onChange={(e) => updateClientUser(user.id, 'organizationRole', e.target.value)}
+                        className="block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="OWNER">Owner</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="MANAGER">Manager</option>
+                        <option value="MEMBER">Member</option>
+                        <option value="VIEWER">Viewer</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Error and Success Messages */}
@@ -261,7 +390,7 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
           </button>
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || formData.clientUsers.length === 0}
             className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating...' : 'Create Organization'}
