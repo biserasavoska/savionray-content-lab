@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import IdeaForm from '../components/IdeaForm'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -8,12 +9,17 @@ export default function NewIdeaPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+    }
+  }, [status, router])
+
   if (status === 'loading') {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
 
-  if (!session) {
-    if (typeof window !== 'undefined') router.push('/auth/signin')
+  if (status === 'unauthenticated') {
     return <div className="min-h-screen flex items-center justify-center">Redirecting to sign in...</div>
   }
 
