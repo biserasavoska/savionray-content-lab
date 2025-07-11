@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import type { ContentDraft, Idea } from '@/types/content'
-import RichTextEditor from '../editor/RichTextEditor'
-import { debounce } from 'lodash'
+import RichTextEditor from '../editor/RichTextEditorDynamic'
+import { debounce } from '@/utils/performance'
 import { FormField, Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
 import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
@@ -98,7 +98,7 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
     }
   })
 
-  // Auto-save function
+  // Auto-save function with optimized debounce
   const autoSave = useCallback(
     debounce(async (data: typeof formData, id?: string) => {
       if (!session?.user?.id) return
