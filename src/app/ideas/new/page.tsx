@@ -1,8 +1,22 @@
 'use client'
 
 import IdeaForm from '../components/IdeaForm'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 export default function NewIdeaPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  if (status === 'loading') {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+  if (!session) {
+    if (typeof window !== 'undefined') router.push('/auth/signin')
+    return <div className="min-h-screen flex items-center justify-center">Redirecting to sign in...</div>
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">

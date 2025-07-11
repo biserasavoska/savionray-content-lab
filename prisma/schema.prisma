@@ -59,6 +59,7 @@ model User {
   stageTransitions     StageTransition[]
   organizationUsers    OrganizationUser[]
   organizationInvitations OrganizationUser[] @relation("OrganizationInvitations")
+  emailVerificationTokens EmailVerificationToken[]
 }
 
 model Idea {
@@ -152,6 +153,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
 }
 
 model ContentDeliveryPlan {
