@@ -66,6 +66,14 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       // Store the selected organization in localStorage for persistence
       localStorage.setItem('selectedOrganizationId', organizationId)
       
+      // Update the URL to reflect the organization context
+      const currentPath = window.location.pathname
+      if (currentPath.startsWith('/organization/')) {
+        // If we're already in an organization context, update the URL
+        const newPath = currentPath.replace(/^\/organization\/[^\/]+/, `/organization/${organization.slug}`)
+        window.history.pushState({}, '', newPath)
+      }
+      
       // Refresh the page to update all context-dependent components
       window.location.reload()
     }
