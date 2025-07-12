@@ -26,6 +26,7 @@ import {
 import { useInterface } from '@/hooks/useInterface'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import OrganizationSwitcher from './OrganizationSwitcher'
+import ClientNavigationSwitcher from './ClientNavigationSwitcher'
 
 interface NavigationItem {
   name: string
@@ -67,6 +68,9 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     { name: 'Team', href: '/team', icon: UsersIcon, roles: ['ADMIN'] },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, roles: ['ADMIN'] },
     { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['ADMIN'] },
+    
+    // Development/Test items
+    { name: 'Test Client Nav', href: '/test-client-navigation', icon: BuildingOfficeIcon, roles: ['CREATIVE', 'ADMIN'] },
   ]
 
   // Filter navigation items based on user role
@@ -142,6 +146,13 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
           {/* User section */}
           {session && (
             <div className="border-t border-gray-200 p-4">
+              {/* Client Navigation Switcher for Creative and Admin users */}
+              {(interfaceContext.isCreative || interfaceContext.isAdmin) && (
+                <div className="mb-4">
+                  <ClientNavigationSwitcher />
+                </div>
+              )}
+              
               {/* Organization Switcher for Admin users */}
               {interfaceContext.isAdmin && (
                 <div className="mb-4">
