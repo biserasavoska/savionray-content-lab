@@ -24,6 +24,7 @@ import {
   ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 import { useInterface } from '@/hooks/useInterface'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import OrganizationSwitcher from './OrganizationSwitcher'
 
 interface NavigationItem {
@@ -42,21 +43,21 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
   const { data: session } = useSession()
   const pathname = usePathname()
   const interfaceContext = useInterface()
+  const { currentOrganization } = useOrganization()
 
   // Define navigation items for different roles
   const navigationItems: NavigationItem[] = [
     // Common items
     { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     
-    // Client-specific items
-    { name: 'Content Review', href: '/content-review', icon: EyeIcon, roles: ['CLIENT'] },
+    // Client-specific items (in requested order)
+    { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
+    { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Approved Content', href: '/approved', icon: DocumentTextIcon, roles: ['CLIENT'] },
-    { name: 'Feedback Management', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT', 'ADMIN'] },
+    { name: 'Feedback', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT'] },
     
     // Creative/Agency items
-    { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CREATIVE', 'ADMIN', 'CLIENT'] },
     { name: 'Content Review', href: '/content-review', icon: EyeIcon, roles: ['CREATIVE', 'ADMIN'] },
-    { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon, roles: ['CREATIVE', 'ADMIN', 'CLIENT'] },
     { name: 'Published', href: '/published', icon: FolderIcon, roles: ['CREATIVE', 'ADMIN'] },
     { name: 'Scheduled Posts', href: '/scheduled-posts', icon: CalendarIcon, roles: ['CREATIVE', 'ADMIN'] },
     { name: 'Delivery Plans', href: '/delivery-plans', icon: ChartBarIcon, roles: ['CREATIVE', 'ADMIN'] },
@@ -115,11 +116,6 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
             </button>
           </div>
 
-          {/* Organization Switcher */}
-          <div className="px-4 py-3 border-b border-gray-100">
-            <OrganizationSwitcher />
-          </div>
-
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">
             {filteredNavigation.map((item) => {
@@ -146,6 +142,25 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
           {/* User section */}
           {session && (
             <div className="border-t border-gray-200 p-4">
+              {/* Organization Switcher for Admin users */}
+              {interfaceContext.isAdmin && (
+                <div className="mb-4">
+                  <OrganizationSwitcher />
+                </div>
+              )}
+              
+              {/* Organization name label */}
+              {currentOrganization && (
+                <div className="mb-4 px-3 py-2 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <BuildingOfficeIcon className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {currentOrganization.name}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex items-center space-x-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-sm font-medium text-blue-700">
