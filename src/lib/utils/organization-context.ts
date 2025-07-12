@@ -14,7 +14,7 @@ export interface OrganizationContext {
  * Get the current user's organization context
  * This is the core function for multi-tenant data isolation
  */
-export async function getOrganizationContext(): Promise<OrganizationContext | null> {
+export async function getOrganizationContext(organizationId?: string): Promise<OrganizationContext | null> {
   try {
     const session = await getServerSession(authOptions);
     
@@ -41,9 +41,19 @@ export async function getOrganizationContext(): Promise<OrganizationContext | nu
       return null;
     }
 
-    // For now, we'll use the first active organization
-    // In Phase 3, we'll add organization switching
-    const organizationUser = user.organizationUsers[0];
+    let organizationUser;
+    
+    if (organizationId) {
+      // Use the specified organization if provided
+      organizationUser = user.organizationUsers.find(ou => ou.organizationId === organizationId);
+      if (!organizationUser) {
+        logger.warn(`User ${session.user.email} does not have access to organization ${organizationId}`);
+        return null;
+      }
+    } else {
+      // Fall back to the first active organization
+      organizationUser = user.organizationUsers[0];
+    }
     
     if (!organizationUser) {
       logger.warn(`No active organization found for user: ${session.user.email}`);
@@ -65,8 +75,8 @@ export async function getOrganizationContext(): Promise<OrganizationContext | nu
 /**
  * Require organization context - throws error if not available
  */
-export async function requireOrganizationContext(): Promise<OrganizationContext> {
-  const context = await getOrganizationContext();
+export async function requireOrganizationContext(organizationId?: string): Promise<OrganizationContext> {
+  const context = await getOrganizationContext(organizationId);
   
   if (!context) {
     throw new Error("Organization context required but not available");

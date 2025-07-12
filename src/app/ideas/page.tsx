@@ -10,6 +10,8 @@ import { IDEA_STATUS } from '@/lib/utils/enum-utils'
 import { SimpleErrorDisplay } from '@/components/ui/ErrorDisplay'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
+import { useApiHeaders } from '@/lib/utils/api-helpers'
 
 const TABS = [
   { id: 'all', name: 'All Ideas', status: undefined },
@@ -21,6 +23,8 @@ const TABS = [
 export default function IdeasPage() {
   const { data: session } = useSession()
   const { organizationId, isLoading: orgLoading } = useCurrentOrganization()
+  const { currentOrganization } = useOrganization()
+  const apiHeaders = useApiHeaders()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -49,7 +53,9 @@ export default function IdeasPage() {
         limit: '10',
       })
       
-      const response = await fetch(`/api/ideas?${params}`)
+      const response = await fetch(`/api/ideas?${params}`, {
+        headers: apiHeaders
+      })
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error?.message || 'Failed to load ideas')
@@ -149,7 +155,14 @@ export default function IdeasPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Content Ideas</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Content Ideas</h1>
+            {currentOrganization && (
+              <p className="text-sm text-gray-600 mt-1">
+                Viewing ideas for <span className="font-medium">{currentOrganization.name}</span>
+              </p>
+            )}
+          </div>
           <button
             onClick={() => router.push('/ideas/new')}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"

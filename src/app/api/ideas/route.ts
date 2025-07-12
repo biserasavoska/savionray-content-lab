@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext()
+    // Check if organization ID is provided in headers (from frontend context)
+    const organizationId = req.headers.get('x-organization-id') || undefined
+    const orgContext = await requireOrganizationContext(organizationId)
 
     const { title, description, publishingDateTime, savedForLater, mediaType, contentType } = await req.json()
 
@@ -92,6 +94,14 @@ export async function POST(req: NextRequest) {
               email: true,
             },
           },
+          organization: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              primaryColor: true,
+            },
+          },
         },
       })
     })
@@ -122,7 +132,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext()
+    // Check if organization ID is provided in headers (from frontend context)
+    const organizationId = req.headers.get('x-organization-id') || undefined
+    const orgContext = await requireOrganizationContext(organizationId)
 
     const url = new URL(req.url)
     const page = parseInt(url.searchParams.get('page') || '1')
@@ -159,6 +171,14 @@ export async function GET(req: NextRequest) {
             select: {
               name: true,
               email: true,
+            },
+          },
+          organization: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              primaryColor: true,
             },
           },
           comments: {

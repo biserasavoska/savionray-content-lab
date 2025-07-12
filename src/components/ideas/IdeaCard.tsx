@@ -83,10 +83,17 @@ export default function IdeaCard({
             {idea.status.replace(/_/g, ' ')}
           </Badge>
         </div>
-        <p className="text-sm text-gray-500">
-          by {idea.createdBy.name || idea.createdBy.email} •{' '}
-          {formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true })}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            by {idea.createdBy.name || idea.createdBy.email} •{' '}
+            {formatDistanceToNow(new Date(idea.createdAt), { addSuffix: true })}
+          </p>
+          {idea.organization && (
+            <Badge variant="secondary" size="sm">
+              {idea.organization.name}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent>

@@ -17,16 +17,49 @@ export default async function ReviewIdeasPage() {
     redirect('/dashboard')
   }
 
-  // Fetch initial ideas pending review
+  // Get user's organizations for filtering
+  const userOrganizations = await prisma.organizationUser.findMany({
+    where: {
+      userId: session.user.id,
+      isActive: true,
+    },
+    include: {
+      organization: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          primaryColor: true,
+        },
+      },
+    },
+    orderBy: {
+      joinedAt: 'desc',
+    },
+  })
+
+  // For now, use the first organization. In a real app, you'd get the current organization from context
+  const currentOrgId = userOrganizations[0]?.organizationId
+
+  // Fetch initial ideas pending review for the current organization
   const ideas = await prisma.idea.findMany({
     where: {
       status: IdeaStatus.PENDING,
+      ...(currentOrgId && { organizationId: currentOrgId }),
     },
     include: {
       createdBy: {
         select: {
           name: true,
           email: true,
+        },
+      },
+      organization: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          primaryColor: true,
         },
       },
       contentDrafts: {

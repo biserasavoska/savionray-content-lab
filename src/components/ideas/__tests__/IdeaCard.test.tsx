@@ -35,6 +35,12 @@ describe('IdeaCard', () => {
       name: 'Test User',
       email: 'test@example.com',
     },
+    organization: {
+      id: 'test-org-id',
+      name: 'Test Organization',
+      slug: 'test-org',
+      primaryColor: '#3B82F6',
+    },
     contentDrafts: [],
     comments: [],
   }
@@ -120,5 +126,10 @@ describe('IdeaCard', () => {
     const statusElement = screen.getByText('APPROVED')
     expect(statusElement.className).toContain('bg-green-100')
     expect(statusElement.className).toContain('text-green-800')
+  })
+
+  it('displays organization name', () => {
+    render(<IdeaCard idea={mockIdea} />)
+    expect(screen.getByText('Test Organization')).toBeInTheDocument()
   })
 }) 

@@ -7,6 +7,9 @@ import { FormField, Input, Textarea, Select, Checkbox } from '@/components/ui/co
 import Button from '@/components/ui/common/Button'
 import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import { useFormData } from '@/components/ui/common/hooks'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
+import { isAdmin } from '@/lib/auth'
+import { useApiHeaders } from '@/lib/utils/api-helpers'
 
 type MediaType = 'PHOTO' | 'GRAPH_OR_INFOGRAPHIC' | 'VIDEO' | 'SOCIAL_CARD' | 'POLL' | 'CAROUSEL'
 type ContentType = 'NEWSLETTER' | 'BLOG_POST' | 'SOCIAL_MEDIA_POST' | 'WEBSITE_COPY' | 'EMAIL_CAMPAIGN'
@@ -36,6 +39,8 @@ interface FormData {
 export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
   const router = useRouter()
   const { data: session } = useSession()
+  const { currentOrganization, userOrganizations } = useOrganization()
+  const apiHeaders = useApiHeaders()
 
   const mediaTypes = [
     { value: 'PHOTO' as MediaType, label: 'Photo' },
@@ -86,9 +91,7 @@ export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
 
       const response = await fetch(idea ? `/api/ideas/${idea.id}` : '/api/ideas', {
         method: idea ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: apiHeaders,
         body: JSON.stringify({
           ...data,
           publishingDateTime: data.publishingDateTime ? new Date(data.publishingDateTime).toISOString() : null,
@@ -187,6 +190,31 @@ export default function IdeaForm({ idea, onSuccess }: IdeaFormProps) {
               label="Save for later"
             />
           </FormField>
+
+          {/* Organization Information */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Organization</h3>
+            {currentOrganization ? (
+              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div 
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                  style={{ 
+                    backgroundColor: currentOrganization.primaryColor || '#3B82F6' 
+                  }}
+                >
+                  {currentOrganization.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{currentOrganization.name}</p>
+                  <p className="text-sm text-gray-500">
+                    This idea will be created for {currentOrganization.name}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No organization selected</p>
+            )}
+          </div>
         </CardContent>
 
         <CardFooter>
