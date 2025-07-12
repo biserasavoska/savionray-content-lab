@@ -10,9 +10,10 @@ interface ApprovedContentListProps {
   content: any[]
   isAdminUser: boolean
   isCreativeUser: boolean
+  isClientUser: boolean
 }
 
-export default function ApprovedContentList({ content, isAdminUser, isCreativeUser }: ApprovedContentListProps) {
+export default function ApprovedContentList({ content, isAdminUser, isCreativeUser, isClientUser }: ApprovedContentListProps) {
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
 
@@ -20,6 +21,7 @@ export default function ApprovedContentList({ content, isAdminUser, isCreativeUs
     contentCount: content.length,
     isAdminUser,
     isCreativeUser,
+    isClientUser,
     sessionUser: session?.user?.email
   })
 

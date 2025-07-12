@@ -17,9 +17,10 @@ export default async function ApprovedContentPage() {
 
   const isAdminUser = isAdmin(session)
   const isCreativeUser = isCreative(session)
+  const isClientUser = session.user.role === 'CLIENT'
 
-  // Only admins and creatives can access approved content
-  if (!isAdminUser && !isCreativeUser) {
+  // All authenticated users can access approved content
+  if (!isAdminUser && !isCreativeUser && !isClientUser) {
     redirect('/')
   }
 
@@ -106,6 +107,7 @@ export default async function ApprovedContentPage() {
           content={approvedContent}
           isAdminUser={isAdminUser}
           isCreativeUser={isCreativeUser}
+          isClientUser={isClientUser}
         />
       </div>
     )
