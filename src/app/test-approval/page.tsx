@@ -75,6 +75,37 @@ export default function TestApprovalPage() {
     }
   }
 
+  const testContentDraftApproval = async () => {
+    if (!draftId.trim()) return
+    
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/content-drafts/${draftId.trim()}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: DRAFT_STATUS.APPROVED,
+        }),
+      })
+
+      const result = await response.json()
+      setTestResult({
+        success: response.ok,
+        status: response.status,
+        data: result
+      })
+    } catch (error) {
+      setTestResult({
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!session) {
     return (
       <div className="p-8">
@@ -125,7 +156,7 @@ export default function TestApprovalPage() {
         </div>
 
         <div className="bg-white shadow sm:rounded-lg p-6">
-          <h2 className="text-lg font-medium mb-4">Test Draft Approval</h2>
+          <h2 className="text-lg font-medium mb-4">Test Draft Approval (Idea-specific endpoint)</h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -156,7 +187,35 @@ export default function TestApprovalPage() {
               disabled={loading || !ideaId.trim() || !draftId.trim()}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
             >
-              {loading ? 'Testing...' : 'Test Draft Approval'}
+              {loading ? 'Testing...' : 'Test Draft Approval (Idea-specific)'}
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white shadow sm:rounded-lg p-6">
+          <h2 className="text-lg font-medium mb-4">Test Content Draft Approval (Direct endpoint)</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            This tests the updated content draft API that allows clients to approve drafts for their organization.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Draft ID
+              </label>
+              <input
+                type="text"
+                value={draftId}
+                onChange={(e) => setDraftId(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                placeholder="Enter draft ID"
+              />
+            </div>
+            <button
+              onClick={testContentDraftApproval}
+              disabled={loading || !draftId.trim()}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300"
+            >
+              {loading ? 'Testing...' : 'Test Content Draft Approval (Direct)'}
             </button>
           </div>
         </div>
