@@ -12,20 +12,20 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) {
       logger.warn('Unauthorized attempt to update idea status', { ideaId: params.id })
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-    if (!isClient(session)) {
+  if (!isClient(session)) {
       logger.warn('Non-client attempt to update idea status', { 
         ideaId: params.id, 
         userId: session.user.id, 
         userRole: session.user.role 
       })
-      return NextResponse.json({ error: 'Only clients can update idea status' }, { status: 403 })
-    }
+    return NextResponse.json({ error: 'Only clients can update idea status' }, { status: 403 })
+  }
 
     const orgContext = await requireOrganizationContext()
     const { status } = await req.json()

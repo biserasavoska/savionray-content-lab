@@ -53,7 +53,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     // Client-specific items (in requested order)
     { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
-    { name: 'Approved Content', href: '/approved', icon: DocumentTextIcon, roles: ['CLIENT'] },
+    { name: 'Approved Content', href: '/approved', icon: DocumentTextIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Feedback', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT'] },
     
     // Creative/Agency items

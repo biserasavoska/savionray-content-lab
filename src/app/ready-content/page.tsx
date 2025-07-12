@@ -35,12 +35,7 @@ export default async function ReadyContentPage() {
       where: {
         ...(isCreativeUser ? { createdById: session.user.id } : {}),
         ...(isClientUser && orgContext ? { organizationId: orgContext.organizationId } : {}),
-        status: {
-          in: [
-            DRAFT_STATUS.APPROVED,
-            DRAFT_STATUS.AWAITING_FEEDBACK // Include drafts awaiting final client approval
-          ]
-        }
+        status: DRAFT_STATUS.AWAITING_FEEDBACK // Only show content awaiting client approval
       },
       include: {
         idea: {
@@ -108,7 +103,7 @@ export default async function ReadyContentPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Ready Content</h1>
           <p className="text-gray-600">
-            Content that has been created with AI and is ready for publishing or final review.
+            Content that has been created with AI and is ready for client review and approval.
           </p>
         </div>
         
