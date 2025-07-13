@@ -44,13 +44,6 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
 
-  console.log('ReadyContentList: Rendering with', {
-    contentCount: content.length,
-    isCreativeUser,
-    isClientUser,
-    sessionUser: session?.user?.email
-  })
-
   const filteredContent = content.filter(item => {
     if (selectedType !== 'ALL' && item.contentType !== selectedType) {
       return false

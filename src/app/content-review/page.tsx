@@ -7,6 +7,7 @@ import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import ContentReviewList from './ContentReviewList'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 import { getOrganizationContext } from '@/lib/utils/organization-context'
+import { headers } from 'next/headers'
 
 export default async function ContentReviewPage() {
   const session = await getServerSession(authOptions)
@@ -18,15 +19,45 @@ export default async function ContentReviewPage() {
   const isCreativeUser = isCreative(session)
   const isClientUser = isClient(session)
 
-  // Get organization context for clients
-  const orgContext = isClientUser ? await getOrganizationContext() : null
+  // Get headers to access cookies
+  const headersList = await headers()
+  
+  // Create a mock request object to pass to getOrganizationContext
+  const mockRequest = {
+    cookies: {
+      get: (name: string) => {
+        const cookieHeader = headersList.get('cookie')
+        if (!cookieHeader) return null
+        
+        const cookies = cookieHeader.split(';').reduce((acc: any, cookie) => {
+          const [key, value] = cookie.trim().split('=')
+          acc[key] = value
+          return acc
+        }, {})
+        
+        return cookies[name] ? { value: cookies[name] } : null
+      }
+    },
+    headers: {
+      get: (name: string) => headersList.get(name)
+    }
+  } as any
+
+  // Get organization context for ALL users (including admins)
+  const orgContext = await getOrganizationContext(undefined, mockRequest)
+  
+  if (!orgContext) {
+    redirect('/')
+  }
 
   try {
     // Fetch content drafts for review - show drafts for approved ideas
     const drafts = await prisma.contentDraft.findMany({
       where: {
+        // Always filter by organization for all users
+        organizationId: orgContext.organizationId,
+        // Additional filters based on user role
         ...(isCreativeUser ? { createdById: session.user.id } : {}),
-        ...(isClientUser && orgContext ? { organizationId: orgContext.organizationId } : {}),
         idea: {
           status: IDEA_STATUS.APPROVED
         },
@@ -63,6 +94,7 @@ export default async function ContentReviewPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Content Review</h1>
+        
         <ContentReviewList 
           drafts={safeDrafts} 
           isCreativeUser={isCreativeUser}

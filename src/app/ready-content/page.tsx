@@ -9,6 +9,7 @@ import { isClient, isCreative } from '@/lib/auth'
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 import { getOrganizationContext } from '@/lib/utils/organization-context'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   title: 'Ready Content',
@@ -25,16 +26,46 @@ export default async function ReadyContentPage() {
   const isCreativeUser = isCreative(session)
   const isClientUser = isClient(session)
 
-  // Get organization context for clients
-  const orgContext = isClientUser ? await getOrganizationContext() : null
+  // Get headers to access cookies
+  const headersList = await headers()
+  
+  // Create a mock request object to pass to getOrganizationContext
+  const mockRequest = {
+    cookies: {
+      get: (name: string) => {
+        const cookieHeader = headersList.get('cookie')
+        if (!cookieHeader) return null
+        
+        const cookies = cookieHeader.split(';').reduce((acc: any, cookie) => {
+          const [key, value] = cookie.trim().split('=')
+          acc[key] = value
+          return acc
+        }, {})
+        
+        return cookies[name] ? { value: cookies[name] } : null
+      }
+    },
+    headers: {
+      get: (name: string) => headersList.get(name)
+    }
+  } as any
+
+  // Get organization context for ALL users (including admins)
+  const orgContext = await getOrganizationContext(undefined, mockRequest)
+  
+  if (!orgContext) {
+    redirect('/')
+  }
 
   try {
     // Fetch content drafts that are ready for publishing
     // This includes approved drafts and those awaiting final review
     const readyContent = await prisma.contentDraft.findMany({
       where: {
+        // Always filter by organization for all users
+        organizationId: orgContext.organizationId,
+        // Additional filters based on user role
         ...(isCreativeUser ? { createdById: session.user.id } : {}),
-        ...(isClientUser && orgContext ? { organizationId: orgContext.organizationId } : {}),
         status: DRAFT_STATUS.AWAITING_FEEDBACK // Only show content awaiting client approval
       },
       include: {
@@ -92,7 +123,8 @@ export default async function ReadyContentPage() {
     logger.info(`Ready Content: Found ${readyContent.length} items for user ${session.user.email}`, {
       userId: session.user.id,
       userEmail: session.user.email,
-      itemCount: readyContent.length
+      itemCount: readyContent.length,
+      organizationId: orgContext.organizationId
     })
 
     // Use the sanitization utility to ensure all user fields are non-null
@@ -107,6 +139,8 @@ export default async function ReadyContentPage() {
           </p>
         </div>
         
+
+        
         <ReadyContentList 
           content={safeReadyContent} 
           isCreativeUser={isCreativeUser}
@@ -117,7 +151,8 @@ export default async function ReadyContentPage() {
   } catch (error) {
     logger.error('Error loading ready content page', error as Error, {
       userId: session?.user?.id,
-      userEmail: session?.user?.email
+      userEmail: session?.user?.email,
+      organizationId: orgContext?.organizationId
     })
     return (
       <div className="container mx-auto px-4 py-8">

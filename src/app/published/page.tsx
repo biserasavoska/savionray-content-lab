@@ -6,6 +6,8 @@ import { isCreative } from '@/lib/auth'
 import PublishedContentList from './PublishedContentList'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
+import { getOrganizationContext } from '@/lib/utils/organization-context'
+import { headers } from 'next/headers'
 
 export default async function PublishedPage() {
   const session = await getServerSession(authOptions)
@@ -16,9 +18,43 @@ export default async function PublishedPage() {
 
   const isCreativeUser = isCreative(session)
 
+  // Get headers to access cookies
+  const headersList = await headers()
+  
+  // Create a mock request object to pass to getOrganizationContext
+  const mockRequest = {
+    cookies: {
+      get: (name: string) => {
+        const cookieHeader = headersList.get('cookie')
+        if (!cookieHeader) return null
+        
+        const cookies = cookieHeader.split(';').reduce((acc: any, cookie) => {
+          const [key, value] = cookie.trim().split('=')
+          acc[key] = value
+          return acc
+        }, {})
+        
+        return cookies[name] ? { value: cookies[name] } : null
+      }
+    },
+    headers: {
+      get: (name: string) => headersList.get(name)
+    }
+  } as any
+
+  // Get organization context for ALL users (including admins)
+  const orgContext = await getOrganizationContext(undefined, mockRequest)
+  
+  if (!orgContext) {
+    redirect('/')
+  }
+
   // Fetch published content
   const publishedContent = await prisma.contentDraft.findMany({
     where: {
+      // Always filter by organization for all users
+      organizationId: orgContext.organizationId,
+      // Additional filters based on user role
       ...(isCreativeUser ? { createdById: session.user.id } : {}),
       status: DRAFT_STATUS.PUBLISHED
     },

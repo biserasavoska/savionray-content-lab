@@ -66,6 +66,9 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       // Store the selected organization in localStorage for persistence
       localStorage.setItem('selectedOrganizationId', organizationId)
       
+      // Set a cookie for server-side organization context
+      document.cookie = `selectedOrganizationId=${organizationId}; path=/; max-age=86400; SameSite=Lax`
+      
       // Update the URL to reflect the organization context
       const currentPath = window.location.pathname
       if (currentPath.startsWith('/organization/')) {

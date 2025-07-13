@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/utils/logger";
+import { NextRequest } from "next/server";
 
 export interface OrganizationContext {
   organizationId: string;
@@ -14,7 +15,10 @@ export interface OrganizationContext {
  * Get the current user's organization context
  * This is the core function for multi-tenant data isolation
  */
-export async function getOrganizationContext(organizationId?: string): Promise<OrganizationContext | null> {
+export async function getOrganizationContext(
+  organizationId?: string, 
+  request?: NextRequest
+): Promise<OrganizationContext | null> {
   try {
     const session = await getServerSession(authOptions);
     
@@ -45,14 +49,54 @@ export async function getOrganizationContext(organizationId?: string): Promise<O
     
     if (organizationId) {
       // Use the specified organization if provided
-      organizationUser = user.organizationUsers.find(ou => ou.organizationId === organizationId);
+      organizationUser = user.organizationUsers.find((ou: any) => ou.organizationId === organizationId);
       if (!organizationUser) {
         logger.warn(`User ${session.user.email} does not have access to organization ${organizationId}`);
         return null;
       }
     } else {
-      // Fall back to the first active organization
-      organizationUser = user.organizationUsers[0];
+      // Try to get the selected organization from request cookies/headers
+      let selectedOrganizationId: string | undefined;
+      
+      if (request) {
+        // Check for organization in cookies
+        const orgCookie = request.cookies.get('selectedOrganizationId');
+        if (orgCookie?.value) {
+          selectedOrganizationId = orgCookie.value;
+        }
+        
+        // Check for organization in headers (fallback)
+        if (!selectedOrganizationId) {
+          const orgHeader = request.headers.get('x-selected-organization');
+          if (orgHeader) {
+            selectedOrganizationId = orgHeader;
+          }
+        }
+      }
+      
+      if (selectedOrganizationId) {
+        // Use the selected organization from client
+        organizationUser = user.organizationUsers.find((ou: any) => ou.organizationId === selectedOrganizationId);
+        if (organizationUser) {
+          logger.info(`Using selected organization: ${organizationUser.organization.name}`, {
+            userId: user.id,
+            userEmail: session.user.email,
+            organizationId: selectedOrganizationId
+          });
+        }
+      }
+      
+      // Fall back to the first active organization if no selected organization found
+      if (!organizationUser) {
+        organizationUser = user.organizationUsers[0];
+        if (organizationUser) {
+          logger.info(`Using first organization: ${organizationUser.organization.name}`, {
+            userId: user.id,
+            userEmail: session.user.email,
+            organizationId: organizationUser.organizationId
+          });
+        }
+      }
     }
     
     if (!organizationUser) {
