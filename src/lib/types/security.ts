@@ -64,4 +64,12 @@ export interface SecurityValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
+}
+
+export interface SecurityEvent {
+  type: string;
+  userId: string;
+  organizationId: string;
+  timestamp: Date;
+  details: Record<string, any>;
 } 

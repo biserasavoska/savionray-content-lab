@@ -355,6 +355,7 @@ model Organization {
   deliveryPlans     ContentDeliveryPlan[]
   contentItems      ContentItem[]
   billingRecords    BillingRecord[]
+  securityAuditLogs SecurityAuditLog[]
 
   @@index([slug])
   @@index([domain])
@@ -516,4 +517,28 @@ enum BillingStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+model SecurityAuditLog {
+  id             String   @id @default(cuid())
+  timestamp      DateTime @default(now())
+  userId         String
+  organizationId String
+  userEmail      String
+  action         String
+  resource       String
+  method         String
+  ipAddress      String
+  userAgent      String
+  success        Boolean
+  errorMessage   String?
+  metadata       Json?
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([timestamp])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([action])
+  @@index([success])
+  @@map("security_audit_logs")
 }
