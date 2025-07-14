@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+
 import { formatDate } from '../../../../lib/utils/date-helpers'
 import type { ContentDraft, Idea, User, Media } from '../../../../types/content'
-import RichTextEditor from '@/components/editor/RichTextEditor'
+
 import MediaUpload from './MediaUpload'
+
+import RichTextEditor from '@/components/editor/RichTextEditor'
 
 type ContentDraftWithDetails = ContentDraft & {
   idea: Idea & {

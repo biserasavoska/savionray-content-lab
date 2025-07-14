@@ -1,11 +1,12 @@
 import React from 'react';
-import { AVAILABLE_MODELS, AIModel } from '@/lib/models';
 import { 
   CpuChipIcon, 
   ShieldCheckIcon, 
   DocumentTextIcon,
   SparklesIcon 
 } from '@heroicons/react/24/outline';
+
+import { AVAILABLE_MODELS, AIModel } from '@/lib/models';
 
 interface ModelSelectorProps {
   selectedModel: string;

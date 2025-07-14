@@ -12,6 +12,7 @@ import {
   FunnelIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid'
+
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
 

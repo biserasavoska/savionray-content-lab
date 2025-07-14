@@ -1,13 +1,11 @@
-import 'next-auth'
-import { Session } from 'next-auth'
-import { Prisma } from '@prisma/client'
+import { Session , NextAuthOptions } from 'next-auth'
+import { Prisma , UserRole } from '@prisma/client'
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { NextAuthOptions } from "next-auth"
-import { prisma } from "./prisma"
 import CredentialsProvider from "next-auth/providers/credentials"
 import LinkedInProvider from "next-auth/providers/linkedin"
-import { UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+
+import { prisma } from "./prisma"
 
 export function isCreative(session: Session | null): boolean {
   return session?.user?.role === 'CREATIVE'

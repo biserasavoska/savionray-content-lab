@@ -1,5 +1,8 @@
 import { prisma } from '../prisma';
+
 import { logError, createDatabaseError, createAuthorizationError } from './error-handling';
+
+import { SecurityContext, QueryOptions } from '@/lib/types/security';
 
 /**
  * Database Security Utilities for Multi-Tenant Data Isolation
@@ -7,20 +10,6 @@ import { logError, createDatabaseError, createAuthorizationError } from './error
  * This module provides security utilities to ensure proper organization-based
  * access control and prevent data leakage across tenants.
  */
-
-export interface SecurityContext {
-  userId: string;
-  organizationId: string;
-  userEmail: string;
-  isSuperAdmin?: boolean;
-}
-
-export interface QueryOptions {
-  includeDeleted?: boolean;
-  includeInactive?: boolean;
-  limit?: number;
-  offset?: number;
-}
 
 /**
  * Validates that a user has access to a specific organization
@@ -102,7 +91,7 @@ export async function validateContentOwnership(
 
     // Check content ownership based on type
     switch (contentType) {
-      case 'idea':
+      case 'idea': {
         const idea = await prisma.idea.findFirst({
           where: {
             id: contentId,
@@ -111,8 +100,9 @@ export async function validateContentOwnership(
           select: { id: true },
         });
         return !!idea;
+      }
 
-      case 'draft':
+      case 'draft': {
         const draft = await prisma.contentDraft.findFirst({
           where: {
             id: contentId,
@@ -121,8 +111,9 @@ export async function validateContentOwnership(
           select: { id: true },
         });
         return !!draft;
+      }
 
-      case 'content':
+      case 'content': {
         const content = await prisma.contentItem.findFirst({
           where: {
             id: contentId,
@@ -131,6 +122,7 @@ export async function validateContentOwnership(
           select: { id: true },
         });
         return !!content;
+      }
 
       default:
         return false;
@@ -284,7 +276,7 @@ export function sanitizeOrganizationId(organizationId: string): string | null {
   return organizationId;
 }
 
-export default {
+const databaseSecurity = {
   validateOrganizationAccess,
   createSecureOrgFilter,
   createSecureUserOrgFilter,
@@ -295,4 +287,6 @@ export default {
   logDatabaseAccess,
   validateOrganizationId,
   sanitizeOrganizationId,
-}; 
+};
+
+export default databaseSecurity; 

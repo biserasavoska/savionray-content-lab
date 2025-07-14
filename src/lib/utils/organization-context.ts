@@ -1,15 +1,10 @@
 import { getServerSession } from "next-auth/next";
+import { NextRequest } from "next/server";
+
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/utils/logger";
-import { NextRequest } from "next/server";
-
-export interface OrganizationContext {
-  organizationId: string;
-  userId: string;
-  userRole: string;
-  organizationRole: string;
-}
+import { OrganizationContext } from "@/lib/types/security";
 
 /**
  * Get the current user's organization context
@@ -108,7 +103,12 @@ export async function getOrganizationContext(
       organizationId: organizationUser.organizationId,
       userId: user.id,
       userRole: user.role,
-      organizationRole: organizationUser.role
+      organizationRole: organizationUser.role,
+      userEmail: user.email || '',
+      isSuperAdmin: user.isSuperAdmin || false,
+      permissions: Array.isArray(organizationUser.permissions) 
+        ? organizationUser.permissions as string[]
+        : []
     };
   } catch (error) {
     logger.error("Error getting organization context", error instanceof Error ? error : new Error(String(error)));
@@ -220,7 +220,12 @@ export async function getOrganizationContextWithOverride(
       organizationId: organizationUser.organizationId,
       userId: user.id,
       userRole: user.role,
-      organizationRole: organizationUser.role
+      organizationRole: organizationUser.role,
+      userEmail: user.email || '',
+      isSuperAdmin: user.isSuperAdmin || false,
+      permissions: Array.isArray(organizationUser.permissions) 
+        ? organizationUser.permissions as string[]
+        : []
     };
   } catch (error) {
     logger.error("Error getting organization context with override", error instanceof Error ? error : new Error(String(error)));

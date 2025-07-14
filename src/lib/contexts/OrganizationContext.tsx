@@ -73,7 +73,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       const currentPath = window.location.pathname
       if (currentPath.startsWith('/organization/')) {
         // If we're already in an organization context, update the URL
-        const newPath = currentPath.replace(/^\/organization\/[^\/]+/, `/organization/${organization.slug}`)
+        const newPath = currentPath.replace(/^\/organization\/[^/]+/, `/organization/${organization.slug}`)
         window.history.pushState({}, '', newPath)
       }
       

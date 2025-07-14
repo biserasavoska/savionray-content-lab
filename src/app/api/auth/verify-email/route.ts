@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { verifyEmailToken, sendWelcomeEmail } from '@/lib/email-verification'
 import { prisma } from '@/lib/prisma'
 

@@ -1,10 +1,11 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { isCreative, isAdmin } from '@/lib/auth'
+
+import ScheduledPostsList from './ScheduledPostsList'
+
+import { authOptions , isCreative, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getOrganizationContext, requireOrganizationContext } from '@/lib/utils/organization-context'
-import ScheduledPostsList from './ScheduledPostsList'
 
 export default async function ScheduledPostsPage() {
   const session = await getServerSession(authOptions)

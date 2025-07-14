@@ -1,11 +1,13 @@
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { format } from 'date-fns'
-import IdeaFeedbackPanel from '@/components/ideas/IdeaFeedbackPanel'
 import { Idea, User, ContentDraft, IdeaComment } from '@prisma/client'
+
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import IdeaFeedbackPanel from '@/components/ideas/IdeaFeedbackPanel'
+
 
 interface ContentPageProps {
   params: {

@@ -1,7 +1,8 @@
 import { revalidatePath } from 'next/cache'
+import { IdeaStatus, Prisma } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context'
-import { IdeaStatus, Prisma } from '@prisma/client'
 
 export type IdeaFilters = {
   status?: string

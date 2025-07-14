@@ -1,8 +1,10 @@
 'use client'
 
 import { SessionProvider } from 'next-auth/react'
-import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
+
 import Navigation from './Navigation'
+
+import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
 
 export default function ClientProviders({
   children,

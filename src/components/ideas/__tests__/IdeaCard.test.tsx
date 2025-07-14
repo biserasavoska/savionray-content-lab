@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
-import IdeaCard from '../IdeaCard'
 import { formatDistanceToNow } from 'date-fns'
 import { IdeaStatus } from '@prisma/client'
 import { Session } from 'next-auth'
+
+import IdeaCard from '../IdeaCard'
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({

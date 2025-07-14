@@ -1,8 +1,10 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
 import type { Metadata } from 'next'
-import RootClientWrapper from '../components/RootClientWrapper'
 import { getServerSession } from 'next-auth'
+
+import RootClientWrapper from '../components/RootClientWrapper'
+
 import { authOptions } from '@/lib/auth'
 import ErrorBoundary from '@/components/ErrorBoundary'
 

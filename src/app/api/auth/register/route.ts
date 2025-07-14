@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { UserRole } from '@prisma/client'
+
+import { prisma } from '@/lib/prisma'
 import { sendEmailVerification } from '@/lib/email-verification'
 
 export async function POST(req: NextRequest) {

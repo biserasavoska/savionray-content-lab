@@ -3,9 +3,11 @@
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { isAdmin, isClient, isCreative } from '@/lib/auth'
 import Image from 'next/image'
+
 import OrganizationSwitcher from './navigation/OrganizationSwitcher'
+
+import { isAdmin, isClient, isCreative } from '@/lib/auth'
 
 export default function Navigation() {
   const { data: session } = useSession()

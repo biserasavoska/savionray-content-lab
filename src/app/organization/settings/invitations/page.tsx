@@ -1,9 +1,10 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { isAdmin } from '@/lib/auth'
+
 import InvitationManagementList from './InvitationManagementList'
 import InviteUserForm from './InviteUserForm'
+
+import { authOptions , isAdmin } from '@/lib/auth'
 
 export default async function OrganizationInvitationsPage() {
   const session = await getServerSession(authOptions)

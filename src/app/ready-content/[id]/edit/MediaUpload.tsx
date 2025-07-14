@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import type { Media } from '@/types/content'
 import Card from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'

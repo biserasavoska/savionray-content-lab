@@ -1,7 +1,8 @@
 'use client'
 
-import IdeaForm from './components/IdeaForm'
 import { useRouter } from 'next/navigation'
+
+import IdeaForm from './components/IdeaForm'
 
 export default function NewIdeaSection() {
   const router = useRouter()

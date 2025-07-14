@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
 import { Card } from '@/components/ui/common/Card'

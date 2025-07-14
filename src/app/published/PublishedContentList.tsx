@@ -1,7 +1,8 @@
 'use client'
 
-import type { ContentDraft, Idea, User } from '../../types/content'
 import Link from 'next/link'
+
+import type { ContentDraft, Idea, User } from '../../types/content'
 import { formatDate } from '../../lib/utils/date-helpers'
 
 // Local ScheduledPost type

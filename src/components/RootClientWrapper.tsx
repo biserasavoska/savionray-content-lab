@@ -4,8 +4,10 @@ import { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+
 import RoleBasedNavigation from './navigation/RoleBasedNavigation'
 import TopNavigation from './TopNavigation'
+
 import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
 
 export default function RootClientWrapper({

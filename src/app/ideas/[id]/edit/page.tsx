@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Idea } from '@prisma/client'
+
 import IdeaForm from '../../components/IdeaForm'
 
 export default function EditIdeaPage() {

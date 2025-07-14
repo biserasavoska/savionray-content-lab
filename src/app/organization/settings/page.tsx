@@ -1,10 +1,11 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { isAdmin } from '@/lib/auth'
+
+import OrganizationSettingsForm from './OrganizationSettingsForm'
+
+import { authOptions , isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
-import OrganizationSettingsForm from './OrganizationSettingsForm'
 
 export default async function OrganizationSettingsPage() {
   const session = await getServerSession(authOptions)

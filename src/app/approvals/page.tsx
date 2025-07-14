@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
+
 import ContentGrid from '@/components/ContentGrid'
 
 const SAMPLE_DATA = [

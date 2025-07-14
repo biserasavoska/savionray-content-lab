@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Idea } from '@prisma/client'
+
 import ModelSelector from '@/components/ModelSelector'
 import { AVAILABLE_MODELS } from '@/lib/models'
 

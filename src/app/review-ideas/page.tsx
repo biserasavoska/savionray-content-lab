@@ -1,9 +1,9 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { isClient, isAdmin } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { IdeaStatus } from '@prisma/client'
+
+import { authOptions , isClient, isAdmin } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 import IdeaCard from '@/components/ideas/IdeaCard'
 
 export default async function ReviewIdeasPage() {

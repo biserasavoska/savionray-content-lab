@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 import { EyeIcon, DocumentTextIcon, CheckCircleIcon, ClockIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline'
+
+import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 
 interface ContentItem {
   id: string

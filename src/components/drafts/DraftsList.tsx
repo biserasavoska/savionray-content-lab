@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { ContentStatus } from '@/types/content'
 import { formatDistanceToNow, format } from 'date-fns'
-import { DraftMetadata } from '@/types/draft'
+
 import DraftActions from './DraftActions'
+
+import type { ContentStatus } from '@/types/content'
+import { DraftMetadata } from '@/types/draft'
+
 
 interface Draft {
   id: string

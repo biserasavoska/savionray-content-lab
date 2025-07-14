@@ -1,13 +1,13 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+
 import { prisma } from '@/lib/prisma'
-import { authOptions } from '@/lib/auth'
-import { isAdmin, isCreative } from '@/lib/auth'
+import { authOptions , isAdmin, isCreative } from '@/lib/auth'
 import { getOrganizationContext } from '@/lib/utils/organization-context'
 import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
 import { logger } from '@/lib/utils/logger'
 import ApprovedContentList from '@/components/approved-content/ApprovedContentList'
-import { headers } from 'next/headers'
 
 export default async function ApprovedContentPage() {
   const session = await getServerSession(authOptions)

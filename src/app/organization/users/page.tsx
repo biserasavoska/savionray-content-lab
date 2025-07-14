@@ -1,10 +1,11 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { isAdmin } from '@/lib/auth'
+
+import UserManagementList from './UserManagementList'
+
+import { authOptions , isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
-import UserManagementList from './UserManagementList'
 
 export default async function UserManagementPage() {
   const session = await getServerSession(authOptions)

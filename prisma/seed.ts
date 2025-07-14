@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
-import { USER_ROLE, CONTENT_TYPE, IDEA_STATUS, DRAFT_STATUS } from '../src/lib/utils/enum-constants'
 import bcrypt from 'bcryptjs'
+
+import { USER_ROLE, CONTENT_TYPE, IDEA_STATUS, DRAFT_STATUS } from '../src/lib/utils/enum-constants'
 
 const prisma = new PrismaClient()
 

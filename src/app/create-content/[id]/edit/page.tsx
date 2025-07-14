@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
 import type { Idea } from '@/types/content'
 import ModelSelector from '@/components/ModelSelector'
 import { AVAILABLE_MODELS } from '@/lib/models'
-import Link from 'next/link'
-
 import ReasoningOptions from '@/components/content/ReasoningOptions'
 import ReasoningDisplay from '@/components/content/ReasoningDisplay'
 

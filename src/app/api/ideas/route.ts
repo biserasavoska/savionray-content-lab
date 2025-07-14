@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { prisma } from '@/lib/prisma'
-import { authOptions } from '@/lib/auth'
-import { isCreative, isAdmin, isClient } from '@/lib/auth'
 
+import { prisma } from '@/lib/prisma'
+import { authOptions , isCreative, isAdmin, isClient } from '@/lib/auth'
 import { IDEA_STATUS, isValidIdeaStatus } from '@/lib/utils/enum-utils'
 import { 
   handleApiError, 

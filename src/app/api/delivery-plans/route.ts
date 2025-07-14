@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-
 import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context'
 
 type ContentType = 'NEWSLETTER' | 'BLOG_POST' | 'SOCIAL_MEDIA_POST' | 'WEBSITE_COPY' | 'EMAIL_CAMPAIGN'

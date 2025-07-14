@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { format } from 'date-fns'
-import type { Idea, ContentDraft, User } from '@/types/content'
-import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+
+import type { Idea, ContentDraft, User } from '@/types/content'
+import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
 
 type CreateContentItem = {
   id: string

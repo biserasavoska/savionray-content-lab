@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { handleApiError, generateRequestId } from '@/lib/utils/error-handling';
 
 export async function GET() {

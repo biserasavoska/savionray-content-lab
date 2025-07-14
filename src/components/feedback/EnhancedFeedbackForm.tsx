@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { StarIcon } from '@heroicons/react/24/solid'
+import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
+
 import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 import { FormField, Textarea, Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
-import { StarIcon } from '@heroicons/react/24/solid'
-import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline'
 
 interface FeedbackData {
   comment: string

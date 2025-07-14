@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+
 import { ErrorType } from '@/lib/utils/error-handling'
 
 interface ErrorDisplayProps {

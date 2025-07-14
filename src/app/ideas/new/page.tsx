@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import IdeaForm from '../components/IdeaForm'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+
+import IdeaForm from '../components/IdeaForm'
 
 export default function NewIdeaPage() {
   const { data: session, status } = useSession()

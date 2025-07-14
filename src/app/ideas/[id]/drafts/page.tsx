@@ -1,12 +1,13 @@
 import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
+import { ContentDraft, DraftStatus } from '@prisma/client'
+import { format } from 'date-fns'
+
 import { prisma } from '@/lib/prisma'
 import { authOptions, isAdmin } from '@/lib/auth'
 import DraftsList from '@/components/drafts/DraftsList'
 import { DraftMetadata, DraftWithRelations } from '@/types/draft'
-import { ContentDraft, DraftStatus } from '@prisma/client'
-import { format } from 'date-fns'
 
 
 interface DraftsPageProps {

@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-
-export interface OrganizationContext {
-  organizationId: string
-  userRole: string
-  permissions: string[]
-}
+import { OrganizationContext } from '@/lib/types/security'
 
 export async function withOrganizationContext(
   request: NextRequest,
@@ -47,7 +43,11 @@ export async function withOrganizationContext(
 
     const context: OrganizationContext = {
       organizationId: organizationMembership.organizationId,
-      userRole: organizationMembership.role,
+      userId: session.user.id,
+      userRole: session.user.role,
+      organizationRole: organizationMembership.role,
+      userEmail: session.user.email || '',
+      isSuperAdmin: session.user.isSuperAdmin || false,
       permissions: Array.isArray(organizationMembership.permissions) 
         ? (organizationMembership.permissions as string[]).filter(p => typeof p === 'string')
         : []

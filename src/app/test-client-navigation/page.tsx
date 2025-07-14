@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
+
 import { useInterface } from '@/hooks/useInterface'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import ClientNavigationSwitcher from '@/components/navigation/ClientNavigationSwitcher'

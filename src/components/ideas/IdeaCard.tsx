@@ -1,13 +1,16 @@
 'use client'
 
-import type { Idea, User, ContentDraft } from '../../types/content'
-import { IDEA_STATUS, getStatusBadgeClasses } from '../../lib/utils/enum-utils'
 import { formatDistanceToNow } from 'date-fns'
 import { useSession } from 'next-auth/react'
-import { isClient, isAdmin } from '@/lib/auth'
-import IdeaFeedbackPanel from './IdeaFeedbackPanel'
-import { IdeaWithCreator } from '@/types/idea'
+
+import type { Idea, User, ContentDraft } from '../../types/content'
+import { IDEA_STATUS, getStatusBadgeClasses } from '../../lib/utils/enum-utils'
 import { formatDate } from '../../lib/utils/date-helpers'
+
+import IdeaFeedbackPanel from './IdeaFeedbackPanel'
+
+import { isClient, isAdmin } from '@/lib/auth'
+import { IdeaWithCreator } from '@/types/idea'
 import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'

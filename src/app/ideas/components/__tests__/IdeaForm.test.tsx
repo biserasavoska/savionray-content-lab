@@ -2,9 +2,10 @@ import '@testing-library/jest-dom'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import IdeaForm from '../IdeaForm'
 import { IdeaStatus } from '@prisma/client'
 import { Session } from 'next-auth'
+
+import IdeaForm from '../IdeaForm'
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({

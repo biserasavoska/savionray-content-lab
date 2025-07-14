@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/lib/auth'
-import { isClient, isAdmin } from '@/lib/auth'
+
+import { authOptions , isClient, isAdmin } from '@/lib/auth'
 import FeedbackManagementDashboard from '@/components/feedback/FeedbackManagementDashboard'
 
 export const metadata: Metadata = {

@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CONTENT_TYPE, MEDIA_TYPE } from '@/lib/utils/enum-constants'
+
 import OrganizationSelector from './OrganizationSelector'
+
+import { CONTENT_TYPE, MEDIA_TYPE } from '@/lib/utils/enum-constants'
 
 interface ContentFormData {
   title: string

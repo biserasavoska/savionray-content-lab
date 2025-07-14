@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+
+import { authOptions } from '@/lib/auth'
 import DeliveryPlanForm from '@/components/delivery/DeliveryPlanForm'
 
 export const metadata: Metadata = {

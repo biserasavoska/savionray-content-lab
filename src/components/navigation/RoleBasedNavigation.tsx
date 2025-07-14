@@ -23,10 +23,12 @@ import {
   EnvelopeIcon,
   ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
-import { useInterface } from '@/hooks/useInterface'
-import { useOrganization } from '@/lib/contexts/OrganizationContext'
+
 import OrganizationSwitcher from './OrganizationSwitcher'
 import ClientNavigationSwitcher from './ClientNavigationSwitcher'
+
+import { useInterface } from '@/hooks/useInterface'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface NavigationItem {
   name: string

@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import FeedbackForm from './FeedbackForm'
+
 import { formatDate } from '../../lib/utils/date-helpers'
+
+import FeedbackForm from './FeedbackForm'
 
 type IdeaStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
