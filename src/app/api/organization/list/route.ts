@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth'
 import { logger } from '@/lib/utils/logger'
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-
+    
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get user with their organization memberships
@@ -28,29 +25,31 @@ export async function GET(request: NextRequest) {
                 name: true,
                 slug: true,
                 primaryColor: true,
-                domain: true,
+                createdAt: true,
               }
             }
           },
-          orderBy: { joinedAt: 'desc' }
+          orderBy: {
+            organization: {
+              name: 'asc'
+            }
+          }
         }
       }
     })
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const organizations = user.organizationUsers.map((orgUser: any) => ({
-      id: orgUser.organization.id,
-      name: orgUser.organization.name,
-      slug: orgUser.organization.slug,
-      primaryColor: orgUser.organization.primaryColor,
-      domain: orgUser.organization.domain,
-      role: orgUser.role,
+    // Transform the data to include role information
+    const organizations = user.organizationUsers.map(ou => ({
+      id: ou.organization.id,
+      name: ou.organization.name,
+      slug: ou.organization.slug,
+      primaryColor: ou.organization.primaryColor,
+      role: ou.role,
+      createdAt: ou.organization.createdAt
     }))
 
     logger.info('Organizations fetched for user', {
@@ -59,13 +58,14 @@ export async function GET(request: NextRequest) {
       organizationCount: organizations.length
     })
 
-    return NextResponse.json({ organizations })
-
+    return NextResponse.json({
+      organizations,
+      total: organizations.length
+    })
   } catch (error) {
     logger.error('Error fetching organizations', error instanceof Error ? error : new Error(String(error)))
-    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch organizations' },
       { status: 500 }
     )
   }

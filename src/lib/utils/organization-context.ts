@@ -117,10 +117,135 @@ export async function getOrganizationContext(
 }
 
 /**
+ * Get organization context with support for manual override
+ * This allows for both automatic and manual organization assignment
+ */
+export async function getOrganizationContextWithOverride(
+  manualOrganizationId?: string,
+  request?: NextRequest
+): Promise<OrganizationContext | null> {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      logger.warn("No authenticated user found for organization context");
+      return null;
+    }
+
+    // Get user with their organization membership
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        organizationUsers: {
+          where: { isActive: true },
+          include: {
+            organization: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      logger.warn(`User not found: ${session.user.email}`);
+      return null;
+    }
+
+    let organizationUser;
+    
+    // Priority 1: Manual override (highest priority)
+    if (manualOrganizationId) {
+      organizationUser = user.organizationUsers.find((ou: any) => ou.organizationId === manualOrganizationId);
+      if (!organizationUser) {
+        logger.warn(`User ${session.user.email} does not have access to manually specified organization ${manualOrganizationId}`);
+        return null;
+      }
+      logger.info(`Using manually specified organization: ${organizationUser.organization.name}`, {
+        userId: user.id,
+        userEmail: session.user.email,
+        organizationId: manualOrganizationId,
+        source: 'manual_override'
+      });
+    } else {
+      // Priority 2: Client-selected organization from cookies/headers
+      let selectedOrganizationId: string | undefined;
+      
+      if (request) {
+        // Check for organization in cookies
+        const orgCookie = request.cookies.get('selectedOrganizationId');
+        if (orgCookie?.value) {
+          selectedOrganizationId = orgCookie.value;
+        }
+        
+        // Check for organization in headers (fallback)
+        if (!selectedOrganizationId) {
+          const orgHeader = request.headers.get('x-selected-organization');
+          if (orgHeader) {
+            selectedOrganizationId = orgHeader;
+          }
+        }
+      }
+      
+      if (selectedOrganizationId) {
+        organizationUser = user.organizationUsers.find((ou: any) => ou.organizationId === selectedOrganizationId);
+        if (organizationUser) {
+          logger.info(`Using client-selected organization: ${organizationUser.organization.name}`, {
+            userId: user.id,
+            userEmail: session.user.email,
+            organizationId: selectedOrganizationId,
+            source: 'client_selection'
+          });
+        }
+      }
+      
+      // Priority 3: Fall back to the first active organization
+      if (!organizationUser) {
+        organizationUser = user.organizationUsers[0];
+        if (organizationUser) {
+          logger.info(`Using first available organization: ${organizationUser.organization.name}`, {
+            userId: user.id,
+            userEmail: session.user.email,
+            organizationId: organizationUser.organizationId,
+            source: 'fallback'
+          });
+        }
+      }
+    }
+    
+    if (!organizationUser) {
+      logger.warn(`No active organization found for user: ${session.user.email}`);
+      return null;
+    }
+
+    return {
+      organizationId: organizationUser.organizationId,
+      userId: user.id,
+      userRole: user.role,
+      organizationRole: organizationUser.role
+    };
+  } catch (error) {
+    logger.error("Error getting organization context with override", error instanceof Error ? error : new Error(String(error)));
+    return null;
+  }
+}
+
+/**
  * Require organization context - throws error if not available
  */
 export async function requireOrganizationContext(organizationId?: string): Promise<OrganizationContext> {
   const context = await getOrganizationContext(organizationId);
+  
+  if (!context) {
+    throw new Error("Organization context required but not available");
+  }
+  
+  return context;
+}
+
+/**
+ * Require organization context with manual override support
+ */
+export async function requireOrganizationContextWithOverride(manualOrganizationId?: string): Promise<OrganizationContext> {
+  const context = await getOrganizationContextWithOverride(manualOrganizationId);
   
   if (!context) {
     throw new Error("Organization context required but not available");
