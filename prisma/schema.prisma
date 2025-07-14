@@ -83,6 +83,9 @@ model Idea {
   comments           IdeaComment[]
 
   @@index([organizationId])
+  @@index([createdById, organizationId])
+  @@index([status, organizationId])
+  @@map("ideas")
 }
 
 model ContentDraft {
@@ -104,6 +107,10 @@ model ContentDraft {
   scheduledPosts ScheduledPost[]
 
   @@index([organizationId])
+  @@index([createdById, organizationId])
+  @@index([status, organizationId])
+  @@index([ideaId, organizationId])
+  @@map("content_drafts")
 }
 
 model Feedback {
@@ -117,6 +124,7 @@ model Feedback {
 
   @@index([contentDraftId])
   @@index([createdById])
+  @@map("feedbacks")
 }
 
 model Media {
@@ -134,6 +142,9 @@ model Media {
   uploadedBy     User         @relation(fields: [uploadedById], references: [id])
 
   @@index([organizationId])
+  @@index([uploadedById, organizationId])
+  @@index([contentDraftId, organizationId])
+  @@map("media")
 }
 
 model ScheduledPost {
@@ -246,6 +257,11 @@ model ContentItem {
   @@index([createdById])
   @@index([assignedToId])
   @@index([organizationId])
+  @@index([createdById, organizationId])
+  @@index([assignedToId, organizationId])
+  @@index([status, organizationId])
+  @@index([currentStage, organizationId])
+  @@map("content_items")
 }
 
 model StageTransition {
@@ -339,6 +355,10 @@ model Organization {
   deliveryPlans     ContentDeliveryPlan[]
   contentItems      ContentItem[]
   billingRecords    BillingRecord[]
+
+  @@index([slug])
+  @@index([domain])
+  @@map("organizations")
 }
 
 model OrganizationUser {
@@ -358,6 +378,9 @@ model OrganizationUser {
   @@unique([organizationId, userId])
   @@index([userId])
   @@index([organizationId])
+  @@index([userId, isActive])
+  @@index([organizationId, isActive])
+  @@map("organization_users")
 }
 
 model SubscriptionPlan {
