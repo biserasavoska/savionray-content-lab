@@ -125,10 +125,14 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <h3 className="mt-2 text-lg font-medium text-gray-900 mb-2">No ready content</h3>
+        <h3 className="mt-2 text-lg font-medium text-gray-900 mb-2">
+          {isClientUser ? 'No content pending review' : 'No ready content'}
+        </h3>
         <p className="text-gray-600 mb-4">
           {isCreativeUser 
             ? "You don't have any content ready for publishing yet. Create content from approved ideas first."
+            : isClientUser
+            ? "All content has been reviewed and approved. New content will appear here when it's ready for your review."
             : "There is no content ready for publishing at this time."
           }
         </p>
@@ -138,6 +142,14 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             Create Content
+          </Link>
+        )}
+        {isClientUser && (
+          <Link
+            href="/ideas"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Review Ideas
           </Link>
         )}
       </div>
@@ -183,6 +195,11 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                   <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                     {getContentTypeLabel(item.contentType)}
                   </span>
+                  {isClientUser && item.status === 'AWAITING_FEEDBACK' && (
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      Needs Review
+                    </span>
+                  )}
                 </div>
                 
                 <p className="text-gray-600 mb-4">{item.idea?.description || 'No description available'}</p>

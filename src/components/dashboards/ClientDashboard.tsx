@@ -2,9 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { EyeIcon, DocumentTextIcon, CheckCircleIcon, ClockIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
+import { 
+  EyeIcon, 
+  DocumentTextIcon, 
+  CheckCircleIcon, 
+  ClockIcon, 
+  ChatBubbleLeftIcon,
+  LightBulbIcon,
+  CalendarIcon,
+  ChartBarIcon,
+  ExclamationTriangleIcon,
+  ArrowRightIcon,
+  PlusIcon
+} from '@heroicons/react/24/outline'
 
 import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
+import { useInterface } from '@/hooks/useInterface'
+import Button from '@/components/ui/common/Button'
+import Badge from '@/components/ui/common/Badge'
 
 interface ContentItem {
   id: string
@@ -12,79 +28,228 @@ interface ContentItem {
   status: string
   contentType: string
   createdAt: string
-  createdBy: string
+  createdBy: {
+    id: string
+    name: string
+    email: string
+    role: string
+    image?: string
+  }
+  priority?: 'HIGH' | 'MEDIUM' | 'LOW'
+  dueDate?: string
+}
+
+interface DashboardStats {
+  pendingReview: number
+  recentlyApproved: number
+  totalContent: number
+  feedbackProvided: number
+  overdueItems: number
+  thisWeekDeadlines: number
 }
 
 export default function ClientDashboard() {
   const { data: session } = useSession()
   const { organization, isLoading: orgLoading } = useCurrentOrganization()
+  const interfaceContext = useInterface()
   const [pendingContent, setPendingContent] = useState<ContentItem[]>([])
   const [recentApproved, setRecentApproved] = useState<ContentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [stats, setStats] = useState<DashboardStats>({
+    pendingReview: 0,
+    recentlyApproved: 0,
+    totalContent: 0,
+    feedbackProvided: 0,
+    overdueItems: 0,
+    thisWeekDeadlines: 0
+  })
 
   useEffect(() => {
-    // In a real implementation, this would fetch data from API
-    // For now, we'll use mock data
-    const mockPendingContent: ContentItem[] = [
-      {
-        id: '1',
-        title: 'Q4 Marketing Campaign',
-        status: 'PENDING_APPROVAL',
-        contentType: 'SOCIAL_MEDIA_POST',
-        createdAt: '2025-01-07T10:00:00Z',
-        createdBy: 'Creative Team'
-      },
-      {
-        id: '2',
-        title: 'Product Launch Announcement',
-        status: 'PENDING_APPROVAL',
-        contentType: 'NEWSLETTER',
-        createdAt: '2025-01-07T09:30:00Z',
-        createdBy: 'Creative Team'
-      }
-    ]
+    const fetchDashboardData = async () => {
+      if (!session?.user) return
 
-    const mockRecentApproved: ContentItem[] = [
-      {
-        id: '3',
-        title: 'Holiday Promotion',
-        status: 'APPROVED',
-        contentType: 'SOCIAL_MEDIA_POST',
-        createdAt: '2025-01-06T15:00:00Z',
-        createdBy: 'Creative Team'
-      }
-    ]
+      try {
+        // Fetch real data from API endpoints
+        const [readyContentRes, approvedContentRes, statsRes] = await Promise.all([
+          fetch('/api/ready-content?limit=5'),
+          fetch('/api/approved?limit=5'),
+          fetch('/api/client/stats')
+        ])
 
-    setTimeout(() => {
+        if (readyContentRes.ok) {
+          const readyData = await readyContentRes.json()
+          setPendingContent(readyData.content || [])
+        }
+
+        if (approvedContentRes.ok) {
+          const approvedData = await approvedContentRes.json()
+          setRecentApproved(approvedData.content || [])
+        }
+
+        if (statsRes.ok) {
+          const statsData = await statsRes.json()
+          setStats(statsData)
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+        // Fallback to mock data
+        loadMockData()
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    const loadMockData = () => {
+      const mockPendingContent: ContentItem[] = [
+        {
+          id: '1',
+          title: 'Q4 Marketing Campaign - Social Media Series',
+          status: 'PENDING_APPROVAL',
+          contentType: 'SOCIAL_MEDIA_POST',
+          createdAt: '2025-01-07T10:00:00Z',
+          createdBy: {
+            id: '1',
+            name: 'Creative Team',
+            email: 'creative@savionray.com',
+            role: 'CREATIVE'
+          },
+          priority: 'HIGH',
+          dueDate: '2025-01-10T17:00:00Z'
+        },
+        {
+          id: '2',
+          title: 'Product Launch Announcement Newsletter',
+          status: 'PENDING_APPROVAL',
+          contentType: 'NEWSLETTER',
+          createdAt: '2025-01-07T09:30:00Z',
+          createdBy: {
+            id: '1',
+            name: 'Creative Team',
+            email: 'creative@savionray.com',
+            role: 'CREATIVE'
+          },
+          priority: 'MEDIUM',
+          dueDate: '2025-01-12T17:00:00Z'
+        },
+        {
+          id: '3',
+          title: 'Website Homepage Copy Update',
+          status: 'PENDING_APPROVAL',
+          contentType: 'WEBSITE_COPY',
+          createdAt: '2025-01-06T14:00:00Z',
+          createdBy: {
+            id: '1',
+            name: 'Creative Team',
+            email: 'creative@savionray.com',
+            role: 'CREATIVE'
+          },
+          priority: 'LOW',
+          dueDate: '2025-01-15T17:00:00Z'
+        }
+      ]
+
+      const mockRecentApproved: ContentItem[] = [
+        {
+          id: '4',
+          title: 'Holiday Promotion Campaign',
+          status: 'APPROVED',
+          contentType: 'SOCIAL_MEDIA_POST',
+          createdAt: '2025-01-06T15:00:00Z',
+          createdBy: {
+            id: '1',
+            name: 'Creative Team',
+            email: 'creative@savionray.com',
+            role: 'CREATIVE'
+          }
+        },
+        {
+          id: '5',
+          title: 'Customer Success Story Blog Post',
+          status: 'APPROVED',
+          contentType: 'BLOG_POST',
+          createdAt: '2025-01-05T11:00:00Z',
+          createdBy: {
+            id: '1',
+            name: 'Creative Team',
+            email: 'creative@savionray.com',
+            role: 'CREATIVE'
+          }
+        }
+      ]
+
       setPendingContent(mockPendingContent)
       setRecentApproved(mockRecentApproved)
-      setIsLoading(false)
-    }, 1000)
-  }, [])
+      setStats({
+        pendingReview: mockPendingContent.length,
+        recentlyApproved: mockRecentApproved.length,
+        totalContent: mockPendingContent.length + mockRecentApproved.length,
+        feedbackProvided: 3,
+        overdueItems: 1,
+        thisWeekDeadlines: 2
+      })
+    }
+
+    fetchDashboardData()
+  }, [session?.user])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING_APPROVAL':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <Badge variant="warning" size="sm">
             <ClockIcon className="w-3 h-3 mr-1" />
-            Pending
-          </span>
+            Pending Review
+          </Badge>
         )
       case 'APPROVED':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <Badge variant="success" size="sm">
             <CheckCircleIcon className="w-3 h-3 mr-1" />
             Approved
-          </span>
+          </Badge>
         )
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <Badge variant="default" size="sm">
             {status}
-          </span>
+          </Badge>
         )
     }
+  }
+
+  const getPriorityBadge = (priority?: string) => {
+    switch (priority) {
+      case 'HIGH':
+        return <Badge variant="danger" size="sm">High Priority</Badge>
+      case 'MEDIUM':
+        return <Badge variant="warning" size="sm">Medium Priority</Badge>
+      case 'LOW':
+        return <Badge variant="default" size="sm">Low Priority</Badge>
+      default:
+        return null
+    }
+  }
+
+  const getContentTypeIcon = (contentType: string) => {
+    switch (contentType) {
+      case 'SOCIAL_MEDIA_POST':
+        return <ChatBubbleLeftIcon className="h-4 w-4" />
+      case 'BLOG_POST':
+        return <DocumentTextIcon className="h-4 w-4" />
+      case 'NEWSLETTER':
+        return <DocumentTextIcon className="h-4 w-4" />
+      case 'WEBSITE_COPY':
+        return <DocumentTextIcon className="h-4 w-4" />
+      case 'EMAIL_CAMPAIGN':
+        return <DocumentTextIcon className="h-4 w-4" />
+      default:
+        return <DocumentTextIcon className="h-4 w-4" />
+    }
+  }
+
+  const isOverdue = (dueDate?: string) => {
+    if (!dueDate) return false
+    return new Date(dueDate) < new Date()
   }
 
   if (isLoading) {
@@ -97,109 +262,197 @@ export default function ClientDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {organization ? `${organization.name} Dashboard` : 'Content Review Dashboard'}
-        </h1>
-        <p className="text-gray-600 mt-1">
-          {organization 
-            ? `Review and approve content for ${organization.name}`
-            : 'Review and approve content from your creative team'
-          }
-        </p>
-        {organization && (
-          <div className="mt-2 flex items-center space-x-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              Organization: {organization.name}
-            </span>
+      {/* Enhanced Header */}
+      <div className="border-b border-gray-200 pb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {organization ? `${organization.name} Content Hub` : 'Content Review Dashboard'}
+            </h1>
+            <p className="text-gray-600 mt-2">
+              {organization 
+                ? `Review and approve content for ${organization.name}`
+                : 'Review and approve content from your creative team'
+              }
+            </p>
+            {organization && (
+              <div className="mt-3 flex items-center space-x-3">
+                <Badge variant="primary">
+                  <LightBulbIcon className="w-3 h-3 mr-1" />
+                  Organization: {organization.name}
+                </Badge>
+                <Badge variant="success">
+                  <CheckCircleIcon className="w-3 h-3 mr-1" />
+                  Client Access
+                </Badge>
+              </div>
+            )}
           </div>
-        )}
+          <div className="flex items-center space-x-3">
+            <Button variant="primary" size="sm">
+              <EyeIcon className="h-4 w-4 mr-2" />
+              Review All Content
+            </Button>
+            <Button variant="secondary" size="sm">
+              <ChartBarIcon className="h-4 w-4 mr-2" />
+              View Analytics
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+      {/* Enhanced Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
+            <div className="p-3 bg-yellow-100 rounded-lg">
               <ClockIcon className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending Review</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingContent.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.pendingReview}</p>
+              {stats.overdueItems > 0 && (
+                <p className="text-xs text-red-600 mt-1">
+                  {stats.overdueItems} overdue
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
+            <div className="p-3 bg-green-100 rounded-lg">
               <CheckCircleIcon className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Recently Approved</p>
-              <p className="text-2xl font-bold text-gray-900">{recentApproved.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.recentlyApproved}</p>
+              <p className="text-xs text-green-600 mt-1">This week</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-3 bg-blue-100 rounded-lg">
               <DocumentTextIcon className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Content</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingContent.length + recentApproved.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalContent}</p>
+              <p className="text-xs text-blue-600 mt-1">All time</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
+            <div className="p-3 bg-purple-100 rounded-lg">
               <ChatBubbleLeftIcon className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Feedback Provided</p>
-              <p className="text-2xl font-bold text-gray-900">3</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.feedbackProvided}</p>
+              <p className="text-xs text-purple-600 mt-1">This month</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center">
+            <div className="p-3 bg-red-100 rounded-lg">
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">Overdue Items</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.overdueItems}</p>
+              <p className="text-xs text-red-600 mt-1">Needs attention</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center">
+            <div className="p-3 bg-indigo-100 rounded-lg">
+              <CalendarIcon className="h-6 w-6 text-indigo-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-500">This Week</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.thisWeekDeadlines}</p>
+              <p className="text-xs text-indigo-600 mt-1">Deadlines</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Pending Content */}
-      <div className="bg-white rounded-lg shadow">
+      {/* Enhanced Pending Content Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <EyeIcon className="h-5 w-5 mr-2 text-blue-600" />
-            Content Pending Review
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <EyeIcon className="h-5 w-5 mr-2 text-blue-600" />
+              Content Pending Review
+              {stats.pendingReview > 0 && (
+                <Badge variant="warning" size="sm" className="ml-2">
+                  {stats.pendingReview}
+                </Badge>
+              )}
+            </h2>
+            <Link href="/ready-content">
+              <Button variant="secondary" size="sm">
+                View All
+                <ArrowRightIcon className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
         </div>
         <div className="divide-y divide-gray-200">
           {pendingContent.length === 0 ? (
-            <div className="px-6 py-8 text-center">
+            <div className="px-6 py-12 text-center">
               <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No content pending review</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No content pending review</h3>
+              <p className="text-gray-500 mb-4">All content has been reviewed and approved.</p>
+              <Button variant="primary">
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Request New Content
+              </Button>
             </div>
           ) : (
             pendingContent.map((item) => (
-              <div key={item.id} className="px-6 py-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
+              <div key={item.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {item.contentType} • Created by {item.createdBy}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-sm font-semibold text-gray-900">{item.title}</h3>
+                      {getPriorityBadge(item.priority)}
+                                             {isOverdue(item.dueDate) && (
+                         <Badge variant="danger" size="sm">Overdue</Badge>
+                       )}
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
+                      <span className="flex items-center">
+                        {getContentTypeIcon(item.contentType)}
+                        <span className="ml-1">{item.contentType.replace(/_/g, ' ')}</span>
+                      </span>
+                      <span>Created by {item.createdBy?.name || item.createdBy?.email || 'Unknown'}</span>
+                      <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                      {item.dueDate && (
+                        <span className={`flex items-center ${isOverdue(item.dueDate) ? 'text-red-600' : 'text-gray-500'}`}>
+                          <CalendarIcon className="h-3 w-3 mr-1" />
+                          Due: {new Date(item.dueDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     {getStatusBadge(item.status)}
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      Review
-                    </button>
+                    <Link href={`/ready-content/${item.id}`}>
+                      <Button variant="primary" size="sm">
+                        Review
+                        <ArrowRightIcon className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -208,61 +461,87 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow">
+      {/* Enhanced Quick Actions */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
         </div>
-        <div className="px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-              <EyeIcon className="h-5 w-5 mr-2" />
-              Review Content
-            </button>
-            <button className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 transition-colors">
-              <CheckCircleIcon className="h-5 w-5 mr-2" />
-              Approve Ideas
-            </button>
-            <button className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-purple-600 hover:bg-purple-700 transition-colors">
-              <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
-              Provide Feedback
-            </button>
+        <div className="px-6 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link href="/ready-content">
+              <Button variant="primary" className="w-full justify-center">
+                <EyeIcon className="h-5 w-5 mr-2" />
+                Review Content
+              </Button>
+            </Link>
+            <Link href="/ideas">
+              <Button variant="success" className="w-full justify-center">
+                <CheckCircleIcon className="h-5 w-5 mr-2" />
+                Approve Ideas
+              </Button>
+            </Link>
+            <Link href="/feedback-management">
+              <Button variant="secondary" className="w-full justify-center">
+                <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
+                Provide Feedback
+              </Button>
+            </Link>
+            <Link href="/approved">
+              <Button variant="outline" className="w-full justify-center">
+                <DocumentTextIcon className="h-5 w-5 mr-2" />
+                View Approved
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Recent Approved Content */}
-      <div className="bg-white rounded-lg shadow">
+      {/* Enhanced Recent Approved Content */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <CheckCircleIcon className="h-5 w-5 mr-2 text-green-600" />
-            Recently Approved
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <CheckCircleIcon className="h-5 w-5 mr-2 text-green-600" />
+              Recently Approved
+            </h2>
+            <Link href="/approved">
+              <Button variant="secondary" size="sm">
+                View All
+                <ArrowRightIcon className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
         </div>
         <div className="divide-y divide-gray-200">
           {recentApproved.length === 0 ? (
-            <div className="px-6 py-8 text-center">
+            <div className="px-6 py-12 text-center">
               <CheckCircleIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No recently approved content</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No recently approved content</h3>
+              <p className="text-gray-500">Approved content will appear here.</p>
             </div>
           ) : (
             recentApproved.map((item) => (
-              <div key={item.id} className="px-6 py-4 hover:bg-gray-50">
+              <div key={item.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="text-sm font-medium text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {item.contentType} • Created by {item.createdBy}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
+                    <h3 className="text-sm font-semibold text-gray-900">{item.title}</h3>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                      <span className="flex items-center">
+                        {getContentTypeIcon(item.contentType)}
+                        <span className="ml-1">{item.contentType.replace(/_/g, ' ')}</span>
+                      </span>
+                      <span>Created by {item.createdBy?.name || item.createdBy?.email || 'Unknown'}</span>
+                      <span>Approved {new Date(item.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     {getStatusBadge(item.status)}
-                    <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
-                      View
-                    </button>
+                    <Link href={`/approved/${item.id}`}>
+                      <Button variant="outline" size="sm">
+                        View
+                        <ArrowRightIcon className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>
