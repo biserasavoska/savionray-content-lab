@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
         deliveryPlans: org._count.deliveryPlans,
         contentItems: org._count.contentItems
       },
-      users: org.users.map(orgUser => ({
+      users: org.users.map((orgUser: any) => ({
         id: orgUser.user.id,
         name: orgUser.user.name,
         email: orgUser.user.email,
