@@ -140,12 +140,6 @@ export default function Navigation() {
               >
                 Delivery Plans
               </Link>
-              <Link
-                href="/published"
-                className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/published')}`}
-              >
-                Published
-              </Link>
             </nav>
           </div>
         </div>
