@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { User, MessageCircle, Users, Edit3, Eye } from 'lucide-react'
+import { MessageCircle, Users, Edit3, Eye } from 'lucide-react'
 
 interface Collaborator {
   id: string
@@ -38,17 +38,39 @@ interface RealTimeCollaborationProps {
 const validateCommentContent = (content: string): boolean => {
   if (!content || typeof content !== 'string') return false
   if (content.trim().length === 0) return false
-  if (content.length > 1000) return false // Limit comment length
+  if (content.length > 1000) return false
   return true
 }
 
 const sanitizeContent = (content: string): string => {
-  // Basic XSS prevention - remove script tags and dangerous HTML
   return content
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '')
     .trim()
+}
+
+const getSectionAtPosition = (text: string, position: number): string => {
+  const lines = text.substring(0, position).split('\n')
+  if (lines.length <= 3) return 'introduction'
+  if (lines.length <= 8) return 'body'
+  return 'conclusion'
+}
+
+const formatTimestamp = (date: Date): string => {
+  try {
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const minutes = Math.floor(diff / 60000)
+    
+    if (minutes < 1) return 'Just now'
+    if (minutes < 60) return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+    return date.toLocaleDateString()
+  } catch (err) {
+    return 'Unknown time'
+  }
 }
 
 export default function RealTimeCollaboration({
@@ -73,13 +95,14 @@ export default function RealTimeCollaboration({
   const commentsRef = useRef<HTMLDivElement>(null)
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Mock real-time data for demonstration
+  // Load initial data and set up real-time updates
   useEffect(() => {
     const loadInitialData = async () => {
       try {
         setIsLoading(true)
         setError(null)
         
+        // Mock data for demonstration
         const mockCollaborators: Collaborator[] = [
           {
             id: '1',
@@ -102,7 +125,7 @@ export default function RealTimeCollaboration({
             name: 'Mike Manager',
             email: 'mike@example.com',
             isOnline: false,
-            lastSeen: new Date(Date.now() - 300000) // 5 minutes ago
+            lastSeen: new Date(Date.now() - 300000)
           }
         ]
 
@@ -115,7 +138,7 @@ export default function RealTimeCollaboration({
               name: 'Sarah Client',
               email: 'sarah@example.com'
             },
-            timestamp: new Date(Date.now() - 600000), // 10 minutes ago
+            timestamp: new Date(Date.now() - 600000),
             section: 'introduction',
             resolved: false
           },
@@ -127,7 +150,7 @@ export default function RealTimeCollaboration({
               name: 'John Creative',
               email: 'john@example.com'
             },
-            timestamp: new Date(Date.now() - 300000), // 5 minutes ago
+            timestamp: new Date(Date.now() - 300000),
             section: 'body',
             resolved: true
           }
@@ -145,15 +168,14 @@ export default function RealTimeCollaboration({
 
     loadInitialData()
 
-    // Simulate real-time updates with proper cleanup
+    // Simulate real-time updates
     updateIntervalRef.current = setInterval(() => {
       setCollaborators(prev => prev.map(collab => ({
         ...collab,
         lastSeen: new Date()
       })))
-    }, 30000) // Update every 30 seconds
+    }, 30000)
 
-    // Cleanup function
     return () => {
       if (updateIntervalRef.current) {
         clearInterval(updateIntervalRef.current)
@@ -170,7 +192,7 @@ export default function RealTimeCollaboration({
         clearTimeout(timeoutId)
         timeoutId = setTimeout(() => {
           onContentChange?.(newContent)
-        }, 300) // 300ms debounce
+        }, 300)
       }
     })(),
     [onContentChange]
@@ -181,17 +203,9 @@ export default function RealTimeCollaboration({
     setContent(newContent)
     debouncedContentChange(newContent)
     
-    // Simulate real-time cursor position
     const cursorPosition = e.target.selectionStart
     const section = getSectionAtPosition(newContent, cursorPosition)
     setActiveSection(section)
-  }
-
-  const getSectionAtPosition = (text: string, position: number): string => {
-    const lines = text.substring(0, position).split('\n')
-    if (lines.length <= 3) return 'introduction'
-    if (lines.length <= 8) return 'body'
-    return 'conclusion'
   }
 
   const addComment = async () => {
@@ -211,7 +225,7 @@ export default function RealTimeCollaboration({
       setError(null)
       
       const comment: Comment = {
-        id: crypto.randomUUID(), // Secure random ID instead of predictable timestamp
+        id: crypto.randomUUID(),
         content: sanitizedComment,
         author: {
           id: session.user.id || '',
@@ -239,22 +253,6 @@ export default function RealTimeCollaboration({
     } catch (err) {
       setError('Failed to resolve comment')
       console.error('Error resolving comment:', err)
-    }
-  }
-
-  const formatTimestamp = (date: Date): string => {
-    try {
-      const now = new Date()
-      const diff = now.getTime() - date.getTime()
-      const minutes = Math.floor(diff / 60000)
-      
-      if (minutes < 1) return 'Just now'
-      if (minutes < 60) return `${minutes}m ago`
-      const hours = Math.floor(minutes / 60)
-      if (hours < 24) return `${hours}h ago`
-      return date.toLocaleDateString()
-    } catch (err) {
-      return 'Unknown time'
     }
   }
 
