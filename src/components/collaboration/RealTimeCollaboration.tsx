@@ -174,14 +174,35 @@ export default function RealTimeCollaboration({
 
   // --- SOCKET.IO CONNECTION WITH AUTHENTICATION ---
   useEffect(() => {
+    console.log('🔍 RealTimeCollaboration useEffect triggered:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      sessionData: session
+    })
+
     if (!session?.user) {
+      console.log('❌ No session or user data available')
       setError('Authentication required')
       return
     }
 
+    // Debug session data
+    console.log('🔍 Session data for Socket.IO:', {
+      userId: session.user.id,
+      userName: session.user.name,
+      userEmail: session.user.email,
+      fullSession: session
+    })
+
     // Connect to Socket.IO server with authentication
-    const socket = io('ws://localhost:4001', {
-      transports: ['websocket'],
+    console.log('🔌 Attempting Socket.IO connection with auth:', {
+      userId: session.user.id || session.user.email,
+      userName: session.user.name || 'Anonymous',
+      userEmail: session.user.email || ''
+    })
+
+    const socket = io('http://localhost:4001', {
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -209,7 +230,12 @@ export default function RealTimeCollaboration({
     })
 
     socket.on('connect_error', (error) => {
-      console.error('Socket.IO connection error:', error)
+      console.error('❌ Socket.IO connection error:', error)
+      console.error('❌ Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      })
       setConnectionStatus('error')
       setError(`Connection failed: ${error.message}`)
     })

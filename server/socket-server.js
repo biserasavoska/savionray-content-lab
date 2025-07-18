@@ -83,12 +83,21 @@ setInterval(() => {
 io.use((socket, next) => {
   const { userId, userName, userEmail } = socket.handshake.auth
   
+  console.log('🔍 Socket.IO Auth Debug:', {
+    userId,
+    userName,
+    userEmail,
+    authData: socket.handshake.auth
+  })
+  
   if (!userId || !userName || !userEmail) {
+    console.log('❌ Auth failed: Missing required fields')
     return next(new Error('Authentication required'))
   }
   
   // Rate limiting check
   if (!checkRateLimit(userId)) {
+    console.log('❌ Auth failed: Rate limit exceeded')
     return next(new Error('Rate limit exceeded'))
   }
   
@@ -97,6 +106,7 @@ io.use((socket, next) => {
   socket.userName = userName
   socket.userEmail = userEmail
   
+  console.log('✅ Auth successful for user:', userName)
   next()
 })
 

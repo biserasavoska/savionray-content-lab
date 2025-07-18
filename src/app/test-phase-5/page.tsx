@@ -27,7 +27,7 @@ import RichTextEditor from '@/components/editor/RichTextEditor'
 
 export default function TestPhase5Page() {
   const { data: session } = useSession()
-  const [selectedFeature, setSelectedFeature] = useState<'rich-text' | 'workflow' | 'collaboration'>('rich-text')
+  const [selectedFeature, setSelectedFeature] = useState<'rich-text' | 'workflow' | 'collaboration'>('collaboration')
   const [contentId] = useState('phase5-test-' + Date.now())
   const [workflowType, setWorkflowType] = useState<'development' | 'review' | 'approval'>('development')
   const [contentType, setContentType] = useState<'idea' | 'draft' | 'content'>('draft')
