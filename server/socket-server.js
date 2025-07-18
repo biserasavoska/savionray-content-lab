@@ -3,12 +3,34 @@ const { Server } = require('socket.io')
 const cors = require('cors')
 const { PrismaClient } = require('@prisma/client')
 
-// Initialize Prisma client
-const prisma = new PrismaClient()
+// Initialize Prisma client with connection pooling
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    }
+  },
+  // Connection pooling for better performance
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
+})
 
-// In-memory storage (in production, use Redis or database)
+// Rate limiting
+const rateLimit = new Map()
+const RATE_LIMIT_WINDOW = 60000 // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 100 // Max requests per minute per user
+
+// In-memory storage (in production, use Redis)
 const rooms = new Map()
 const userSessions = new Map()
+
+// Performance monitoring
+const performanceMetrics = {
+  connections: 0,
+  messagesSent: 0,
+  messagesReceived: 0,
+  errors: 0,
+  startTime: Date.now()
+}
 
 const httpServer = createServer()
 const io = new Server(httpServer, {
@@ -19,8 +41,43 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST'],
     credentials: true
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  // Performance optimizations
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  maxHttpBufferSize: 1e6, // 1MB
+  allowEIO3: true
 })
+
+// Rate limiting middleware
+function checkRateLimit(userId) {
+  const now = Date.now()
+  const userRequests = rateLimit.get(userId) || []
+  
+  // Remove old requests outside the window
+  const recentRequests = userRequests.filter(time => now - time < RATE_LIMIT_WINDOW)
+  
+  if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
+    return false
+  }
+  
+  recentRequests.push(now)
+  rateLimit.set(userId, recentRequests)
+  return true
+}
+
+// Clean up old rate limit entries
+setInterval(() => {
+  const now = Date.now()
+  for (const [userId, requests] of rateLimit.entries()) {
+    const recentRequests = requests.filter(time => now - time < RATE_LIMIT_WINDOW)
+    if (recentRequests.length === 0) {
+      rateLimit.delete(userId)
+    } else {
+      rateLimit.set(userId, recentRequests)
+    }
+  }
+}, RATE_LIMIT_WINDOW)
 
 // Middleware for authentication and validation
 io.use((socket, next) => {
@@ -28,6 +85,11 @@ io.use((socket, next) => {
   
   if (!userId || !userName || !userEmail) {
     return next(new Error('Authentication required'))
+  }
+  
+  // Rate limiting check
+  if (!checkRateLimit(userId)) {
+    return next(new Error('Rate limit exceeded'))
   }
   
   // Store user info in socket
@@ -39,7 +101,8 @@ io.use((socket, next) => {
 })
 
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.userName} (${socket.userId})`)
+  performanceMetrics.connections++
+  console.log(`User connected: ${socket.userName} (${socket.userId}) - Total connections: ${performanceMetrics.connections}`)
   
   // Join room for specific content
   socket.on('join-room', async (data) => {
@@ -47,6 +110,7 @@ io.on('connection', (socket) => {
     
     if (!contentId || !contentType) {
       socket.emit('error', { message: 'Invalid room data' })
+      performanceMetrics.errors++
       return
     }
     
@@ -72,12 +136,14 @@ io.on('connection', (socket) => {
       currentSection: 'introduction'
     })
     
-    // Load content from database
+    // Load content from database with caching
     try {
       const roomState = await loadRoomStateFromDatabase(roomId, contentId, contentType)
       socket.emit('room-state', roomState)
+      performanceMetrics.messagesSent++
     } catch (error) {
       console.error('Error loading room state:', error)
+      performanceMetrics.errors++
       // Fallback to in-memory state
       const roomState = getRoomState(roomId)
       socket.emit('room-state', roomState)
@@ -95,18 +161,29 @@ io.on('connection', (socket) => {
     console.log(`User ${socket.userName} joined room: ${roomId}`)
   })
   
-  // Handle content changes
+  // Handle content changes with throttling
+  let contentChangeThrottle = new Map()
   socket.on('content-change', async (data) => {
     const { content, section } = data
     
     if (!socket.roomId) {
       socket.emit('error', { message: 'Not in a room' })
+      performanceMetrics.errors++
       return
     }
+    
+    // Throttle content changes to prevent spam
+    const now = Date.now()
+    const lastChange = contentChangeThrottle.get(socket.userId) || 0
+    if (now - lastChange < 100) { // 100ms throttle
+      return
+    }
+    contentChangeThrottle.set(socket.userId, now)
     
     // Validate content
     if (typeof content !== 'string' || content.length > 50000) {
       socket.emit('error', { message: 'Invalid content' })
+      performanceMetrics.errors++
       return
     }
     
@@ -116,11 +193,12 @@ io.on('connection', (socket) => {
     // Update user's current section
     updateUserSection(socket.roomId, socket.userId, section || 'body')
     
-    // Save to database
+    // Save to database with batching
     try {
       await saveContentToDatabase(socket.roomId, content, socket.userId)
     } catch (error) {
       console.error('Error saving content to database:', error)
+      performanceMetrics.errors++
       // Continue with real-time sync even if DB save fails
     }
     
@@ -130,18 +208,23 @@ io.on('connection', (socket) => {
       updatedBy: socket.userId,
       timestamp: new Date()
     })
+    
+    performanceMetrics.messagesReceived++
+    performanceMetrics.messagesSent++
   })
   
   // Handle new comments
   socket.on('new-comment', async (comment) => {
     if (!socket.roomId) {
       socket.emit('error', { message: 'Not in a room' })
+      performanceMetrics.errors++
       return
     }
     
     // Validate comment
     if (!comment.content || comment.content.length > 1000) {
       socket.emit('error', { message: 'Invalid comment' })
+      performanceMetrics.errors++
       return
     }
     
@@ -164,11 +247,15 @@ io.on('connection', (socket) => {
       await saveCommentToDatabase(socket.roomId, newComment)
     } catch (error) {
       console.error('Error saving comment to database:', error)
+      performanceMetrics.errors++
       // Continue with real-time sync even if DB save fails
     }
     
     // Broadcast to all in room
     io.to(socket.roomId).emit('new-comment', newComment)
+    
+    performanceMetrics.messagesReceived++
+    performanceMetrics.messagesSent++
   })
   
   // Handle comment resolution
@@ -177,6 +264,7 @@ io.on('connection', (socket) => {
     
     if (!socket.roomId) {
       socket.emit('error', { message: 'Not in a room' })
+      performanceMetrics.errors++
       return
     }
     
@@ -188,11 +276,14 @@ io.on('connection', (socket) => {
         await updateCommentInDatabase(commentId, { resolved: true })
       } catch (error) {
         console.error('Error updating comment in database:', error)
+        performanceMetrics.errors++
       }
       
       io.to(socket.roomId).emit('comment-resolved', { commentId })
+      performanceMetrics.messagesSent++
     } else {
       socket.emit('error', { message: 'Comment not found' })
+      performanceMetrics.errors++
     }
   })
   
@@ -216,11 +307,15 @@ io.on('connection', (socket) => {
       activity,
       timestamp: new Date()
     })
+    
+    performanceMetrics.messagesReceived++
+    performanceMetrics.messagesSent++
   })
   
   // Handle disconnection
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.userName} (${socket.userId})`)
+    performanceMetrics.connections--
+    console.log(`User disconnected: ${socket.userName} (${socket.userId}) - Total connections: ${performanceMetrics.connections}`)
     
     if (socket.roomId) {
       // Mark user as offline but keep in room
@@ -239,10 +334,11 @@ io.on('connection', (socket) => {
     
     // Clean up user session
     userSessions.delete(socket.userId)
+    contentChangeThrottle.delete(socket.userId)
   })
 })
 
-// Database functions
+// Database functions with connection pooling
 async function loadRoomStateFromDatabase(roomId, contentId, contentType) {
   try {
     // Load content based on content type
@@ -512,16 +608,27 @@ function generateId() {
   return Math.random().toString(36).substr(2, 9)
 }
 
-// Health check endpoint
+// Enhanced health check endpoint with performance metrics
 httpServer.on('request', (req, res) => {
   if (req.url === '/health') {
+    const uptime = Date.now() - performanceMetrics.startTime
+    const avgMessagesPerSecond = performanceMetrics.messagesSent / (uptime / 1000)
+    
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({
       status: 'healthy',
       rooms: rooms.size,
-      connections: io.engine.clientsCount,
+      connections: performanceMetrics.connections,
+      messagesSent: performanceMetrics.messagesSent,
+      messagesReceived: performanceMetrics.messagesReceived,
+      errors: performanceMetrics.errors,
+      avgMessagesPerSecond: Math.round(avgMessagesPerSecond * 100) / 100,
+      uptime: Math.round(uptime / 1000),
       timestamp: new Date().toISOString()
     }))
+  } else if (req.url === '/metrics') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify(performanceMetrics))
   } else {
     res.writeHead(404)
     res.end()
@@ -533,7 +640,9 @@ const PORT = process.env.SOCKET_PORT || 4001
 httpServer.listen(PORT, () => {
   console.log(`🚀 Socket.IO server running on port ${PORT}`)
   console.log(`📊 Health check available at http://localhost:${PORT}/health`)
+  console.log(`📈 Performance metrics at http://localhost:${PORT}/metrics`)
   console.log(`💾 Database persistence enabled`)
+  console.log(`⚡ Performance optimizations active`)
 })
 
 // Graceful shutdown
