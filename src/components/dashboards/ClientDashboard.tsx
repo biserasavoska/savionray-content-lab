@@ -100,13 +100,13 @@ export default function ClientDashboard() {
     }
 
     const loadMockData = () => {
-      const mockPendingContent: ContentItem[] = [
-        {
-          id: '1',
+    const mockPendingContent: ContentItem[] = [
+      {
+        id: '1',
           title: 'Q4 Marketing Campaign - Social Media Series',
-          status: 'PENDING_APPROVAL',
-          contentType: 'SOCIAL_MEDIA_POST',
-          createdAt: '2025-01-07T10:00:00Z',
+        status: 'PENDING_APPROVAL',
+        contentType: 'SOCIAL_MEDIA_POST',
+        createdAt: '2025-01-07T10:00:00Z',
           createdBy: {
             id: '1',
             name: 'Creative Team',
@@ -115,13 +115,13 @@ export default function ClientDashboard() {
           },
           priority: 'HIGH',
           dueDate: '2025-01-10T17:00:00Z'
-        },
-        {
-          id: '2',
+      },
+      {
+        id: '2',
           title: 'Product Launch Announcement Newsletter',
-          status: 'PENDING_APPROVAL',
-          contentType: 'NEWSLETTER',
-          createdAt: '2025-01-07T09:30:00Z',
+        status: 'PENDING_APPROVAL',
+        contentType: 'NEWSLETTER',
+        createdAt: '2025-01-07T09:30:00Z',
           createdBy: {
             id: '1',
             name: 'Creative Team',
@@ -145,16 +145,16 @@ export default function ClientDashboard() {
           },
           priority: 'LOW',
           dueDate: '2025-01-15T17:00:00Z'
-        }
-      ]
+      }
+    ]
 
-      const mockRecentApproved: ContentItem[] = [
-        {
+    const mockRecentApproved: ContentItem[] = [
+      {
           id: '4',
           title: 'Holiday Promotion Campaign',
-          status: 'APPROVED',
-          contentType: 'SOCIAL_MEDIA_POST',
-          createdAt: '2025-01-06T15:00:00Z',
+        status: 'APPROVED',
+        contentType: 'SOCIAL_MEDIA_POST',
+        createdAt: '2025-01-06T15:00:00Z',
           createdBy: {
             id: '1',
             name: 'Creative Team',
@@ -268,18 +268,18 @@ export default function ClientDashboard() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               {organization ? `${organization.name} Content Hub` : 'Content Review Dashboard'}
-            </h1>
+        </h1>
             <p className="text-gray-600 mt-2">
-              {organization 
-                ? `Review and approve content for ${organization.name}`
-                : 'Review and approve content from your creative team'
-              }
-            </p>
-            {organization && (
+          {organization 
+            ? `Review and approve content for ${organization.name}`
+            : 'Review and approve content from your creative team'
+          }
+        </p>
+        {organization && (
               <div className="mt-3 flex items-center space-x-3">
                 <Badge variant="primary">
                   <LightBulbIcon className="w-3 h-3 mr-1" />
-                  Organization: {organization.name}
+              Organization: {organization.name}
                 </Badge>
                 <Badge variant="success">
                   <CheckCircleIcon className="w-3 h-3 mr-1" />
@@ -391,14 +391,14 @@ export default function ClientDashboard() {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <EyeIcon className="h-5 w-5 mr-2 text-blue-600" />
-              Content Pending Review
+            <EyeIcon className="h-5 w-5 mr-2 text-blue-600" />
+            Content Pending Review
               {stats.pendingReview > 0 && (
                 <Badge variant="warning" size="sm" className="ml-2">
                   {stats.pendingReview}
                 </Badge>
               )}
-            </h2>
+          </h2>
             <Link href="/ready-content">
               <Button variant="secondary" size="sm">
                 View All
@@ -449,7 +449,7 @@ export default function ClientDashboard() {
                     {getStatusBadge(item.status)}
                     <Link href={`/ready-content/${item.id}`}>
                       <Button variant="primary" size="sm">
-                        Review
+                      Review
                         <ArrowRightIcon className="h-4 w-4 ml-1" />
                       </Button>
                     </Link>
@@ -470,20 +470,20 @@ export default function ClientDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/ready-content">
               <Button variant="primary" className="w-full justify-center">
-                <EyeIcon className="h-5 w-5 mr-2" />
-                Review Content
+              <EyeIcon className="h-5 w-5 mr-2" />
+              Review Content
               </Button>
             </Link>
             <Link href="/ideas">
               <Button variant="success" className="w-full justify-center">
-                <CheckCircleIcon className="h-5 w-5 mr-2" />
-                Approve Ideas
+              <CheckCircleIcon className="h-5 w-5 mr-2" />
+              Approve Ideas
               </Button>
             </Link>
             <Link href="/feedback-management">
               <Button variant="secondary" className="w-full justify-center">
-                <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
-                Provide Feedback
+              <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
+              Provide Feedback
               </Button>
             </Link>
             <Link href="/approved">
@@ -501,9 +501,9 @@ export default function ClientDashboard() {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="h-5 w-5 mr-2 text-green-600" />
-              Recently Approved
-            </h2>
+            <CheckCircleIcon className="h-5 w-5 mr-2 text-green-600" />
+            Recently Approved
+          </h2>
             <Link href="/approved">
               <Button variant="secondary" size="sm">
                 View All
@@ -538,7 +538,7 @@ export default function ClientDashboard() {
                     {getStatusBadge(item.status)}
                     <Link href={`/approved/${item.id}`}>
                       <Button variant="outline" size="sm">
-                        View
+                      View
                         <ArrowRightIcon className="h-4 w-4 ml-1" />
                       </Button>
                     </Link>

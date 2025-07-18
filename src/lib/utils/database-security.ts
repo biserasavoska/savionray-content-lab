@@ -287,6 +287,6 @@ const databaseSecurity = {
   logDatabaseAccess,
   validateOrganizationId,
   sanitizeOrganizationId,
-};
+}; 
 
 export default databaseSecurity; 

@@ -339,6 +339,6 @@ const apiSecurity = {
   sanitizeInput,
   addSecurityHeaders,
   addCorsHeaders
-};
+}; 
 
 export default apiSecurity; 
