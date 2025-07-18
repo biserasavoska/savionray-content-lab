@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { MessageCircle, Users, Edit3, Eye, Wifi, WifiOff, AlertCircle } from 'lucide-react'
+import { MessageCircle, Users, Edit3, Eye, Wifi, WifiOff, AlertCircle, GitBranch } from 'lucide-react'
 // SOCKET.IO CLIENT
 import { io, Socket } from 'socket.io-client'
 
@@ -27,6 +27,16 @@ interface Comment {
   timestamp: Date
   section?: string
   resolved: boolean
+}
+
+interface ContentOperation {
+  id: string
+  type: 'insert' | 'delete'
+  position: number
+  text?: string
+  length?: number
+  timestamp: number
+  userId: string
 }
 
 interface RealTimeCollaborationProps {
@@ -75,6 +85,56 @@ const formatTimestamp = (date: Date): string => {
   }
 }
 
+// Simple Operational Transformation for conflict resolution
+class SimpleOT {
+  private operations: ContentOperation[] = []
+  private baseContent: string = ''
+
+  constructor(initialContent: string) {
+    this.baseContent = initialContent
+  }
+
+  applyOperation(operation: ContentOperation): string {
+    let content = this.baseContent
+    
+    // Sort operations by timestamp
+    const sortedOps = [...this.operations, operation].sort((a, b) => a.timestamp - b.timestamp)
+    
+    for (const op of sortedOps) {
+      if (op.type === 'insert' && op.text) {
+        content = content.slice(0, op.position) + op.text + content.slice(op.position)
+        // Adjust positions of subsequent operations
+        this.adjustPositions(op.position, op.text.length)
+      } else if (op.type === 'delete' && op.length) {
+        content = content.slice(0, op.position) + content.slice(op.position + op.length)
+        // Adjust positions of subsequent operations
+        this.adjustPositions(op.position, -op.length)
+      }
+    }
+    
+    this.operations.push(operation)
+    this.baseContent = content
+    return content
+  }
+
+  private adjustPositions(fromPosition: number, offset: number) {
+    for (const op of this.operations) {
+      if (op.position > fromPosition) {
+        op.position += offset
+      }
+    }
+  }
+
+  getOperations(): ContentOperation[] {
+    return [...this.operations]
+  }
+
+  reset(initialContent: string) {
+    this.baseContent = initialContent
+    this.operations = []
+  }
+}
+
 export default function RealTimeCollaboration({
   contentId,
   contentType,
@@ -94,12 +154,21 @@ export default function RealTimeCollaboration({
   const [error, setError] = useState<string | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting')
   const [isTyping, setIsTyping] = useState(false)
+  const [pendingOperations, setPendingOperations] = useState<ContentOperation[]>([])
+  const [conflictResolution, setConflictResolution] = useState<{
+    show: boolean
+    localContent: string
+    remoteContent: string
+    onResolve: (content: string) => void
+  }>({ show: false, localContent: '', remoteContent: '', onResolve: () => {} })
   
   const contentRef = useRef<HTMLTextAreaElement>(null)
   const commentsRef = useRef<HTMLDivElement>(null)
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const socketRef = useRef<Socket | null>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const otRef = useRef<SimpleOT>(new SimpleOT(initialContent))
+  const lastCursorPositionRef = useRef<number>(0)
 
   // --- SOCKET.IO CONNECTION WITH AUTHENTICATION ---
   useEffect(() => {
@@ -149,15 +218,47 @@ export default function RealTimeCollaboration({
         setContent(state.content || initialContent)
         setComments(state.comments || [])
         setCollaborators(state.users || [])
+        otRef.current.reset(state.content || initialContent)
       }
     })
 
-    // Content change handlers
-    socket.on('content-change', (data: { content: string, updatedBy: string, timestamp: Date }) => {
+    // Content change handlers with conflict resolution
+    socket.on('content-change', (data: { content: string, updatedBy: string, timestamp: Date, operations?: ContentOperation[] }) => {
       if (data.updatedBy !== session.user.id) {
-        setContent(data.content)
-        onContentChange?.(data.content)
+        // Apply remote operations
+        if (data.operations) {
+          let newContent = content
+          for (const operation of data.operations) {
+            newContent = otRef.current.applyOperation(operation)
+          }
+          setContent(newContent)
+          onContentChange?.(newContent)
+        } else {
+          // Fallback to simple content replacement
+          setContent(data.content)
+          onContentChange?.(data.content)
+        }
       }
+    })
+
+    // Conflict resolution handler
+    socket.on('content-conflict', (data: { localContent: string, remoteContent: string, operations: ContentOperation[] }) => {
+      setConflictResolution({
+        show: true,
+        localContent: data.localContent,
+        remoteContent: data.remoteContent,
+        onResolve: (resolvedContent: string) => {
+          setContent(resolvedContent)
+          onContentChange?.(resolvedContent)
+          otRef.current.reset(resolvedContent)
+          setConflictResolution({ show: false, localContent: '', remoteContent: '', onResolve: () => {} })
+          
+          // Send resolved content to server
+          if (socketRef.current && connectionStatus === 'connected') {
+            socketRef.current.emit('content-resolved', { content: resolvedContent })
+          }
+        }
+      })
     })
 
     // Comment handlers
@@ -214,18 +315,50 @@ export default function RealTimeCollaboration({
 
   // --- END SOCKET.IO CONNECTION ---
 
-  // Debounced content change handler with typing indicator
+  // Generate operations from content changes
+  const generateOperations = (oldContent: string, newContent: string, cursorPosition: number): ContentOperation[] => {
+    const operations: ContentOperation[] = []
+    
+    // Simple diff algorithm - in production, use a more sophisticated diff library
+    if (newContent.length > oldContent.length) {
+      // Insertion
+      const insertedText = newContent.slice(cursorPosition, cursorPosition + (newContent.length - oldContent.length))
+      operations.push({
+        id: crypto.randomUUID(),
+        type: 'insert',
+        position: cursorPosition,
+        text: insertedText,
+        timestamp: Date.now(),
+        userId: session?.user?.id || ''
+      })
+    } else if (newContent.length < oldContent.length) {
+      // Deletion
+      const deletedLength = oldContent.length - newContent.length
+      operations.push({
+        id: crypto.randomUUID(),
+        type: 'delete',
+        position: cursorPosition,
+        length: deletedLength,
+        timestamp: Date.now(),
+        userId: session?.user?.id || ''
+      })
+    }
+    
+    return operations
+  }
+
+  // Debounced content change handler with operational transformation
   const debouncedContentChange = useCallback(
     (() => {
       let timeoutId: NodeJS.Timeout
-      return (newContent: string) => {
+      return (newContent: string, cursorPosition: number) => {
         clearTimeout(timeoutId)
         
         // Show typing indicator
         if (socketRef.current && connectionStatus === 'connected') {
           setIsTyping(true)
           socketRef.current.emit('user-activity', { 
-            section: getSectionAtPosition(newContent, contentRef.current?.selectionStart || 0),
+            section: getSectionAtPosition(newContent, cursorPosition),
             activity: 'typing'
           })
           
@@ -235,26 +368,38 @@ export default function RealTimeCollaboration({
         }
         
         timeoutId = setTimeout(() => {
-          // Emit content change to server
+          // Generate operations for conflict resolution
+          const operations = generateOperations(content, newContent, cursorPosition)
+          
+          // Apply operations locally
+          let transformedContent = newContent
+          for (const operation of operations) {
+            transformedContent = otRef.current.applyOperation(operation)
+          }
+          
+          // Emit operations to server
           if (socketRef.current && connectionStatus === 'connected') {
             socketRef.current.emit('content-change', { 
-              content: newContent,
-              section: getSectionAtPosition(newContent, contentRef.current?.selectionStart || 0)
+              content: transformedContent,
+              operations,
+              section: getSectionAtPosition(transformedContent, cursorPosition)
             })
           }
-          onContentChange?.(newContent)
+          onContentChange?.(transformedContent)
         }, 300)
       }
     })(),
-    [onContentChange, connectionStatus]
+    [onContentChange, connectionStatus, content]
   )
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value
-    setContent(newContent)
-    debouncedContentChange(newContent)
-    
     const cursorPosition = e.target.selectionStart
+    
+    setContent(newContent)
+    lastCursorPositionRef.current = cursorPosition
+    debouncedContentChange(newContent, cursorPosition)
+    
     const section = getSectionAtPosition(newContent, cursorPosition)
     setActiveSection(section)
   }
@@ -345,6 +490,62 @@ export default function RealTimeCollaboration({
     }
   }
 
+  // Conflict resolution modal
+  if (conflictResolution.show) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            🔄 Content Conflict Detected
+          </h3>
+          <p className="text-gray-600 mb-4">
+            There's a conflict between your local changes and remote changes. Please resolve the conflict:
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Your Version</h4>
+              <textarea
+                value={conflictResolution.localContent}
+                readOnly
+                className="w-full h-32 p-2 border rounded-md text-sm bg-gray-50"
+              />
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Remote Version</h4>
+              <textarea
+                value={conflictResolution.remoteContent}
+                readOnly
+                className="w-full h-32 p-2 border rounded-md text-sm bg-gray-50"
+              />
+            </div>
+          </div>
+          
+          <div className="flex space-x-2">
+            <button
+              onClick={() => conflictResolution.onResolve(conflictResolution.localContent)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Use My Version
+            </button>
+            <button
+              onClick={() => conflictResolution.onResolve(conflictResolution.remoteContent)}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Use Remote Version
+            </button>
+            <button
+              onClick={() => conflictResolution.onResolve(conflictResolution.localContent + '\n\n---\n\n' + conflictResolution.remoteContent)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+            >
+              Merge Both
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Error display component
   if (error && connectionStatus === 'error') {
     return (
@@ -412,6 +613,14 @@ export default function RealTimeCollaboration({
               {getConnectionStatusIcon()}
               <span className="text-gray-600">{getConnectionStatusText()}</span>
             </div>
+            
+            {/* Conflict Resolution Indicator */}
+            {pendingOperations.length > 0 && (
+              <div className="flex items-center space-x-1 px-2 py-1 rounded-md text-xs bg-yellow-100">
+                <GitBranch size={14} className="text-yellow-600" />
+                <span className="text-yellow-700">Resolving conflicts...</span>
+              </div>
+            )}
             
             <button
               onClick={() => setShowCollaborators(!showCollaborators)}

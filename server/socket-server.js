@@ -1,6 +1,10 @@
 const { createServer } = require('http')
 const { Server } = require('socket.io')
 const cors = require('cors')
+const { PrismaClient } = require('@prisma/client')
+
+// Initialize Prisma client
+const prisma = new PrismaClient()
 
 // In-memory storage (in production, use Redis or database)
 const rooms = new Map()
@@ -38,7 +42,7 @@ io.on('connection', (socket) => {
   console.log(`User connected: ${socket.userName} (${socket.userId})`)
   
   // Join room for specific content
-  socket.on('join-room', (data) => {
+  socket.on('join-room', async (data) => {
     const { contentId, contentType } = data
     
     if (!contentId || !contentType) {
@@ -68,9 +72,16 @@ io.on('connection', (socket) => {
       currentSection: 'introduction'
     })
     
-    // Send current room state to user
-    const roomState = getRoomState(roomId)
-    socket.emit('room-state', roomState)
+    // Load content from database
+    try {
+      const roomState = await loadRoomStateFromDatabase(roomId, contentId, contentType)
+      socket.emit('room-state', roomState)
+    } catch (error) {
+      console.error('Error loading room state:', error)
+      // Fallback to in-memory state
+      const roomState = getRoomState(roomId)
+      socket.emit('room-state', roomState)
+    }
     
     // Notify others in room
     socket.to(roomId).emit('user-joined', {
@@ -85,7 +96,7 @@ io.on('connection', (socket) => {
   })
   
   // Handle content changes
-  socket.on('content-change', (data) => {
+  socket.on('content-change', async (data) => {
     const { content, section } = data
     
     if (!socket.roomId) {
@@ -105,6 +116,14 @@ io.on('connection', (socket) => {
     // Update user's current section
     updateUserSection(socket.roomId, socket.userId, section || 'body')
     
+    // Save to database
+    try {
+      await saveContentToDatabase(socket.roomId, content, socket.userId)
+    } catch (error) {
+      console.error('Error saving content to database:', error)
+      // Continue with real-time sync even if DB save fails
+    }
+    
     // Broadcast to others in room
     socket.to(socket.roomId).emit('content-change', { 
       content,
@@ -114,7 +133,7 @@ io.on('connection', (socket) => {
   })
   
   // Handle new comments
-  socket.on('new-comment', (comment) => {
+  socket.on('new-comment', async (comment) => {
     if (!socket.roomId) {
       socket.emit('error', { message: 'Not in a room' })
       return
@@ -140,12 +159,20 @@ io.on('connection', (socket) => {
     
     addCommentToRoom(socket.roomId, newComment)
     
+    // Save to database
+    try {
+      await saveCommentToDatabase(socket.roomId, newComment)
+    } catch (error) {
+      console.error('Error saving comment to database:', error)
+      // Continue with real-time sync even if DB save fails
+    }
+    
     // Broadcast to all in room
     io.to(socket.roomId).emit('new-comment', newComment)
   })
   
   // Handle comment resolution
-  socket.on('resolve-comment', (data) => {
+  socket.on('resolve-comment', async (data) => {
     const { commentId } = data
     
     if (!socket.roomId) {
@@ -156,6 +183,13 @@ io.on('connection', (socket) => {
     const success = resolveCommentInRoom(socket.roomId, commentId)
     
     if (success) {
+      // Update in database
+      try {
+        await updateCommentInDatabase(commentId, { resolved: true })
+      } catch (error) {
+        console.error('Error updating comment in database:', error)
+      }
+      
       io.to(socket.roomId).emit('comment-resolved', { commentId })
     } else {
       socket.emit('error', { message: 'Comment not found' })
@@ -207,6 +241,169 @@ io.on('connection', (socket) => {
     userSessions.delete(socket.userId)
   })
 })
+
+// Database functions
+async function loadRoomStateFromDatabase(roomId, contentId, contentType) {
+  try {
+    // Load content based on content type
+    let content = ''
+    let comments = []
+    
+    switch (contentType) {
+      case 'draft':
+        const draft = await prisma.contentDraft.findUnique({
+          where: { id: contentId },
+          include: {
+            comments: {
+              include: { author: true },
+              orderBy: { createdAt: 'asc' }
+            }
+          }
+        })
+        if (draft) {
+          content = draft.body || ''
+          comments = draft.comments.map(c => ({
+            id: c.id,
+            content: c.content,
+            author: {
+              id: c.author.id,
+              name: c.author.name,
+              email: c.author.email
+            },
+            timestamp: c.createdAt,
+            section: c.section,
+            resolved: c.resolved
+          }))
+        }
+        break
+        
+      case 'idea':
+        const idea = await prisma.idea.findUnique({
+          where: { id: contentId },
+          include: {
+            comments: {
+              include: { author: true },
+              orderBy: { createdAt: 'asc' }
+            }
+          }
+        })
+        if (idea) {
+          content = idea.description || ''
+          comments = idea.comments.map(c => ({
+            id: c.id,
+            content: c.content,
+            author: {
+              id: c.author.id,
+              name: c.author.name,
+              email: c.author.email
+            },
+            timestamp: c.createdAt,
+            section: c.section,
+            resolved: c.resolved
+          }))
+        }
+        break
+        
+      default:
+        // For other content types, use in-memory state
+        const room = rooms.get(roomId)
+        if (room) {
+          content = room.content
+          comments = Array.from(room.comments.values())
+        }
+    }
+    
+    return {
+      content,
+      comments,
+      users: Array.from(rooms.get(roomId)?.users.values() || []),
+      lastActivity: new Date()
+    }
+  } catch (error) {
+    console.error('Error loading room state from database:', error)
+    throw error
+  }
+}
+
+async function saveContentToDatabase(roomId, content, userId) {
+  try {
+    const [contentType, contentId] = roomId.split('-')
+    
+    switch (contentType) {
+      case 'draft':
+        await prisma.contentDraft.update({
+          where: { id: contentId },
+          data: { 
+            body: content,
+            updatedAt: new Date()
+          }
+        })
+        break
+        
+      case 'idea':
+        await prisma.idea.update({
+          where: { id: contentId },
+          data: { 
+            description: content,
+            updatedAt: new Date()
+          }
+        })
+        break
+    }
+  } catch (error) {
+    console.error('Error saving content to database:', error)
+    throw error
+  }
+}
+
+async function saveCommentToDatabase(roomId, comment) {
+  try {
+    const [contentType, contentId] = roomId.split('-')
+    
+    const commentData = {
+      content: comment.content,
+      section: comment.section,
+      resolved: comment.resolved || false,
+      authorId: comment.author.id,
+      createdAt: comment.timestamp
+    }
+    
+    switch (contentType) {
+      case 'draft':
+        await prisma.comment.create({
+          data: {
+            ...commentData,
+            contentDraftId: contentId
+          }
+        })
+        break
+        
+      case 'idea':
+        await prisma.comment.create({
+          data: {
+            ...commentData,
+            ideaId: contentId
+          }
+        })
+        break
+    }
+  } catch (error) {
+    console.error('Error saving comment to database:', error)
+    throw error
+  }
+}
+
+async function updateCommentInDatabase(commentId, updates) {
+  try {
+    await prisma.comment.update({
+      where: { id: commentId },
+      data: updates
+    })
+  } catch (error) {
+    console.error('Error updating comment in database:', error)
+    throw error
+  }
+}
 
 // Room management functions
 function addUserToRoom(roomId, user) {
@@ -336,19 +533,22 @@ const PORT = process.env.SOCKET_PORT || 4001
 httpServer.listen(PORT, () => {
   console.log(`🚀 Socket.IO server running on port ${PORT}`)
   console.log(`📊 Health check available at http://localhost:${PORT}/health`)
+  console.log(`💾 Database persistence enabled`)
 })
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('🛑 Shutting down Socket.IO server...')
+  await prisma.$disconnect()
   io.close(() => {
     console.log('✅ Socket.IO server closed')
     process.exit(0)
   })
 })
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('🛑 Shutting down Socket.IO server...')
+  await prisma.$disconnect()
   io.close(() => {
     console.log('✅ Socket.IO server closed')
     process.exit(0)
