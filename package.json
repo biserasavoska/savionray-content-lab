@@ -32,6 +32,7 @@
     "date-fns": "^4.1.0",
     "hubspot": "^2.3.14",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.525.0",
     "next": "14.1.0",
     "next-auth": "^4.24.6",
     "node-fetch": "^2.7.0",
