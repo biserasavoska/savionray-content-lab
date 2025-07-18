@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
-import { MessageCircle, Users, Edit3, Eye } from 'lucide-react'
+import { MessageCircle, Users, Edit3, Eye, Wifi, WifiOff, AlertCircle } from 'lucide-react'
+// SOCKET.IO CLIENT
+import { io, Socket } from 'socket.io-client'
 
 interface Collaborator {
   id: string
@@ -90,112 +92,161 @@ export default function RealTimeCollaboration({
   const [showComments, setShowComments] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting')
+  const [isTyping, setIsTyping] = useState(false)
   
   const contentRef = useRef<HTMLTextAreaElement>(null)
   const commentsRef = useRef<HTMLDivElement>(null)
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const socketRef = useRef<Socket | null>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Load initial data and set up real-time updates
+  // --- SOCKET.IO CONNECTION WITH AUTHENTICATION ---
   useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        
-        // Mock data for demonstration
-        const mockCollaborators: Collaborator[] = [
-          {
-            id: '1',
-            name: 'John Creative',
-            email: 'john@example.com',
-            isOnline: true,
-            lastSeen: new Date(),
-            currentSection: 'introduction'
-          },
-          {
-            id: '2',
-            name: 'Sarah Client',
-            email: 'sarah@example.com',
-            isOnline: true,
-            lastSeen: new Date(),
-            currentSection: 'conclusion'
-          },
-          {
-            id: '3',
-            name: 'Mike Manager',
-            email: 'mike@example.com',
-            isOnline: false,
-            lastSeen: new Date(Date.now() - 300000)
-          }
-        ]
-
-        const mockComments: Comment[] = [
-          {
-            id: '1',
-            content: 'Great start! Consider adding more specific examples in the second paragraph.',
-            author: {
-              id: '2',
-              name: 'Sarah Client',
-              email: 'sarah@example.com'
-            },
-            timestamp: new Date(Date.now() - 600000),
-            section: 'introduction',
-            resolved: false
-          },
-          {
-            id: '2',
-            content: 'The tone is perfect for our target audience.',
-            author: {
-              id: '1',
-              name: 'John Creative',
-              email: 'john@example.com'
-            },
-            timestamp: new Date(Date.now() - 300000),
-            section: 'body',
-            resolved: true
-          }
-        ]
-
-        setCollaborators(mockCollaborators)
-        setComments(mockComments)
-      } catch (err) {
-        setError('Failed to load collaboration data')
-        console.error('Error loading collaboration data:', err)
-      } finally {
-        setIsLoading(false)
-      }
+    if (!session?.user) {
+      setError('Authentication required')
+      return
     }
 
-    loadInitialData()
+    // Connect to Socket.IO server with authentication
+    const socket = io('ws://localhost:4001', {
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      auth: {
+        userId: session.user.id || session.user.email,
+        userName: session.user.name || 'Anonymous',
+        userEmail: session.user.email || ''
+      }
+    })
+    socketRef.current = socket
 
-    // Simulate real-time updates
-    updateIntervalRef.current = setInterval(() => {
-      setCollaborators(prev => prev.map(collab => ({
-        ...collab,
-        lastSeen: new Date()
-      })))
-    }, 30000)
+    // Connection status handlers
+    socket.on('connect', () => {
+      console.log('Connected to Socket.IO server')
+      setConnectionStatus('connected')
+      setError(null)
+      
+      // Join the room for this content
+      socket.emit('join-room', { contentId, contentType })
+    })
 
+    socket.on('disconnect', () => {
+      console.log('Disconnected from Socket.IO server')
+      setConnectionStatus('disconnected')
+    })
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket.IO connection error:', error)
+      setConnectionStatus('error')
+      setError(`Connection failed: ${error.message}`)
+    })
+
+    // Room state handlers
+    socket.on('room-state', (state: any) => {
+      if (state) {
+        setContent(state.content || initialContent)
+        setComments(state.comments || [])
+        setCollaborators(state.users || [])
+      }
+    })
+
+    // Content change handlers
+    socket.on('content-change', (data: { content: string, updatedBy: string, timestamp: Date }) => {
+      if (data.updatedBy !== session.user.id) {
+        setContent(data.content)
+        onContentChange?.(data.content)
+      }
+    })
+
+    // Comment handlers
+    socket.on('new-comment', (comment: Comment) => {
+      setComments(prev => [...prev, comment])
+      // Scroll to new comment
+      setTimeout(() => {
+        if (commentsRef.current) {
+          commentsRef.current.scrollTop = commentsRef.current.scrollHeight
+        }
+      }, 100)
+    })
+
+    socket.on('comment-resolved', (data: { commentId: string }) => {
+      setComments(prev => prev.map(comment => 
+        comment.id === data.commentId ? { ...comment, resolved: true } : comment
+      ))
+    })
+
+    // Presence handlers
+    socket.on('user-joined', (user: Collaborator) => {
+      setCollaborators(prev => {
+        const existing = prev.find(c => c.id === user.id)
+        if (existing) {
+          return prev.map(c => c.id === user.id ? { ...c, ...user } : c)
+        }
+        return [...prev, user]
+      })
+    })
+
+    socket.on('user-left', (user: { id: string, name: string, lastSeen: Date }) => {
+      setCollaborators(prev => prev.map(c => 
+        c.id === user.id ? { ...c, isOnline: false, lastSeen: user.lastSeen } : c
+      ))
+    })
+
+    socket.on('user-activity', (data: { userId: string, userName: string, section: string, activity: string }) => {
+      setCollaborators(prev => prev.map(c => 
+        c.id === data.userId ? { ...c, currentSection: data.section } : c
+      ))
+    })
+
+    // Error handler
+    socket.on('error', (data: { message: string }) => {
+      setError(data.message)
+    })
+
+    // Clean up on unmount
     return () => {
-      if (updateIntervalRef.current) {
-        clearInterval(updateIntervalRef.current)
-        updateIntervalRef.current = null
-      }
+      socket.disconnect()
+      socketRef.current = null
     }
-  }, [])
+  }, [session, contentId, contentType, initialContent, onContentChange])
 
-  // Debounced content change handler
+  // --- END SOCKET.IO CONNECTION ---
+
+  // Debounced content change handler with typing indicator
   const debouncedContentChange = useCallback(
     (() => {
       let timeoutId: NodeJS.Timeout
       return (newContent: string) => {
         clearTimeout(timeoutId)
+        
+        // Show typing indicator
+        if (socketRef.current && connectionStatus === 'connected') {
+          setIsTyping(true)
+          socketRef.current.emit('user-activity', { 
+            section: getSectionAtPosition(newContent, contentRef.current?.selectionStart || 0),
+            activity: 'typing'
+          })
+          
+          // Clear typing indicator after delay
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+          typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000)
+        }
+        
         timeoutId = setTimeout(() => {
+          // Emit content change to server
+          if (socketRef.current && connectionStatus === 'connected') {
+            socketRef.current.emit('content-change', { 
+              content: newContent,
+              section: getSectionAtPosition(newContent, contentRef.current?.selectionStart || 0)
+            })
+          }
           onContentChange?.(newContent)
         }, 300)
       }
     })(),
-    [onContentChange]
+    [onContentChange, connectionStatus]
   )
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -237,6 +288,10 @@ export default function RealTimeCollaboration({
         resolved: false
       }
 
+      // Emit new comment to server
+      if (socketRef.current && connectionStatus === 'connected') {
+        socketRef.current.emit('new-comment', comment)
+      }
       setComments(prev => [...prev, comment])
       setNewComment('')
     } catch (err) {
@@ -247,6 +302,9 @@ export default function RealTimeCollaboration({
 
   const resolveComment = (commentId: string) => {
     try {
+      if (socketRef.current && connectionStatus === 'connected') {
+        socketRef.current.emit('resolve-comment', { commentId })
+      }
       setComments(prev => prev.map(comment => 
         comment.id === commentId ? { ...comment, resolved: true } : comment
       ))
@@ -256,19 +314,50 @@ export default function RealTimeCollaboration({
     }
   }
 
+  // Connection status indicator
+  const getConnectionStatusIcon = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return <Wifi size={16} className="text-green-500" />
+      case 'connecting':
+        return <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
+      case 'disconnected':
+        return <WifiOff size={16} className="text-gray-400" />
+      case 'error':
+        return <AlertCircle size={16} className="text-red-500" />
+      default:
+        return <WifiOff size={16} className="text-gray-400" />
+    }
+  }
+
+  const getConnectionStatusText = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'Connected'
+      case 'connecting':
+        return 'Connecting...'
+      case 'disconnected':
+        return 'Disconnected'
+      case 'error':
+        return 'Connection Error'
+      default:
+        return 'Unknown'
+    }
+  }
+
   // Error display component
-  if (error) {
+  if (error && connectionStatus === 'error') {
     return (
       <div className="flex h-full bg-white rounded-lg shadow-sm border">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-red-600 mb-2">⚠️ Error</div>
+            <div className="text-red-600 mb-2">⚠️ Connection Error</div>
             <div className="text-gray-600 mb-4">{error}</div>
             <button
-              onClick={() => setError(null)}
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              Try Again
+              Reconnect
             </button>
           </div>
         </div>
@@ -318,6 +407,12 @@ export default function RealTimeCollaboration({
           </div>
           
           <div className="flex items-center space-x-2">
+            {/* Connection Status */}
+            <div className="flex items-center space-x-1 px-2 py-1 rounded-md text-xs bg-gray-100">
+              {getConnectionStatusIcon()}
+              <span className="text-gray-600">{getConnectionStatusText()}</span>
+            </div>
+            
             <button
               onClick={() => setShowCollaborators(!showCollaborators)}
               className={`flex items-center space-x-1 px-3 py-1 rounded-md text-sm ${
@@ -348,15 +443,23 @@ export default function RealTimeCollaboration({
         {/* Content Editor */}
         <div className="flex-1 p-4">
           {isEditing ? (
-            <textarea
-              ref={contentRef}
-              value={content}
-              onChange={handleContentChange}
-              placeholder="Start writing your content here..."
-              className="w-full h-full p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style={{ minHeight: '400px' }}
-              aria-label="Content editor"
-            />
+            <div className="relative">
+              <textarea
+                ref={contentRef}
+                value={content}
+                onChange={handleContentChange}
+                placeholder="Start writing your content here..."
+                className="w-full h-full p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{ minHeight: '400px' }}
+                aria-label="Content editor"
+                disabled={connectionStatus !== 'connected'}
+              />
+              {isTyping && (
+                <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white px-2 py-1 rounded">
+                  Someone is typing...
+                </div>
+              )}
+            </div>
           ) : (
             <div className="w-full h-full p-4 border rounded-lg bg-gray-50 overflow-y-auto">
               <div className="prose max-w-none">
@@ -406,6 +509,9 @@ export default function RealTimeCollaboration({
                   </div>
                 </div>
               ))}
+              {collaborators.length === 0 && (
+                <p className="text-sm text-gray-500 italic">No collaborators yet</p>
+              )}
             </div>
           </div>
         )}
@@ -428,6 +534,7 @@ export default function RealTimeCollaboration({
                 rows={3}
                 aria-label="Add a comment"
                 maxLength={1000}
+                disabled={connectionStatus !== 'connected'}
               />
               <div className="flex justify-between items-center mt-2">
                 <span className="text-xs text-gray-500">
@@ -435,7 +542,7 @@ export default function RealTimeCollaboration({
                 </span>
                 <button
                   onClick={addComment}
-                  disabled={!newComment.trim() || newComment.length > 1000}
+                  disabled={!newComment.trim() || newComment.length > 1000 || connectionStatus !== 'connected'}
                   className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Add comment"
                 >
@@ -477,12 +584,16 @@ export default function RealTimeCollaboration({
                       onClick={() => resolveComment(comment.id)}
                       className="text-xs text-green-600 hover:text-green-700"
                       aria-label={`Mark comment by ${comment.author.name} as resolved`}
+                      disabled={connectionStatus !== 'connected'}
                     >
                       Mark as resolved
                     </button>
                   )}
                 </div>
               ))}
+              {comments.length === 0 && (
+                <p className="text-sm text-gray-500 italic">No comments yet</p>
+              )}
             </div>
           </div>
         )}

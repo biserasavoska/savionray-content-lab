@@ -1,123 +1,148 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import RealTimeCollaboration from '@/components/collaboration/RealTimeCollaboration'
 
-export default function TestRealTimeCollaborationPage() {
-  const handleContentChange = (content: string) => {
-    console.log('Content changed:', content)
-  }
+export default function TestRealtimeCollaborationPage() {
+  const [selectedContentType, setSelectedContentType] = useState<'draft' | 'idea' | 'content'>('draft')
+  const [contentId, setContentId] = useState('test-content-123')
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Real-Time Collaboration - Phase 1 Testing
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Real-Time Collaboration Test
           </h1>
-          <p className="text-gray-600">
-            Testing security, stability, and error handling improvements
-          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">🚀 Phase 2 Features</h2>
+            <ul className="text-blue-800 space-y-1 text-sm">
+              <li>• <strong>Socket.IO Integration:</strong> Real-time content synchronization</li>
+              <li>• <strong>Presence Tracking:</strong> See who's online and what they're editing</li>
+              <li>• <strong>Live Comments:</strong> Real-time commenting with resolution</li>
+              <li>• <strong>Connection Status:</strong> Visual indicators for connection health</li>
+              <li>• <strong>Typing Indicators:</strong> See when others are typing</li>
+              <li>• <strong>Room Management:</strong> Isolated collaboration spaces</li>
+              <li>• <strong>Error Handling:</strong> Graceful connection failures</li>
+            </ul>
+          </div>
+          
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-yellow-900 mb-2">📋 Testing Instructions</h3>
+            <ol className="text-yellow-800 space-y-2 text-sm">
+              <li><strong>1. Start Socket.IO Server:</strong> Run <code className="bg-yellow-100 px-1 rounded">npm run socket-server</code> in terminal</li>
+              <li><strong>2. Open Multiple Tabs:</strong> Open this page in 2-3 browser tabs</li>
+              <li><strong>3. Sign In:</strong> Use test credentials (creative@savionray.com, client@savionray.com, etc.)</li>
+              <li><strong>4. Test Features:</strong> Try editing content, adding comments, and watching real-time updates</li>
+              <li><strong>5. Test Disconnection:</strong> Stop the socket server to see error handling</li>
+            </ol>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Phase 1 Improvements</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-medium text-blue-900 mb-2">🔒 Security</h3>
-              <ul className="text-blue-700 space-y-1">
-                <li>• Secure random IDs (UUID)</li>
-                <li>• Input validation & sanitization</li>
-                <li>• XSS prevention</li>
-                <li>• Comment length limits</li>
-              </ul>
+        {/* Controls */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Configuration</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Content Type
+              </label>
+              <select
+                value={selectedContentType}
+                onChange={(e) => setSelectedContentType(e.target.value as 'draft' | 'idea' | 'content')}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="draft">Content Draft</option>
+                <option value="idea">Idea Development</option>
+                <option value="content">Content Review</option>
+              </select>
             </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h3 className="font-medium text-green-900 mb-2">⚡ Stability</h3>
-              <ul className="text-green-700 space-y-1">
-                <li>• Memory leak prevention</li>
-                <li>• Proper cleanup</li>
-                <li>• Debounced content changes</li>
-                <li>• Error boundaries</li>
-              </ul>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <h3 className="font-medium text-purple-900 mb-2">🛡️ Error Handling</h3>
-              <ul className="text-purple-700 space-y-1">
-                <li>• Try-catch blocks</li>
-                <li>• Loading states</li>
-                <li>• Error display</li>
-                <li>• Graceful degradation</li>
-              </ul>
-            </div>
-            <div className="p-4 bg-orange-50 rounded-lg">
-              <h3 className="font-medium text-orange-900 mb-2">♿ Accessibility</h3>
-              <ul className="text-orange-700 space-y-1">
-                <li>• ARIA labels</li>
-                <li>• Keyboard navigation</li>
-                <li>• Screen reader support</li>
-                <li>• Character counters</li>
-              </ul>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Content ID
+              </label>
+              <input
+                type="text"
+                value={contentId}
+                onChange={(e) => setContentId(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter content ID"
+              />
             </div>
           </div>
         </div>
 
-        <div className="h-96 mb-6">
-          <RealTimeCollaboration
-            contentId="test-content-123"
-            contentType="draft"
-            initialContent="This is test content for the real-time collaboration component. You can edit this content and test the various features including comments, collaborator tracking, and error handling."
-            onContentChange={handleContentChange}
-          />
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-semibold mb-4">Testing Checklist</h2>
-          <div className="space-y-4 text-sm text-gray-700">
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">🔒 Security Testing</h3>
-              <ul className="ml-4 space-y-1">
-                <li>• Try adding comments with HTML/script tags - should be sanitized</li>
-                <li>• Try adding very long comments - should be limited to 1000 characters</li>
-                <li>• Check browser console - comment IDs should be UUIDs, not timestamps</li>
-                <li>• Verify character counter works properly</li>
-              </ul>
+        {/* Status Indicators */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <h4 className="font-semibold text-gray-900 mb-2">Socket.IO Server</h4>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-600">Should be running on port 4001</span>
             </div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">⚡ Performance Testing</h3>
-              <ul className="ml-4 space-y-1">
-                <li>• Type quickly in the content editor - should be debounced</li>
-                <li>• Check browser dev tools - no memory leaks in console</li>
-                <li>• Verify smooth interactions without lag</li>
-                <li>• Test component unmounting/remounting</li>
-              </ul>
+            <p className="text-xs text-gray-500 mt-1">
+              Check terminal for "🚀 Socket.IO server running"
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <h4 className="font-semibold text-gray-900 mb-2">Next.js App</h4>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-gray-600">Running on port 3000</span>
             </div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">🛡️ Error Handling</h3>
-              <ul className="ml-4 space-y-1">
-                <li>• Try adding comments without being logged in</li>
-                <li>• Check that loading states appear briefly</li>
-                <li>• Verify error messages are displayed properly</li>
-                <li>• Test error recovery with "Try Again" button</li>
-              </ul>
+            <p className="text-xs text-gray-500 mt-1">
+              This page should be accessible
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border p-4">
+            <h4 className="font-semibold text-gray-900 mb-2">Database</h4>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-gray-600">Connected</span>
             </div>
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">♿ Accessibility</h3>
-              <ul className="ml-4 space-y-1">
-                <li>• Navigate with keyboard only (Tab, Enter, Space)</li>
-                <li>• Check that ARIA labels are present in dev tools</li>
-                <li>• Verify all interactive elements are focusable</li>
-                <li>• Test with screen reader if available</li>
-              </ul>
-            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Test users should be available
+            </p>
           </div>
         </div>
 
-        <div className="mt-6 bg-blue-50 rounded-lg p-4">
-          <h3 className="font-medium text-blue-900 mb-2">📝 Test Notes</h3>
-          <p className="text-blue-700 text-sm">
-            This component is currently using mock data for demonstration. In Phase 2, 
-            we'll implement actual real-time functionality with WebSockets and API integration.
+        {/* Real-Time Collaboration Component */}
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          <div className="h-[600px]">
+            <RealTimeCollaboration
+              contentId={contentId}
+              contentType={selectedContentType}
+              initialContent={`Welcome to the ${selectedContentType} collaboration test!
+
+This is a shared workspace where multiple users can:
+• Edit content in real-time
+• Add and resolve comments
+• See who's currently online
+• Track what section others are editing
+
+Try opening this page in multiple browser tabs with different user accounts to test the real-time features.
+
+Current content type: ${selectedContentType}
+Content ID: ${contentId}
+
+Start collaborating! 🚀`}
+              onContentChange={(content) => {
+                console.log('Content changed:', content.substring(0, 100) + '...')
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+            Real-time collaboration powered by Socket.IO | 
+            <a href="/test" className="text-blue-600 hover:text-blue-700 ml-2">
+              Back to Test Hub
+            </a>
           </p>
         </div>
       </div>
