@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react'
 import { MessageCircle, Users, Edit3, Eye, Wifi, WifiOff, AlertCircle, GitBranch } from 'lucide-react'
 // SOCKET.IO CLIENT
 import { io, Socket } from 'socket.io-client'
+// RICH TEXT EDITOR
+import RichTextEditor from '@/components/editor/RichTextEditor'
 
 interface Collaborator {
   id: string
@@ -392,16 +394,9 @@ export default function RealTimeCollaboration({
     [onContentChange, connectionStatus, content]
   )
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value
-    const cursorPosition = e.target.selectionStart
-    
+  const handleContentChange = (newContent: string) => {
     setContent(newContent)
-    lastCursorPositionRef.current = cursorPosition
-    debouncedContentChange(newContent, cursorPosition)
-    
-    const section = getSectionAtPosition(newContent, cursorPosition)
-    setActiveSection(section)
+    debouncedContentChange(newContent, lastCursorPositionRef.current)
   }
 
   const addComment = async () => {
@@ -649,35 +644,36 @@ export default function RealTimeCollaboration({
           </div>
         </div>
 
-        {/* Content Editor */}
+                {/* Content Editor */}
         <div className="flex-1 p-4">
           {isEditing ? (
             <div className="relative">
-              <textarea
-                ref={contentRef}
-                value={content}
-                onChange={handleContentChange}
+              <RichTextEditor
+                content={content}
+                onContentChange={handleContentChange}
                 placeholder="Start writing your content here..."
-                className="w-full h-full p-4 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                style={{ minHeight: '400px' }}
-                aria-label="Content editor"
                 disabled={connectionStatus !== 'connected'}
+                isCollaborating={connectionStatus === 'connected'}
+                onCursorChange={(position) => {
+                  lastCursorPositionRef.current = position
+                  const section = getSectionAtPosition(content, position)
+                  setActiveSection(section)
+                }}
               />
               {isTyping && (
-                <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white px-2 py-1 rounded">
+                <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white px-2 py-1 rounded z-10">
                   Someone is typing...
                 </div>
               )}
             </div>
           ) : (
             <div className="w-full h-full p-4 border rounded-lg bg-gray-50 overflow-y-auto">
-              <div className="prose max-w-none">
-                {content || (
-                  <p className="text-gray-500 italic">
-                    No content available. Click "Edit" to start writing.
-                  </p>
-                )}
-              </div>
+              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
+              {!content && (
+                <p className="text-gray-500 italic">
+                  No content available. Click "Edit" to start writing.
+                </p>
+              )}
             </div>
           )}
         </div>
