@@ -228,7 +228,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         <h2 className="text-lg font-medium text-gray-900 mb-4">Content</h2>
         <RichTextEditor
           content={body}
-          onChange={setBody}
+          onContentChange={setBody}
           placeholder="Enter your content here..."
         />
       </div>

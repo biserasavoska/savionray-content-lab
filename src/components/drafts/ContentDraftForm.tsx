@@ -197,8 +197,7 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
           >
             <RichTextEditor
               content={formData.body}
-              onChange={(content) => updateFormData('body', content)}
-              maxLength={CHARACTER_LIMITS[formData.contentType as ContentType]}
+              onContentChange={(content) => updateFormData('body', content)}
               placeholder="Write your content here..."
             />
           </FormField>

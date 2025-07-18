@@ -62,7 +62,7 @@ export async function GET(
     })
 
     // Transform data for frontend
-    const users = organizationUsers.map(orgUser => ({
+    const users = organizationUsers.map((orgUser: any) => ({
       id: orgUser.user.id,
       name: orgUser.user.name || 'Unknown',
       email: orgUser.user.email || '',
