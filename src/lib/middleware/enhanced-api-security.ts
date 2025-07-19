@@ -10,428 +10,344 @@
  * - CORS and security headers
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { logger } from '@/lib/utils/logger';
-import { 
-  SecurityContext, 
-  SecurityOptions, 
-  SecurityEvent,
-  RateLimitConfig 
-} from '@/lib/types/security';
-import { createAuthenticationError, createAuthorizationError } from '@/lib/utils/error-handling';
+import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-// Rate limiting store (in production, use Redis or similar)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+// Rate limiting store (in production, use Redis)
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
-export interface EnhancedSecurityOptions extends SecurityOptions {
-  rateLimit?: RateLimitConfig;
-  validateInput?: boolean;
-  logSecurityEvents?: boolean;
-  requireOrgContext?: boolean;
-  allowedMethods?: string[];
-  maxRequestSize?: number;
-  timeout?: number;
+// Security configuration
+const SECURITY_CONFIG = {
+  RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+  RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+  MAX_REQUEST_SIZE: '10mb',
+  ALLOWED_ORIGINS: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+  BLOCKED_USER_AGENTS: [
+    'bot', 'crawler', 'spider', 'scraper', 'curl', 'wget', 'python', 'java'
+  ]
 }
 
-export interface SecurityAuditLog {
-  timestamp: Date;
-  userId: string;
-  organizationId: string;
-  userEmail: string;
-  action: string;
-  resource: string;
-  method: string;
-  ipAddress: string;
-  userAgent: string;
-  success: boolean;
-  errorMessage?: string;
-  metadata?: Record<string, any>;
+// Input validation patterns
+const VALIDATION_PATTERNS = {
+  EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  UUID: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  ALPHANUMERIC: /^[a-zA-Z0-9\s\-_]+$/,
+  URL: /^https?:\/\/[^\s/$.?#].[^\s]*$/i
 }
 
-/**
- * Enhanced API Security Wrapper
- */
-export function withEnhancedApiSecurity(
-  handler: (req: NextRequest, context: SecurityContext) => Promise<NextResponse>,
-  options: EnhancedSecurityOptions = {}
-) {
-  return async (request: NextRequest): Promise<NextResponse> => {
-    const startTime = Date.now();
-    const requestId = generateRequestId();
-    const ipAddress = getClientIP(request);
-    const userAgent = request.headers.get('user-agent') || 'unknown';
+export class EnhancedAPISecurity {
+  private static instance: EnhancedAPISecurity
 
+  static getInstance(): EnhancedAPISecurity {
+    if (!EnhancedAPISecurity.instance) {
+      EnhancedAPISecurity.instance = new EnhancedAPISecurity()
+    }
+    return EnhancedAPISecurity.instance
+  }
+
+  // Rate limiting
+  private checkRateLimit(identifier: string): boolean {
+    const now = Date.now()
+    const record = rateLimitStore.get(identifier)
+
+    if (!record || now > record.resetTime) {
+      rateLimitStore.set(identifier, {
+        count: 1,
+        resetTime: now + SECURITY_CONFIG.RATE_LIMIT_WINDOW_MS
+      })
+      return true
+    }
+
+    if (record.count >= SECURITY_CONFIG.RATE_LIMIT_MAX_REQUESTS) {
+      return false
+    }
+
+    record.count++
+    return true
+  }
+
+  // Input sanitization
+  private sanitizeInput(input: string): string {
+    return input
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .trim()
+  }
+
+  // Validate input against patterns
+  private validateInput(value: string, pattern: RegExp): boolean {
+    return pattern.test(value)
+  }
+
+  // Check for malicious user agents
+  private isBlockedUserAgent(userAgent: string): boolean {
+    const lowerUA = userAgent.toLowerCase()
+    return SECURITY_CONFIG.BLOCKED_USER_AGENTS.some(blocked => 
+      lowerUA.includes(blocked)
+    )
+  }
+
+  // CORS validation
+  private validateCORS(origin: string): boolean {
+    return SECURITY_CONFIG.ALLOWED_ORIGINS.includes(origin) || 
+           SECURITY_CONFIG.ALLOWED_ORIGINS.includes('*')
+  }
+
+  // Main security middleware
+  async handleRequest(req: NextRequest): Promise<NextResponse | null> {
+    const startTime = Date.now()
+    
     try {
-      // 1. Basic request validation
-      await validateRequest(request, options);
+      // 1. Basic security checks
+      if (!this.performBasicSecurityChecks(req)) {
+        return this.createSecurityResponse('Security check failed', 403)
+      }
 
       // 2. Rate limiting
-      await checkRateLimit(request, options.rateLimit, ipAddress);
-
-      // 3. Authentication check
-      const session = await getServerSession(authOptions);
-      if (!session?.user) {
-        await logSecurityEvent({
-          timestamp: new Date(),
-          userId: 'anonymous',
-          organizationId: 'none',
-          userEmail: 'anonymous',
-          action: 'AUTHENTICATION_FAILED',
-          resource: request.url,
-          method: request.method,
-          ipAddress,
-          userAgent,
-          success: false,
-          errorMessage: 'No valid session found'
-        });
-        throw createAuthenticationError('Authentication required');
+      const identifier = this.getRateLimitIdentifier(req)
+      if (!this.checkRateLimit(identifier)) {
+        return this.createSecurityResponse('Rate limit exceeded', 429)
       }
 
-      // 4. Organization context validation
-      const securityContext = await createSecurityContext(session, request);
-      if (options.requireOrgContext && !securityContext.organizationId) {
-        await logSecurityEvent({
-          timestamp: new Date(),
-          userId: session.user.id,
-          organizationId: 'none',
-          userEmail: session.user.email || '',
-          action: 'ORGANIZATION_CONTEXT_MISSING',
-          resource: request.url,
-          method: request.method,
-          ipAddress,
-          userAgent,
-          success: false,
-          errorMessage: 'Organization context required'
-        });
-        throw createAuthorizationError('Organization context required');
-      }
-
-      // 5. Role and permission validation
-      if (options.requireRole) {
-        await validatePermissions(securityContext, options.requireRole);
-      }
-
-      // 6. Input validation
-      if (options.validateInput) {
-        await validateInput(request, options);
-      }
-
-      // 7. Execute handler
-      const response = await handler(request, securityContext);
-
-      // 8. Log successful access
-      await logSecurityEvent({
-        timestamp: new Date(),
-        userId: securityContext.userId,
-        organizationId: securityContext.organizationId,
-        userEmail: securityContext.userEmail,
-        action: 'API_ACCESS',
-        resource: request.url,
-        method: request.method,
-        ipAddress,
-        userAgent,
-        success: true,
-        metadata: {
-          responseTime: Date.now() - startTime,
-          statusCode: response.status,
-          requestId
+      // 3. Authentication check (for protected routes)
+      if (this.isProtectedRoute(req.nextUrl.pathname)) {
+        const authResult = await this.validateAuthentication(req)
+        if (!authResult.valid) {
+          return this.createSecurityResponse(authResult.message || 'Authentication failed', 401)
         }
-      });
+      }
 
-      // 9. Add security headers
-      addSecurityHeaders(response);
+      // 4. Input validation (for POST/PUT requests)
+      if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+        const validationResult = await this.validateRequestInput(req)
+        if (!validationResult.valid) {
+          return this.createSecurityResponse(validationResult.message || 'Invalid request', 400)
+        }
+      }
 
-      return response;
+      // 5. Add security headers
+      const response = NextResponse.next()
+      this.addSecurityHeaders(response)
+
+      // 6. Log security event
+      this.logSecurityEvent(req, 'success', Date.now() - startTime)
+
+      return null // Continue with request
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      // Log security event
-      await logSecurityEvent({
-        timestamp: new Date(),
-        userId: 'unknown',
-        organizationId: 'unknown',
-        userEmail: 'unknown',
-        action: 'API_ERROR',
-        resource: request.url,
-        method: request.method,
-        ipAddress,
-        userAgent,
-        success: false,
-        errorMessage,
-        metadata: {
-          requestId,
-          responseTime: Date.now() - startTime
-        }
-      });
+      console.error('Security middleware error:', error)
+      this.logSecurityEvent(req, 'error', Date.now() - startTime, error)
+      return this.createSecurityResponse('Internal security error', 500)
+    }
+  }
 
-      // Return appropriate error response
-      if (error instanceof Error && 'status' in error) {
-        return NextResponse.json(
-          { error: errorMessage },
-          { status: (error as any).status }
-        );
+  private performBasicSecurityChecks(req: NextRequest): boolean {
+    // Check user agent
+    const userAgent = String(req.headers.get('user-agent') || '')
+    if (this.isBlockedUserAgent(userAgent)) {
+      return false
+    }
+
+    // Check content length
+    const contentLength = req.headers.get('content-length')
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) { // 10MB
+      return false
+    }
+
+    // Check for suspicious headers
+    const suspiciousHeaders = ['x-forwarded-for', 'x-real-ip', 'x-forwarded-proto']
+    for (const header of suspiciousHeaders) {
+      if (req.headers.get(header) && !req.headers.get('x-forwarded-for')) {
+        return false
       }
-
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      );
     }
-  };
-}
 
-/**
- * Rate Limiting Implementation
- */
-async function checkRateLimit(
-  request: NextRequest, 
-  config: RateLimitConfig | undefined, 
-  ipAddress: string
-): Promise<void> {
-  if (!config) return;
-
-  const key = `rate_limit:${ipAddress}`;
-  const now = Date.now();
-  const windowMs = config.windowMs || 15 * 60 * 1000; // 15 minutes default
-  const maxRequests = config.maxRequests || 100;
-
-  const current = rateLimitStore.get(key);
-  
-  if (!current || now > current.resetTime) {
-    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
-    return;
+    return true
   }
 
-  if (current.count >= maxRequests) {
-    await logSecurityEvent({
-      timestamp: new Date(),
-      userId: 'anonymous',
-      organizationId: 'none',
-      userEmail: 'anonymous',
-      action: 'RATE_LIMIT_EXCEEDED',
-      resource: request.url,
-      method: request.method,
-      ipAddress,
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      success: false,
-      errorMessage: `Rate limit exceeded: ${current.count}/${maxRequests} requests`
-    });
-    
-    throw new Error('Rate limit exceeded');
-  }
-
-  current.count++;
-}
-
-/**
- * Request Validation
- */
-async function validateRequest(
-  request: NextRequest, 
-  options: EnhancedSecurityOptions
-): Promise<void> {
-  // Method validation
-  if (options.allowedMethods && !options.allowedMethods.includes(request.method)) {
-    throw new Error(`Method ${request.method} not allowed`);
-  }
-
-  // Request size validation
-  if (options.maxRequestSize) {
-    const contentLength = request.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > options.maxRequestSize) {
-      throw new Error('Request too large');
+  private getRateLimitIdentifier(req: NextRequest): string {
+    function safeString(val: unknown): string {
+      if (typeof val === 'string' && val) return val;
+      if (typeof val === 'number') return String(val);
+      return 'unknown';
     }
+    const ip = req.ip ? String(req.ip) : safeString(req.headers.get('x-forwarded-for'));
+    const userAgent = safeString(req.headers.get('user-agent'));
+    return `${ip}-${userAgent}`;
   }
 
-  // Basic CORS validation
-  const origin = request.headers.get('origin');
-  if (origin && !isValidOrigin(origin)) {
-    throw new Error('Invalid origin');
+  private isProtectedRoute(pathname: string): boolean {
+    const protectedPatterns = [
+      /^\/api\/admin/,
+      /^\/api\/organization/,
+      /^\/api\/billing/,
+      /^\/api\/ideas\/.*\/edit/,
+      /^\/api\/content-drafts/
+    ]
+    return protectedPatterns.some(pattern => pattern.test(pathname))
   }
-}
 
-/**
- * Input Validation
- */
-async function validateInput(
-  request: NextRequest, 
-  options: EnhancedSecurityOptions
-): Promise<void> {
-  // Validate JSON payload
-  if (request.headers.get('content-type')?.includes('application/json')) {
+  private async validateAuthentication(req: NextRequest): Promise<{ valid: boolean; message?: string }> {
     try {
-      const body = await request.clone().json();
-      validateJsonPayload(body);
-    } catch (error) {
-      throw new Error('Invalid JSON payload');
-    }
-  }
-
-  // Validate query parameters
-  const url = new URL(request.url);
-  for (const [key, value] of url.searchParams.entries()) {
-    if (!isValidQueryParameter(key, value)) {
-      throw new Error(`Invalid query parameter: ${key}`);
-    }
-  }
-}
-
-/**
- * Security Event Logging
- */
-async function logSecurityEvent(event: SecurityAuditLog): Promise<void> {
-  try {
-    // Log to database for audit trail
-    await prisma.securityAuditLog.create({
-      data: {
-        timestamp: event.timestamp,
-        userId: event.userId,
-        organizationId: event.organizationId,
-        userEmail: event.userEmail,
-        action: event.action,
-        resource: event.resource,
-        method: event.method,
-        ipAddress: event.ipAddress,
-        userAgent: event.userAgent,
-        success: event.success,
-        errorMessage: event.errorMessage,
-        metadata: event.metadata
+      const token = await getToken({ req })
+      if (!token) {
+        return { valid: false, message: 'Authentication required' }
       }
-    });
-
-    // Log to application logger
-    logger.info('Security Event', {
-      ...event,
-      timestamp: event.timestamp.toISOString()
-    });
-
-  } catch (error) {
-    // Fallback to console if database logging fails
-    console.error('Failed to log security event:', error);
-    logger.error('Security logging failed', error instanceof Error ? error : undefined);
+      return { valid: true }
+    } catch (error) {
+      return { valid: false, message: 'Invalid authentication token' }
+    }
   }
-}
 
-/**
- * Security Headers
- */
-function addSecurityHeaders(response: NextResponse): void {
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  
-  // Add CSP header
-  response.headers.set(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
-  );
-}
+  private async validateRequestInput(req: NextRequest): Promise<{ valid: boolean; message?: string }> {
+    try {
+      const contentType = req.headers.get('content-type')
+      
+      if (contentType?.includes('application/json')) {
+        const body = await req.json()
+        return this.validateJSONBody(body, req.nextUrl.pathname)
+      }
+      
+      if (contentType?.includes('multipart/form-data')) {
+        return this.validateFormData(req)
+      }
 
-/**
- * Utility Functions
- */
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
+      return { valid: true }
+    } catch (error) {
+      return { valid: false, message: 'Invalid request body' }
+    }
+  }
 
-function getClientIP(request: NextRequest): string {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-         request.headers.get('x-real-ip') ||
-         'unknown';
-}
+  private validateJSONBody(body: any, pathname: string): { valid: boolean; message?: string } {
+    // Validate based on route
+    if (pathname.includes('/api/ideas')) {
+      if (body.title && !this.validateInput(body.title, VALIDATION_PATTERNS.ALPHANUMERIC)) {
+        return { valid: false, message: 'Invalid title format' }
+      }
+      if (body.content && body.content.length > 10000) {
+        return { valid: false, message: 'Content too long' }
+      }
+    }
 
-function isValidOrigin(origin: string): boolean {
-  // Add your allowed origins here
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'https://yourdomain.com'
-  ];
-  return allowedOrigins.includes(origin);
-}
+    if (pathname.includes('/api/organization')) {
+      if (body.name && !this.validateInput(body.name, VALIDATION_PATTERNS.ALPHANUMERIC)) {
+        return { valid: false, message: 'Invalid organization name' }
+      }
+    }
 
-function isValidQueryParameter(key: string, value: string): boolean {
-  // Basic validation - extend as needed
-  if (key.length > 50 || value.length > 1000) return false;
-  if (/[<>\"']/.test(value)) return false; // Basic XSS prevention
-  return true;
-}
+    return { valid: true }
+  }
 
-function validateJsonPayload(payload: any): void {
-  // Basic JSON validation - extend as needed
-  if (typeof payload === 'object' && payload !== null) {
-    const jsonString = JSON.stringify(payload);
-    if (jsonString.length > 1000000) { // 1MB limit
-      throw new Error('Payload too large');
+  private async validateFormData(req: NextRequest): Promise<{ valid: boolean; message?: string }> {
+    try {
+      const formData = await req.formData()
+      
+      for (const [key, value] of formData.entries()) {
+        if (typeof value === 'string') {
+          const sanitized = this.sanitizeInput(value)
+          if (sanitized !== value) {
+            return { valid: false, message: 'Invalid input detected' }
+          }
+        }
+      }
+
+      return { valid: true }
+    } catch (error) {
+      return { valid: false, message: 'Invalid form data' }
+    }
+  }
+
+  private addSecurityHeaders(response: NextResponse): void {
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('X-XSS-Protection', '1; mode=block')
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    
+    // Content Security Policy
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https:",
+      "font-src 'self'",
+      "connect-src 'self' https:",
+      "frame-ancestors 'none'"
+    ].join('; ')
+    
+    response.headers.set('Content-Security-Policy', csp)
+  }
+
+  private createSecurityResponse(message: string, status: number): NextResponse {
+    return new NextResponse(
+      JSON.stringify({ 
+        error: 'Security Error', 
+        message,
+        timestamp: new Date().toISOString()
+      }),
+      {
+        status,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY'
+        }
+      }
+    )
+  }
+
+  private logSecurityEvent(
+    req: NextRequest, 
+    type: 'success' | 'error' | 'blocked', 
+    duration: number, 
+    error?: any
+  ): void {
+    const logData = {
+      timestamp: new Date().toISOString(),
+      type,
+      method: req.method,
+      url: req.url,
+      ip: String(req.ip || req.headers.get('x-forwarded-for') || 'unknown'),
+      userAgent: String(req.headers.get('user-agent') || 'unknown'),
+      duration,
+      error: error?.message
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      console.log('SECURITY_EVENT:', JSON.stringify(logData))
+    } else {
+      console.log('🔒 Security Event:', logData)
     }
   }
 }
 
-/**
- * Create Security Context with Enhanced Validation
- */
-async function createSecurityContext(session: any, request: NextRequest): Promise<SecurityContext> {
-  const user = session.user;
-  
-  // Get current organization from request or session
-  const organizationId = request.headers.get('x-organization-id') || 
-                        request.cookies.get('selectedOrganizationId')?.value;
+// Export middleware function
+export async function enhancedAPISecurityMiddleware(req: NextRequest): Promise<NextResponse | null> {
+  return EnhancedAPISecurity.getInstance().handleRequest(req)
+}
 
-  if (!organizationId) {
-    throw new Error('Organization context required');
-  }
-
-  // Validate organization membership
-  const organizationUser = await prisma.organizationUser.findFirst({
-    where: {
-      userId: user.id,
-      organizationId,
-      isActive: true
-    },
-    include: {
-      organization: true
+// Higher-order function to wrap API handlers with security
+export function withEnhancedApiSecurity<T extends any[]>(
+  handler: (req: NextRequest, ...args: T) => Promise<NextResponse>,
+  config?: {
+    requireOrgContext?: boolean
+    validateInput?: boolean
+    logSecurityEvents?: boolean
+    rateLimit?: {
+      windowMs: number
+      maxRequests: number
     }
-  });
-
-  if (!organizationUser) {
-    throw new Error('User not member of organization');
   }
-
-  return {
-    userId: user.id,
-    organizationId,
-    userEmail: user.email || '',
-    isSuperAdmin: user.isSuperAdmin || false,
-    userRole: user.role,
-    organizationRole: organizationUser.role,
-    permissions: Array.isArray(organizationUser.permissions) 
-      ? organizationUser.permissions as string[]
-      : []
-  };
-}
-
-/**
- * Validate Permissions
- */
-async function validatePermissions(
-  context: SecurityContext, 
-  requiredRoles: string[]
-): Promise<void> {
-  const hasRole = requiredRoles.includes(context.organizationRole) ||
-                  (context.isSuperAdmin && requiredRoles.includes('ADMIN'));
-  
-  if (!hasRole) {
-    throw createAuthorizationError(`Insufficient permissions. Required: ${requiredRoles.join(', ')}`);
+) {
+  return async (req: NextRequest, ...args: T): Promise<NextResponse> => {
+    const security = EnhancedAPISecurity.getInstance()
+    const securityResult = await security.handleRequest(req)
+    
+    if (securityResult) {
+      return securityResult
+    }
+    
+    return handler(req, ...args)
   }
-}
-
-export default {
-  withEnhancedApiSecurity,
-  logSecurityEvent,
-  addSecurityHeaders
-}; 
+} 
