@@ -117,5 +117,20 @@ const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
 )
 CardFooter.displayName = 'CardFooter'
 
-export { Card, CardHeader, CardContent, CardFooter }
+const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <h3
+        ref={ref}
+        className={cn('text-lg font-semibold leading-none tracking-tight', className)}
+        {...props}
+      >
+        {children}
+      </h3>
+    )
+  }
+)
+CardTitle.displayName = 'CardTitle'
+
+export { Card, CardHeader, CardContent, CardFooter, CardTitle }
 export default Card 

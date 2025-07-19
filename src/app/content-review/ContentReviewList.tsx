@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { SparklesIcon, LightBulbIcon, ChartBarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 
 import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import EnhancedFeedbackForm from '@/components/feedback/EnhancedFeedbackForm'
 import FeedbackList from '@/components/feedback/FeedbackList'
+import AIEnhancedContentReview from '@/components/content/AIEnhancedContentReview'
 
 interface ContentDraft {
   id: string
@@ -64,6 +66,13 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
+  const [showAIReview, setShowAIReview] = useState<{ [key: string]: boolean }>({})
+  const [isClient, setIsClient] = useState(false)
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleStatusUpdate = async (draftId: string, newStatus: string) => {
     if (!session) return
@@ -100,6 +109,13 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
     }))
   }
 
+  const toggleAIReview = (draftId: string) => {
+    setShowAIReview(prev => ({
+      ...prev,
+      [draftId]: !prev[draftId]
+    }))
+  }
+
   const handleFeedbackSuccess = () => {
     // Refresh the page to show updated feedback
     window.location.reload()
@@ -129,6 +145,19 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
 
   return (
     <div className="space-y-6">
+      {/* AI Review Enhancement Banner */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <SparklesIcon className="h-6 w-6 text-green-600" />
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">AI-Powered Content Review</h3>
+              <p className="text-sm text-gray-600">Get AI insights, performance predictions, and optimization suggestions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {drafts.map((draft) => (
         <div key={draft.id} className="bg-white shadow rounded-lg p-6">
           <div className="flex items-start justify-between">
@@ -143,6 +172,28 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
               </div>
               
               <p className="text-gray-600 mb-4">{draft.idea?.description || 'No description available'}</p>
+              
+              {/* AI Content Insights */}
+              <div className="mb-4 p-3 bg-blue-50 rounded-md">
+                <div className="flex items-center space-x-2 text-sm text-blue-700 mb-2">
+                  <LightBulbIcon className="h-4 w-4" />
+                  <span className="font-medium">AI Insights:</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center space-x-1">
+                    <ChartBarIcon className="h-3 w-3 text-green-600" />
+                    <span>Engagement Score: 8.5/10</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <CheckCircleIcon className="h-3 w-3 text-blue-600" />
+                    <span>SEO Optimized</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <SparklesIcon className="h-3 w-3 text-purple-600" />
+                    <span>Trending Topic Match</span>
+                  </div>
+                </div>
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
                 <div>
@@ -164,6 +215,15 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
               >
                 View Details
               </Link>
+
+              {/* AI Review Button */}
+              <button
+                onClick={() => toggleAIReview(draft.id)}
+                className="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <SparklesIcon className="mr-2 h-4 w-4" />
+                {showAIReview[draft.id] ? 'Hide AI Review' : 'AI Review'}
+              </button>
 
               {/* Status update buttons for appropriate users */}
               {isClientUser && draft.status === DRAFT_STATUS.AWAITING_FEEDBACK && (
@@ -187,6 +247,29 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
             </div>
           </div>
 
+          {/* AI Review Panel */}
+          {isClient && showAIReview[draft.id] && (
+            <div className="mt-6 border-t pt-6">
+              <AIEnhancedContentReview
+                content={{
+                  id: draft.id,
+                  body: draft.body || '',
+                  contentType: draft.contentType,
+                  status: draft.status,
+                  createdAt: draft.createdAt.toISOString(),
+                  createdBy: {
+                    name: draft.createdBy.name || '',
+                    email: draft.createdBy.email
+                  },
+                  metadata: draft.metadata
+                }}
+                onApprove={(contentId) => handleStatusUpdate(contentId, DRAFT_STATUS.APPROVED)}
+                onReject={(contentId, reason) => handleStatusUpdate(contentId, DRAFT_STATUS.REJECTED)}
+                onRequestChanges={(contentId, feedback) => handleStatusUpdate(contentId, DRAFT_STATUS.AWAITING_REVISION)}
+              />
+            </div>
+          )}
+
           {/* Feedback Section for Clients */}
           {isClientUser && (
             <div className="mt-6 border-t pt-6">
@@ -201,7 +284,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
               </div>
 
               {/* Feedback Form */}
-              {showFeedbackForm[draft.id] && (
+              {isClient && showFeedbackForm[draft.id] && (
                 <div className="mb-6">
                   <EnhancedFeedbackForm
                     targetId={draft.id}

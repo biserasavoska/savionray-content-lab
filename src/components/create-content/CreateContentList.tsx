@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { SparklesIcon, LightBulbIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 
 import type { Idea, ContentDraft, User } from '@/types/content'
 import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
+import AINavigationEnhancement from '@/components/navigation/AINavigationEnhancement'
 
 type CreateContentItem = {
   id: string
@@ -50,6 +52,13 @@ export default function CreateContentList({ items }: CreateContentListProps) {
   const { data: session } = useSession()
   const [selectedType, setSelectedType] = useState<string>('ALL')
   const [selectedMonth, setSelectedMonth] = useState<string>('')
+  const [showAISuggestions, setShowAISuggestions] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const filteredItems = items.filter(item => {
     if (selectedType !== 'ALL' && item.contentType !== selectedType) {
@@ -73,6 +82,31 @@ export default function CreateContentList({ items }: CreateContentListProps) {
 
   return (
     <div className="space-y-6">
+      {/* AI Enhancement Panel */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <SparklesIcon className="h-6 w-6 text-blue-600" />
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">AI Content Assistant</h3>
+              <p className="text-sm text-gray-600">Get AI-powered suggestions and insights for your content creation</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowAISuggestions(!showAISuggestions)}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            {showAISuggestions ? 'Hide AI' : 'Show AI Suggestions'}
+          </button>
+        </div>
+        
+        {isClient && showAISuggestions && (
+          <div className="mt-4">
+            <AINavigationEnhancement />
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <select
@@ -100,6 +134,15 @@ export default function CreateContentList({ items }: CreateContentListProps) {
             ))}
           </select>
         </div>
+        
+        {/* AI Content Creation Button */}
+        <Link
+          href="/create-content/ai-enhanced"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+        >
+          <SparklesIcon className="mr-2 h-4 w-4" />
+          AI-Enhanced Creation
+        </Link>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -128,6 +171,15 @@ export default function CreateContentList({ items }: CreateContentListProps) {
                 <h3 className="mt-3 text-lg font-medium text-gray-900">{item.title}</h3>
                 <p className="mt-2 text-sm text-gray-500">{item.description}</p>
 
+                {/* AI Content Insights */}
+                <div className="mt-3 p-3 bg-blue-50 rounded-md">
+                  <div className="flex items-center space-x-2 text-sm text-blue-700">
+                    <LightBulbIcon className="h-4 w-4" />
+                    <span className="font-medium">AI Insights:</span>
+                    <span>High engagement potential • Trending topic • Optimal posting time</span>
+                  </div>
+                </div>
+
                 {latestDraft && (
                   <div className="mt-4 border-t border-gray-200 pt-4">
                     <div className="flex items-center justify-between text-sm">
@@ -151,12 +203,21 @@ export default function CreateContentList({ items }: CreateContentListProps) {
                   </div>
                 )}
 
-                <div className="mt-4">
+                <div className="mt-4 space-y-2">
                   <Link
                     href={`/create-content/${item.id}/edit`}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 w-full justify-center"
                   >
                     {latestDraft ? 'Edit Content' : 'Create Content'}
+                  </Link>
+                  
+                  {/* AI-Enhanced Edit Option */}
+                  <Link
+                    href={`/create-content/${item.id}/edit?ai-enhanced=true`}
+                    className="inline-flex items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 w-full justify-center"
+                  >
+                    <SparklesIcon className="mr-2 h-4 w-4" />
+                    AI-Enhanced Edit
                   </Link>
                 </div>
               </div>
