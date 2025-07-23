@@ -253,7 +253,7 @@ export class EnhancedAPISecurity {
       }
 
       return { valid: true }
-    } catch (error) {
+  } catch (error) {
       return { valid: false, message: 'Invalid form data' }
     }
   }

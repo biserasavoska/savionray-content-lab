@@ -440,26 +440,26 @@ export default function RealTimeCollaboration({
 
     try {
       setError(null)
-      
-      const comment: Comment = {
+
+    const comment: Comment = {
         id: crypto.randomUUID(),
         content: sanitizedComment,
-        author: {
-          id: session.user.id || '',
-          name: session.user.name || '',
-          email: session.user.email || ''
-        },
-        timestamp: new Date(),
-        section: activeSection,
-        resolved: false
-      }
+      author: {
+        id: session.user.id || '',
+        name: session.user.name || '',
+        email: session.user.email || ''
+      },
+      timestamp: new Date(),
+      section: activeSection,
+      resolved: false
+    }
 
       // Emit new comment to server
       if (socketRef.current && connectionStatus === 'connected') {
         socketRef.current.emit('new-comment', comment)
       }
-      setComments(prev => [...prev, comment])
-      setNewComment('')
+    setComments(prev => [...prev, comment])
+    setNewComment('')
     } catch (err) {
       setError('Failed to add comment')
       console.error('Error adding comment:', err)
@@ -471,9 +471,9 @@ export default function RealTimeCollaboration({
       if (socketRef.current && connectionStatus === 'connected') {
         socketRef.current.emit('resolve-comment', { commentId })
       }
-      setComments(prev => prev.map(comment => 
-        comment.id === commentId ? { ...comment, resolved: true } : comment
-      ))
+    setComments(prev => prev.map(comment => 
+      comment.id === commentId ? { ...comment, resolved: true } : comment
+    ))
     } catch (err) {
       setError('Failed to resolve comment')
       console.error('Error resolving comment:', err)
@@ -670,14 +670,14 @@ export default function RealTimeCollaboration({
           </div>
         </div>
 
-                {/* Content Editor */}
+        {/* Content Editor */}
         <div className="flex-1 p-4">
           {isEditing ? (
             <div className="relative">
               <RichTextEditor
                 content={content}
                 onContentChange={handleContentChange}
-                placeholder="Start writing your content here..."
+              placeholder="Start writing your content here..."
                 disabled={connectionStatus !== 'connected'}
                 isCollaborating={connectionStatus === 'connected'}
                 onCursorChange={(position) => {
@@ -696,10 +696,10 @@ export default function RealTimeCollaboration({
             <div className="w-full h-full p-4 border rounded-lg bg-gray-50 overflow-y-auto">
               <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
               {!content && (
-                <p className="text-gray-500 italic">
-                  No content available. Click "Edit" to start writing.
-                </p>
-              )}
+                  <p className="text-gray-500 italic">
+                    No content available. Click "Edit" to start writing.
+                  </p>
+                )}
             </div>
           )}
         </div>
@@ -771,14 +771,14 @@ export default function RealTimeCollaboration({
                 <span className="text-xs text-gray-500">
                   {newComment.length}/1000 characters
                 </span>
-                <button
-                  onClick={addComment}
+              <button
+                onClick={addComment}
                   disabled={!newComment.trim() || newComment.length > 1000 || connectionStatus !== 'connected'}
                   className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Add comment"
-                >
-                  Add Comment
-                </button>
+              >
+                Add Comment
+              </button>
               </div>
             </div>
 
