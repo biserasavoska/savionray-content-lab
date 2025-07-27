@@ -27,10 +27,10 @@ export default function TestComponentsPage() {
       priority: 'medium',
       notifications: false
     },
-    validationSchema: {
-      name: (value: string) => !value ? 'Name is required' : null,
-      email: (value: string) => !value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : null,
-      message: (value: string) => !value ? 'Message is required' : null
+    validation: {
+      name: (value: string) => !value ? 'Name is required' : undefined,
+      email: (value: string) => !value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : undefined,
+      message: (value: string) => !value ? 'Message is required' : undefined
     }
   })
 
@@ -186,22 +186,6 @@ export default function TestComponentsPage() {
                     onChange={(e) => form.setFieldValue('email', e.target.value)}
                     onBlur={() => form.setFieldTouched('email', true)}
                     placeholder="Enter your email"
-                  />
-                </FormField>
-
-                <FormField
-                  label="Category"
-                  error={form.errors.category}
-                >
-                  <Select
-                    options={[
-                      { value: 'general', label: 'General' },
-                      { value: 'support', label: 'Support' },
-                      { value: 'feedback', label: 'Feedback' }
-                    ]}
-                    value={form.values.category}
-                    onChange={(e) => form.setFieldValue('category', e.target.value)}
-                    onBlur={() => form.setFieldTouched('category', true)}
                   />
                 </FormField>
 
