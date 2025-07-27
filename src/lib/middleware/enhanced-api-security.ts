@@ -259,24 +259,17 @@ export class EnhancedAPISecurity {
   }
 
   private addSecurityHeaders(response: NextResponse): void {
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-XSS-Protection', '1; mode=block')
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     
-    // Content Security Policy
-    const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https:",
-      "font-src 'self'",
-      "connect-src 'self' https:",
-      "frame-ancestors 'none'"
-    ].join('; ')
-    
-    response.headers.set('Content-Security-Policy', csp)
+    // Add CSP header with WebSocket support
+    response.headers.set(
+      'Content-Security-Policy',
+      "default-src 'self'; connect-src 'self' ws://localhost:4001 wss://localhost:4001; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+    );
   }
 
   private createSecurityResponse(message: string, status: number): NextResponse {
