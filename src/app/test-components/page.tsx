@@ -18,7 +18,7 @@ export default function TestComponentsPage() {
     setIsClient(true)
   }, [])
 
-  // Form state for testing
+  // Form state for testing - Updated for Railway deployment
   const form = useFormData({
     initialValues: {
       name: '',
