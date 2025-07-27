@@ -37,7 +37,7 @@ const io = new Server(httpServer, {
   cors: {
     origin: process.env.NODE_ENV === 'production' 
       ? ['https://yourdomain.com'] 
-      : ['http://localhost:3000'],
+      : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003', 'http://localhost:3004'],
     methods: ['GET', 'POST'],
     credentials: true
   },
@@ -360,26 +360,14 @@ async function loadRoomStateFromDatabase(roomId, contentId, contentType) {
         const draft = await prisma.contentDraft.findUnique({
           where: { id: contentId },
           include: {
-            comments: {
-              include: { author: true },
-              orderBy: { createdAt: 'asc' }
-            }
+            createdBy: true,
+            organization: true
           }
         })
         if (draft) {
           content = draft.body || ''
-          comments = draft.comments.map(c => ({
-            id: c.id,
-            content: c.content,
-            author: {
-              id: c.author.id,
-              name: c.author.name,
-              email: c.author.email
-            },
-            timestamp: c.createdAt,
-            section: c.section,
-            resolved: c.resolved
-          }))
+          // Comments are handled in-memory for drafts since there's no database relation
+          comments = []
         }
         break
         
@@ -390,12 +378,14 @@ async function loadRoomStateFromDatabase(roomId, contentId, contentType) {
             comments: {
               include: { author: true },
               orderBy: { createdAt: 'asc' }
-            }
+            },
+            createdBy: true,
+            organization: true
           }
         })
         if (idea) {
           content = idea.description || ''
-          comments = idea.comments.map(c => ({
+          comments = idea.comments?.map(c => ({
             id: c.id,
             content: c.content,
             author: {
@@ -406,7 +396,7 @@ async function loadRoomStateFromDatabase(roomId, contentId, contentType) {
             timestamp: c.createdAt,
             section: c.section,
             resolved: c.resolved
-          }))
+          })) || []
         }
         break
         

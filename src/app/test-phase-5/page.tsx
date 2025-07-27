@@ -28,10 +28,17 @@ import RichTextEditor from '@/components/editor/RichTextEditor'
 export default function TestPhase5Page() {
   const { data: session } = useSession()
   const [selectedFeature, setSelectedFeature] = useState<'rich-text' | 'workflow' | 'collaboration'>('collaboration')
-  const [contentId] = useState('phase5-test-' + Date.now())
+  const [contentId, setContentId] = useState<string>('')
   const [workflowType, setWorkflowType] = useState<'development' | 'review' | 'approval'>('development')
   const [contentType, setContentType] = useState<'idea' | 'draft' | 'content'>('draft')
   const [richTextContent, setRichTextContent] = useState('<h1>Welcome to Phase 5!</h1><p>This is a <strong>rich text editor</strong> with <em>real-time collaboration</em> features.</p><ul><li>Rich formatting</li><li>Real-time sync</li><li>Workflow integration</li></ul>')
+
+  // Generate contentId only on client side to avoid hydration mismatch
+  React.useEffect(() => {
+    if (!contentId) {
+      setContentId('phase5-test-' + Date.now())
+    }
+  }, [contentId])
 
   if (!session) {
     return (
@@ -39,6 +46,18 @@ export default function TestPhase5Page() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h1>
           <p className="text-gray-600">Please sign in to test Phase 5 features.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state while contentId is being generated
+  if (!contentId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Initializing Phase 5 features...</p>
         </div>
       </div>
     )
@@ -214,13 +233,26 @@ export default function TestPhase5Page() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border">
-              <RichTextEditor
-                content={richTextContent}
-                onContentChange={setRichTextContent}
-                placeholder="Start writing with rich formatting..."
-                isCollaborating={true}
-              />
+            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div className="p-4 border-b bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Rich Text Editor</h3>
+                    <p className="text-sm text-gray-600">Professional WYSIWYG editor with real-time collaboration</p>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Try formatting options and real-time sync
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <RichTextEditor
+                  content={richTextContent}
+                  onContentChange={setRichTextContent}
+                  placeholder="Start writing with rich formatting..."
+                  isCollaborating={true}
+                />
+              </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -285,15 +317,28 @@ export default function TestPhase5Page() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border" style={{ height: '600px' }}>
-              <CollaborationWorkflow
-                contentId={contentId}
-                contentType={contentType}
-                workflowType={workflowType}
-                onWorkflowUpdate={(workflow) => {
-                  console.log('Workflow updated:', workflow)
-                }}
-              />
+            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div className="p-4 border-b bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Workflow Integration</h3>
+                    <p className="text-sm text-gray-600">Type: {workflowType} - Content: {contentType}</p>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Manage workflow steps and collaboration
+                  </div>
+                </div>
+              </div>
+              <div className="h-[700px] min-h-[500px]">
+                <CollaborationWorkflow
+                  contentId={contentId}
+                  contentType={contentType}
+                  workflowType={workflowType}
+                  onWorkflowUpdate={(workflow) => {
+                    console.log('Workflow updated:', workflow)
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -345,16 +390,30 @@ export default function TestPhase5Page() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border" style={{ height: '600px' }}>
-              <RealTimeCollaboration
-                contentId={contentId}
-                contentType={contentType}
-                initialContent={richTextContent}
-                onContentChange={(content) => {
-                  setRichTextContent(content)
-                  console.log('Content updated:', content.substring(0, 100) + '...')
-                }}
-              />
+            {/* Collaboration Component with Better Layout */}
+            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+              <div className="p-4 border-b bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Real-time Collaboration</h3>
+                    <p className="text-sm text-gray-600">Content: {contentType} - ID: {contentId}</p>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Start collaborating below! 🚀
+                  </div>
+                </div>
+              </div>
+              <div className="h-[700px] min-h-[500px]">
+                <RealTimeCollaboration
+                  contentId={contentId}
+                  contentType={contentType}
+                  initialContent={richTextContent}
+                  onContentChange={(content) => {
+                    setRichTextContent(content)
+                    console.log('Content updated:', content.substring(0, 100) + '...')
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
