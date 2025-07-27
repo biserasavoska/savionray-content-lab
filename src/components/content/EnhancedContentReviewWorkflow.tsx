@@ -14,6 +14,7 @@ import {
   FileText,
   AlertCircle
 } from 'lucide-react'
+import { formatDate } from '@/lib/utils/date-helpers'
 
 interface ContentDraft {
   id: string
@@ -252,7 +253,7 @@ export default function EnhancedContentReviewWorkflow({
                       </p>
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <span>By {draft.createdBy.name}</span>
-                        <span>{new Date(draft.updatedAt).toLocaleDateString()}</span>
+                        <span>{formatDate(draft.updatedAt)}</span>
                         <span>{draft.feedbacks.length} feedback</span>
                       </div>
                     </div>
@@ -359,7 +360,7 @@ export default function EnhancedContentReviewWorkflow({
                             {feedback.createdBy.name}
                           </span>
                           <span className="text-xs text-gray-500">
-                            {new Date(feedback.createdAt).toLocaleDateString()}
+                            {formatDate(feedback.createdAt)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-700">{feedback.comment}</p>

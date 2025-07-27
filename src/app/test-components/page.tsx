@@ -33,7 +33,7 @@ export default function TestComponentsPage() {
   })
 
   // Test API data hook
-  const [healthData] = useApiData<{status: string; service: string; timestamp: string}>('/api/health', {
+  const [healthData] = useApiData<{success: boolean; data: {status: string; service: string; timestamp: string}; requestId: string}>('/api/health', {
     retryCount: 2,
     onSuccess: (data) => console.log('Health check successful:', data)
   })
@@ -233,19 +233,19 @@ export default function TestComponentsPage() {
               <CardTitle>Health Check API</CardTitle>
             </CardHeader>
             <CardContent>
-              {healthData.loading && (
-                <p className="text-gray-600">Loading health data...</p>
-              )}
-              {healthData.error && (
-                <p className="text-red-600">Error: {healthData.error}</p>
-              )}
-              {healthData.data && (
-                <div className="space-y-2">
-                  <p><strong>Status:</strong> {healthData.data.status}</p>
-                  <p><strong>Service:</strong> {healthData.data.service}</p>
-                  <p><strong>Timestamp:</strong> {healthData.data.timestamp}</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <p><strong>Loading:</strong> {healthData.loading ? 'Yes' : 'No'}</p>
+                <p><strong>Error:</strong> {healthData.error || 'None'}</p>
+                <p><strong>Has Data:</strong> {healthData.data ? 'Yes' : 'No'}</p>
+                {healthData.data && (
+                  <div className="space-y-2">
+                    <p><strong>Success:</strong> {healthData.data.success ? 'Yes' : 'No'}</p>
+                    <p><strong>Status:</strong> {healthData.data.data?.status || 'N/A'}</p>
+                    <p><strong>Service:</strong> {healthData.data.data?.service || 'N/A'}</p>
+                    <p><strong>Timestamp:</strong> {healthData.data.data?.timestamp || 'N/A'}</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </section>

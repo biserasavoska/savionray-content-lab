@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Eye
 } from 'lucide-react'
+import { formatDate } from '@/lib/utils/date-helpers'
 
 interface ScheduledContent {
   id: string
@@ -114,13 +115,15 @@ export default function ContentSchedulingCalendar({
     })
   }
 
-  const isToday = (date: Date) => {
+  const isToday = (date: Date | null) => {
+    if (!date) return false
     const today = new Date()
     return date.toDateString() === today.toDateString()
   }
 
-  const isSelected = (date: Date) => {
-    return selectedDate && date.toDateString() === selectedDate.toDateString()
+  const isSelected = (date: Date | null) => {
+    if (!date || !selectedDate) return false
+    return date.toDateString() === selectedDate.toDateString()
   }
 
   const handleDateClick = (date: Date) => {
@@ -240,8 +243,8 @@ export default function ContentSchedulingCalendar({
               key={index}
               className={`min-h-24 p-2 border border-gray-200 ${
                 date ? 'bg-white' : 'bg-gray-50'
-              } ${isToday(date!) ? 'bg-blue-50 border-blue-300' : ''} ${
-                isSelected(date!) ? 'ring-2 ring-blue-500' : ''
+                              } ${isToday(date) ? 'bg-blue-50 border-blue-300' : ''} ${
+                  isSelected(date) ? 'ring-2 ring-blue-500' : ''
               }`}
             >
               {date && (
@@ -300,12 +303,7 @@ export default function ContentSchedulingCalendar({
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">
-              {selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              {formatDate(selectedDate)}
             </h3>
             <button
               onClick={() => setSelectedDate(null)}
@@ -334,7 +332,7 @@ export default function ContentSchedulingCalendar({
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <span>{content.platform}</span>
                         <span>{content.contentType}</span>
-                        <span>{new Date(content.scheduledDate).toLocaleTimeString()}</span>
+                        <span>{new Date(content.scheduledDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
                         <span>By {content.createdBy.name}</span>
                       </div>
                     </div>

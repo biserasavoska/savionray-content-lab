@@ -27,6 +27,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react'
+import { formatDate } from '@/lib/utils/date-helpers'
 
 interface PerformanceMetrics {
   totalContent: number
@@ -473,7 +474,7 @@ export default function AdvancedAnalyticsDashboard({
                 <div>
                   <h4 className="font-medium text-gray-900">{content.title}</h4>
                   <p className="text-sm text-gray-500">
-                    {new Date(content.publishedDate).toLocaleDateString()}
+                    {formatDate(content.publishedDate)}
                   </p>
                 </div>
               </div>

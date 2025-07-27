@@ -7,6 +7,7 @@ import { MessageCircle, Users, Edit3, Eye, Wifi, WifiOff, AlertCircle, GitBranch
 import { io, Socket } from 'socket.io-client'
 // RICH TEXT EDITOR
 import RichTextEditor from '@/components/editor/RichTextEditor'
+import { formatDate } from '@/lib/utils/date-helpers'
 
 interface Collaborator {
   id: string
@@ -81,7 +82,7 @@ const formatTimestamp = (date: Date): string => {
     if (minutes < 60) return `${minutes}m ago`
     const hours = Math.floor(minutes / 60)
     if (hours < 24) return `${hours}h ago`
-    return date.toLocaleDateString()
+    return formatDate(date)
   } catch (err) {
     return 'Unknown time'
   }

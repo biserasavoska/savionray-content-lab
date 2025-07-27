@@ -21,6 +21,7 @@ import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 import { useInterface } from '@/hooks/useInterface'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
+import { formatDate } from '@/lib/utils/date-helpers'
 
 interface ContentItem {
   id: string
@@ -436,11 +437,11 @@ export default function ClientDashboard() {
                         <span className="ml-1">{item.contentType.replace(/_/g, ' ')}</span>
                       </span>
                       <span>Created by {item.createdBy?.name || item.createdBy?.email || 'Unknown'}</span>
-                      <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                      <span>{formatDate(item.createdAt)}</span>
                       {item.dueDate && (
                         <span className={`flex items-center ${isOverdue(item.dueDate) ? 'text-red-600' : 'text-gray-500'}`}>
                           <CalendarIcon className="h-3 w-3 mr-1" />
-                          Due: {new Date(item.dueDate).toLocaleDateString()}
+                          Due: {formatDate(item.dueDate)}
                         </span>
                       )}
                     </div>
