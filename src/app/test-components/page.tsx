@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
 import FormField, { Input, Textarea, Select, Checkbox, RadioGroup } from '@/components/ui/forms/FormField'
@@ -11,32 +11,71 @@ import { useApiData } from '@/hooks/useApiData'
 import { cn } from '@/lib/utils/cn'
 
 export default function TestComponentsPage() {
-  // Test form data hook
+  const [isClient, setIsClient] = useState(false)
+
+  // Ensure we're on client side
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Form state for testing
   const form = useFormData({
     initialValues: {
       name: '',
       email: '',
       message: '',
-      category: 'general',
-      notifications: false,
-      priority: 'medium'
+      priority: 'medium',
+      notifications: false
     },
-    validation: {
-      name: (value) => !value.trim() ? 'Name is required' : undefined,
-      email: (value) => !value.includes('@') ? 'Valid email required' : undefined,
-      message: (value) => value.length < 10 ? 'Message must be at least 10 characters' : undefined
-    },
-    onSubmit: async (values) => {
-      console.log('Form submitted:', values)
-      alert('Form submitted successfully!')
+    validationSchema: {
+      name: (value: string) => !value ? 'Name is required' : null,
+      email: (value: string) => !value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : null,
+      message: (value: string) => !value ? 'Message is required' : null
     }
   })
 
   // Test API data hook
-  const [healthData] = useApiData<{success: boolean; data: {status: string; service: string; timestamp: string}; requestId: string}>('/api/health', {
+  const [healthData, healthDataActions] = useApiData<{success: boolean; data: {status: string; service: string; timestamp: string}; requestId: string}>('/api/health', {
+    immediate: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     retryCount: 2,
     onSuccess: (data) => console.log('Health check successful:', data)
   })
+
+  // Trigger initial request
+  useEffect(() => {
+    // Only run on client side to prevent hydration mismatch
+    if (typeof window !== 'undefined') {
+      console.log('🔍 useEffect triggered, calling refetch...')
+      healthDataActions.refetch()
+    }
+  }, [])
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Health data state changed:', {
+      loading: healthData.loading,
+      error: healthData.error,
+      hasData: !!healthData.data,
+      lastUpdated: healthData.lastUpdated
+    })
+  }, [healthData.loading, healthData.error, healthData.data, healthData.lastUpdated])
+
+  // Don't render until client side
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-8">Component Test Page</h1>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -233,10 +272,14 @@ export default function TestComponentsPage() {
               <CardTitle>Health Check API</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <p><strong>Loading:</strong> {healthData.loading ? 'Yes' : 'No'}</p>
-                <p><strong>Error:</strong> {healthData.error || 'None'}</p>
-                <p><strong>Has Data:</strong> {healthData.data ? 'Yes' : 'No'}</p>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p><strong>Loading:</strong> {healthData.loading ? 'Yes' : 'No'}</p>
+                  <p><strong>Error:</strong> {healthData.error || 'None'}</p>
+                  <p><strong>Has Data:</strong> {healthData.data ? 'Yes' : 'No'}</p>
+                  <p><strong>Last Updated:</strong> {healthData.lastUpdated ? healthData.lastUpdated.toLocaleString() : 'Never'}</p>
+                </div>
+                
                 {healthData.data && (
                   <div className="space-y-2">
                     <p><strong>Success:</strong> {healthData.data.success ? 'Yes' : 'No'}</p>
@@ -245,6 +288,24 @@ export default function TestComponentsPage() {
                     <p><strong>Timestamp:</strong> {healthData.data.data?.timestamp || 'N/A'}</p>
                   </div>
                 )}
+                
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => healthDataActions.refetch()}
+                    variant="outline"
+                    size="sm"
+                    disabled={healthData.loading}
+                  >
+                    {healthData.loading ? 'Loading...' : 'Refetch'}
+                  </Button>
+                  <Button
+                    onClick={() => healthDataActions.reset()}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Reset
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
