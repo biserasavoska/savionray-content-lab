@@ -105,16 +105,19 @@ export async function POST(req: NextRequest) {
 
     if (!content || (!content.postText && !content.hashtags && !content.callToAction)) {
       return NextResponse.json(
-        { error: 'Failed to generate content' },
+        { success: false, error: 'Failed to generate content' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json(content);
+    return NextResponse.json({ success: true, ...content });
   } catch (error) {
     console.error('Error in content generation API:', error);
     return NextResponse.json(
-      error instanceof Error ? error.message : 'An error occurred while generating content',
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'An error occurred while generating content' 
+      },
       { status: 500 }
     );
   }
