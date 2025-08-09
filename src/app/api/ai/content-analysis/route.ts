@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       contentType, 
       targetAudience, 
       brandVoice, 
-      model = 'o4-mini',
+      model = 'gpt-5-mini',
       includeStepByStep = true,
       includeConfidence = true
     } = body;

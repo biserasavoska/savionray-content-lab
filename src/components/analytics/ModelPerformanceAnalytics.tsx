@@ -41,7 +41,8 @@ export default function ModelPerformanceAnalytics() {
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d'>('7d')
   const [isLoading, setIsLoading] = useState(true)
 
-  // Mock data - in real app this would come from your analytics API
+  // DEMO DATA - This is mock data for testing purposes
+  // In production, this would come from your analytics API
   useEffect(() => {
     const mockData: PerformanceData = {
       models: [
@@ -189,6 +190,21 @@ export default function ModelPerformanceAnalytics() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {/* Demo Notice */}
+      <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <div className="w-4 h-4 bg-yellow-400 rounded-full"></div>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-yellow-800">Demo Mode</h3>
+            <p className="text-sm text-yellow-700">
+              This page shows mock data for demonstration purposes. In production, this would display actual API usage metrics and costs.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">

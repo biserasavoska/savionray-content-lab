@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       audience, 
       goals, 
       constraints, 
-      model = 'o3',
+      model = 'gpt-5-mini',
       includeReasoning = true
     } = body;
 
