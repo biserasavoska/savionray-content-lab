@@ -5,7 +5,18 @@ import { useSession } from 'next-auth/react'
 import GPT5EnhancedEditor from '@/components/content/GPT5EnhancedEditor'
 
 export default function TestGPT5EnhancedPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h2>
+          <p className="text-gray-600">Please wait while we load the page.</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!session) {
     return (
@@ -20,14 +31,7 @@ export default function TestGPT5EnhancedPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <GPT5EnhancedEditor
-        onContentGenerated={(content) => {
-          console.log('Content generated:', content)
-        }}
-        onSave={(content) => {
-          console.log('Content saved:', content)
-        }}
-      />
+      <GPT5EnhancedEditor />
     </div>
   )
 }
