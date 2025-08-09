@@ -18,7 +18,6 @@ import {
   Clock
 } from 'lucide-react'
 import { AVAILABLE_MODELS } from '@/lib/models'
-import { getOptimalGPT5Model } from '@/lib/openai'
 
 interface GPT5EnhancedEditorProps {
   ideaId?: string
@@ -66,10 +65,10 @@ export default function GPT5EnhancedEditor({
 
   useEffect(() => {
     if (useOptimalRouting) {
-      const optimal = getOptimalGPT5Model('medium', 'standard', 'balanced')
-      setSelectedModel(optimal.model)
-      setVerbosity(optimal.gpt5Options.verbosity as 'low' | 'medium' | 'high')
-      setReasoningEffort(optimal.gpt5Options.reasoningEffort as 'minimal' | 'low' | 'medium' | 'high')
+      // Client-side optimal routing - use balanced defaults
+      setSelectedModel('gpt-5-mini') // Best balance of cost and performance
+      setVerbosity('medium')
+      setReasoningEffort('medium')
     }
   }, [useOptimalRouting])
 
@@ -166,18 +165,30 @@ export default function GPT5EnhancedEditor({
       const stepPromise = processStepByStep(steps)
       
       // Actual content generation
+      const requestBody = {
+        title: 'Enhanced Content Generation',
+        description: content || 'Generate engaging content using GPT-5 reasoning',
+        format: 'linkedin',
+        model: selectedModel,
+        verbosity: verbosity,
+        reasoningEffort: reasoningEffort,
+        maxOutputTokens: 3000
+      }
+
+      // Add optimal routing if enabled
+      if (useOptimalRouting) {
+        Object.assign(requestBody, {
+          useOptimalRouting: true,
+          taskComplexity: 'medium',
+          urgency: 'standard', 
+          budget: 'balanced'
+        })
+      }
+
       const response = await fetch('/api/content/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: 'Enhanced Content Generation',
-          description: content || 'Generate engaging content using GPT-5 reasoning',
-          format: 'linkedin',
-          model: selectedModel,
-          verbosity: verbosity,
-          reasoningEffort: reasoningEffort,
-          maxOutputTokens: 3000
-        })
+        body: JSON.stringify(requestBody)
       })
 
       const data = await response.json()
