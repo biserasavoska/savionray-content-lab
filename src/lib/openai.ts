@@ -224,7 +224,7 @@ async function generateWithGPT5API(
     ],
     verbosity: verbosity,
     reasoning_effort: reasoningEffort,
-    max_tokens: Math.min(maxOutputTokens, model.maxOutputTokens || 128000)
+    max_completion_tokens: Math.min(maxOutputTokens, model.maxOutputTokens || 128000)
   };
 
   console.log('Using GPT-5 API with config:', requestConfig);
