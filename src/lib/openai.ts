@@ -699,4 +699,5 @@ Call to Action:
   };
 }
 
-export default getOpenAIClient(); 
+// Export the function instead of an instance to avoid client-side execution
+export { getOpenAIClient }; 
