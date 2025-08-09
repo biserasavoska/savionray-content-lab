@@ -432,7 +432,7 @@ export async function analyzeContentWithReasoning({
   };
 }> {
   const selectedModel = AVAILABLE_MODELS.find(m => m.id === model);
-  if (!selectedModel?.supportsReasoning) {
+  if (!selectedModel?.supportsReasoning && !selectedModel?.supportsGPT5Features) {
     throw new Error(`Model ${model} does not support reasoning`);
   }
 
@@ -529,7 +529,7 @@ export async function generateStrategicContent({
   };
 }> {
   const selectedModel = AVAILABLE_MODELS.find(m => m.id === model);
-  if (!selectedModel?.supportsReasoning) {
+  if (!selectedModel?.supportsReasoning && !selectedModel?.supportsGPT5Features) {
     throw new Error(`Model ${model} does not support reasoning`);
   }
 
