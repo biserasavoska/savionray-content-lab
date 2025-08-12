@@ -15,7 +15,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 import { useInterface } from '@/hooks/useInterface'
-import GPT5EnhancedApprovalWorkflow from '@/components/content/GPT5EnhancedApprovalWorkflow'
+import ContentApprovalWorkflow from '@/components/content/ContentApprovalWorkflow'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/layout/Card'
@@ -421,7 +421,7 @@ export default function UnifiedContentReviewPage() {
             </div>
             
             <div className="overflow-auto max-h-[calc(90vh-80px)]">
-              <GPT5EnhancedApprovalWorkflow
+              <ContentApprovalWorkflow
                 content={{
                   id: selectedContentItem.id,
                   title: selectedContentItem.title,
@@ -440,8 +440,8 @@ export default function UnifiedContentReviewPage() {
                     name: selectedContentItem.assignedTo.name || 'Unknown',
                     email: selectedContentItem.assignedTo.email || 'unknown@example.com'
                   } : undefined,
-                  createdAt: selectedContentItem.createdAt,
-                  updatedAt: selectedContentItem.updatedAt,
+                  createdAt: new Date(selectedContentItem.createdAt),
+                  updatedAt: new Date(selectedContentItem.updatedAt),
                   approvalHistory: [],
                   metadata: {
                     targetAudience: selectedContentItem.metadata?.targetAudience,
@@ -453,7 +453,6 @@ export default function UnifiedContentReviewPage() {
                 onReject={(rejectionData) => handleApprovalComplete(false, rejectionData.feedback)}
                 onAssignReviewer={(reviewerId) => console.log('Reviewer assigned:', reviewerId)}
                 onUpdatePriority={(priority) => console.log('Priority updated:', priority)}
-                onRequestRevision={(revisionData) => console.log('Revision requested:', revisionData)}
               />
             </div>
           </div>
