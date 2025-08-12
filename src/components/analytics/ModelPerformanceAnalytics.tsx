@@ -90,40 +90,20 @@ export default function ModelPerformanceAnalytics() {
           modelId: 'gpt-5-nano',
           modelName: 'GPT-5 Nano',
           totalRequests: 67,
-          successRate: 99.1,
-          averageResponseTime: 950,
-          totalCost: 2.34,
+          successRate: 98.5,
+          averageResponseTime: 1200,
+          totalCost: 1.45,
           averageConfidence: 82.3,
-          fallbackRate: 0.9,
-          lastUsed: '5 minutes ago',
-          qualityRating: 7.8,
-          usageByDay: [
-            { date: '2024-08-03', requests: 12, cost: 0.4 },
-            { date: '2024-08-04', requests: 15, cost: 0.5 },
-            { date: '2024-08-05', requests: 8, cost: 0.3 },
-            { date: '2024-08-06', requests: 11, cost: 0.4 },
-            { date: '2024-08-07', requests: 13, cost: 0.4 },
-            { date: '2024-08-08', requests: 8, cost: 0.3 }
-          ]
-        },
-        {
-          modelId: 'gpt-4o',
-          modelName: 'GPT-4o (Fallback)',
-          totalRequests: 89,
-          successRate: 96.6,
-          averageResponseTime: 2100,
-          totalCost: 4.23,
-          averageConfidence: 84.1,
           fallbackRate: 0,
-          lastUsed: '1 hour ago',
-          qualityRating: 8.2,
+          lastUsed: '30 minutes ago',
+          qualityRating: 8.8,
           usageByDay: [
-            { date: '2024-08-03', requests: 15, cost: 0.7 },
-            { date: '2024-08-04', requests: 18, cost: 0.8 },
-            { date: '2024-08-05', requests: 12, cost: 0.6 },
-            { date: '2024-08-06', requests: 16, cost: 0.7 },
-            { date: '2024-08-07', requests: 14, cost: 0.6 },
-            { date: '2024-08-08', requests: 14, cost: 0.8 }
+            { date: '2024-08-03', requests: 12, cost: 0.3 },
+            { date: '2024-08-04', requests: 15, cost: 0.4 },
+            { date: '2024-08-05', requests: 10, cost: 0.2 },
+            { date: '2024-08-06', requests: 13, cost: 0.3 },
+            { date: '2024-08-07', requests: 8, cost: 0.2 },
+            { date: '2024-08-08', requests: 9, cost: 0.25 }
           ]
         }
       ],

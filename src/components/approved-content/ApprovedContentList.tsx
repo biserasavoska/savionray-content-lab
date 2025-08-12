@@ -43,12 +43,12 @@ export default function ApprovedContentList({ content, isAdminUser, isCreativeUs
     }
   }
 
-  const handlePublish = async (draftId: string) => {
+  const handlePublish = async (contentItemId: string) => {
     if (!session) return
 
-    setIsSubmitting(draftId)
+    setIsSubmitting(contentItemId)
     try {
-      const response = await fetch(`/api/content-drafts/${draftId}`, {
+      const response = await fetch(`/api/content-items/${contentItemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

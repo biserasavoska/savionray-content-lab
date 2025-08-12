@@ -1,0 +1,456 @@
+import { prisma } from '@/lib/prisma'
+import type { ContentItem, ContentItemStatus, WorkflowStage, ContentType, MediaType } from '@prisma/client'
+
+export interface CreateContentItemData {
+  title: string
+  description: string
+  body?: string
+  contentType: ContentType
+  mediaType?: MediaType
+  metadata?: Record<string, any>
+  organizationId: string
+  createdById: string
+  deliveryItemId?: string
+  assignedToId?: string
+}
+
+export interface UpdateContentItemData {
+  title?: string
+  description?: string
+  body?: string
+  contentType?: ContentType
+  mediaType?: MediaType
+  metadata?: Record<string, any>
+  status?: ContentItemStatus
+  currentStage?: WorkflowStage
+  assignedToId?: string
+  deliveryItemId?: string
+}
+
+export interface ContentItemWithDetails extends ContentItem {
+  createdBy: {
+    id: string
+    name: string | null
+    email: string | null
+    role: string
+  }
+  assignedTo: {
+    id: string
+    name: string | null
+    email: string | null
+  } | null
+  organization: {
+    id: string
+    name: string
+  }
+  comments: Array<{
+    id: string
+    comment: string
+    createdAt: Date
+    createdBy: {
+      id: string
+      name: string | null
+      email: string | null
+    }
+  }>
+  feedbacks: Array<{
+    id: string
+    comment: string
+    createdAt: Date
+    createdBy: {
+      id: string
+      name: string | null
+      email: string | null
+    }
+  }>
+  media: Array<{
+    id: string
+    url: string
+    filename: string
+    contentType: string
+    size: number
+  }>
+  stageHistory: Array<{
+    id: string
+    fromStage: WorkflowStage
+    toStage: WorkflowStage
+    transitionedAt: Date
+    transitionedBy: string
+    notes: string | null
+  }>
+}
+
+export class ContentItemService {
+  /**
+   * Create a new content item
+   */
+  static async create(data: CreateContentItemData): Promise<ContentItem> {
+    const contentItem = await prisma.contentItem.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        body: data.body,
+        contentType: data.contentType,
+        mediaType: data.mediaType,
+        metadata: data.metadata || {},
+        status: 'IDEA',
+        currentStage: 'IDEA',
+        createdById: data.createdById,
+        organizationId: data.organizationId,
+        deliveryItemId: data.deliveryItemId,
+        assignedToId: data.assignedToId
+      }
+    })
+
+    // Create initial stage transition
+    await prisma.stageTransition.create({
+      data: {
+        contentItemId: contentItem.id,
+        fromStage: 'IDEA',
+        toStage: 'IDEA',
+        transitionedAt: new Date(),
+        transitionedBy: data.createdById,
+        notes: 'Content item created'
+      }
+    })
+
+    return contentItem
+  }
+
+  /**
+   * Get content item by ID with full details
+   */
+  static async getById(id: string, organizationId: string): Promise<ContentItemWithDetails | null> {
+    return prisma.contentItem.findFirst({
+      where: {
+        id,
+        organizationId
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        organization: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        comments: {
+          include: {
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
+        feedbacks: {
+          include: {
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
+        media: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        },
+        stageHistory: {
+          orderBy: {
+            transitionedAt: 'desc'
+          }
+        }
+      }
+    })
+  }
+
+  /**
+   * Get content items by organization with filtering
+   */
+  static async getByOrganization(
+    organizationId: string,
+    filters: {
+      status?: ContentItemStatus
+      currentStage?: WorkflowStage
+      contentType?: ContentType
+      assignedToId?: string
+      createdById?: string
+    } = {},
+    pagination: {
+      page?: number
+      limit?: number
+    } = {}
+  ): Promise<{ items: ContentItemWithDetails[]; total: number }> {
+    const { page = 1, limit = 20 } = pagination
+    const skip = (page - 1) * limit
+
+    const where = {
+      organizationId,
+      ...filters
+    }
+
+    const [items, total] = await Promise.all([
+      prisma.contentItem.findMany({
+        where,
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true
+            }
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          organization: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          comments: {
+            include: {
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            }
+          },
+          feedbacks: {
+            include: {
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            }
+          },
+          media: {
+            orderBy: {
+              createdAt: 'desc'
+            }
+          },
+          stageHistory: {
+            orderBy: {
+              transitionedAt: 'desc'
+            }
+          }
+        },
+        orderBy: {
+          updatedAt: 'desc'
+        },
+        skip,
+        take: limit
+      }),
+      prisma.contentItem.count({ where })
+    ])
+
+    return { items, total }
+  }
+
+  /**
+   * Update content item
+   */
+  static async update(id: string, organizationId: string, data: UpdateContentItemData): Promise<ContentItem> {
+    const contentItem = await prisma.contentItem.findFirst({
+      where: { id, organizationId }
+    })
+
+    if (!contentItem) {
+      throw new Error('Content item not found')
+    }
+
+    // If stage is changing, create stage transition
+    if (data.currentStage && data.currentStage !== contentItem.currentStage) {
+      await prisma.stageTransition.create({
+        data: {
+          contentItemId: id,
+          fromStage: contentItem.currentStage,
+          toStage: data.currentStage,
+          transitionedAt: new Date(),
+          transitionedBy: contentItem.createdById,
+          notes: `Stage transition: ${contentItem.currentStage} → ${data.currentStage}`
+        }
+      })
+    }
+
+    return prisma.contentItem.update({
+      where: { id },
+      data
+    })
+  }
+
+  /**
+   * Transition content item to a new stage
+   */
+  static async transitionStage(
+    id: string,
+    organizationId: string,
+    newStage: WorkflowStage,
+    transitionedBy: string,
+    notes?: string
+  ): Promise<ContentItem> {
+    const contentItem = await prisma.contentItem.findFirst({
+      where: { id, organizationId }
+    })
+
+    if (!contentItem) {
+      throw new Error('Content item not found')
+    }
+
+    // Create stage transition
+    await prisma.stageTransition.create({
+      data: {
+        contentItemId: id,
+        fromStage: contentItem.currentStage,
+        toStage: newStage,
+        transitionedAt: new Date(),
+        transitionedBy,
+        notes
+      }
+    })
+
+    // Update content item
+    return prisma.contentItem.update({
+      where: { id },
+      data: {
+        currentStage: newStage,
+        status: mapStageToStatus(newStage),
+        updatedAt: new Date()
+      }
+    })
+  }
+
+  /**
+   * Add feedback to content item
+   */
+  static async addFeedback(
+    contentItemId: string,
+    organizationId: string,
+    comment: string,
+    createdById: string
+  ): Promise<void> {
+    const contentItem = await prisma.contentItem.findFirst({
+      where: { id: contentItemId, organizationId }
+    })
+
+    if (!contentItem) {
+      throw new Error('Content item not found')
+    }
+
+    await prisma.contentItemFeedback.create({
+      data: {
+        comment,
+        contentItemId,
+        createdById
+      }
+    })
+  }
+
+  /**
+   * Add comment to content item
+   */
+  static async addComment(
+    contentItemId: string,
+    organizationId: string,
+    comment: string,
+    createdById: string
+  ): Promise<void> {
+    const contentItem = await prisma.contentItem.findFirst({
+      where: { id: contentItemId, organizationId }
+    })
+
+    if (!contentItem) {
+      throw new Error('Content item not found')
+    }
+
+    await prisma.contentItemComment.create({
+      data: {
+        comment,
+        contentItemId,
+        createdById
+      }
+    })
+  }
+
+  /**
+   * Delete content item (soft delete by updating status)
+   */
+  static async delete(id: string, organizationId: string): Promise<void> {
+    const contentItem = await prisma.contentItem.findFirst({
+      where: { id, organizationId }
+    })
+
+    if (!contentItem) {
+      throw new Error('Content item not found')
+    }
+
+    await prisma.contentItem.update({
+      where: { id },
+      data: {
+        status: 'REJECTED',
+        currentStage: 'REJECTED',
+        metadata: {
+          ...(contentItem.metadata as Record<string, any> || {}),
+          deletedAt: new Date().toISOString(),
+          deleted: true
+        }
+      }
+    })
+  }
+}
+
+// Helper function to map workflow stage to status
+function mapStageToStatus(stage: WorkflowStage): ContentItemStatus {
+  const stageToStatusMap: Record<WorkflowStage, ContentItemStatus> = {
+    'IDEA': 'IDEA',
+    'CONTENT_REVIEW': 'CONTENT_REVIEW',
+    'APPROVED': 'APPROVED',
+    'REJECTED': 'REJECTED',
+    'PUBLISHED': 'PUBLISHED'
+  }
+  return stageToStatusMap[stage] || 'IDEA'
+}

@@ -4,20 +4,77 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
-import type { ContentDraft, Idea, User } from '@/types/content'
+import type { User } from '@/types/content'
 import { AVAILABLE_MODELS } from '@/lib/models'
 import ModelSelector from '@/components/content/ModelSelector'
 import ReasoningOptions from '@/components/content/ReasoningOptions'
 import ReasoningDisplay from '@/components/content/ReasoningDisplay'
 
-type ContentDraftWithDetails = ContentDraft & {
-  idea: Idea & {
-    createdBy: Pick<User, 'name' | 'email'>
+type ContentItemWithDetails = {
+  id: string
+  title: string
+  description: string
+  body: string
+  contentType: string
+  status: string
+  currentStage: string
+  createdAt: string
+  updatedAt: string
+  createdBy: {
+    id: string
+    name: string | null
+    email: string | null
+    role: string
   }
-  createdBy: Pick<User, 'name' | 'email'>
+  assignedTo?: {
+    id: string
+    name: string | null
+    email: string | null
+  } | null
+  metadata: any
+  feedbacks?: Array<{
+    id: string
+    comment: string
+    createdAt: string
+    createdBy: {
+      id: string
+      name: string | null
+      email: string | null
+      role: string
+    }
+  }>
+  comments?: Array<{
+    id: string
+    comment: string
+    createdAt: string
+    createdBy: {
+      id: string
+      name: string | null
+      email: string | null
+      role: string
+    }
+  }>
+  media?: Array<{
+    id: string
+    url: string
+    filename: string
+    contentType: string
+    size: number
+  }>
+  stageHistory?: Array<{
+    id: string
+    fromStage: string
+    toStage: string
+    transitionedAt: string
+    transitionedBy: string
+    notes: string | null
+    user: {
+      id: string
+      name: string | null
+      email: string | null
+    }
+  }>
 }
-
-
 
 interface GeneratedContent {
   postText: string
@@ -31,9 +88,9 @@ interface GeneratedContent {
 }
 
 export default function ContentReviewDetailPage({ params }: { params: { id: string } }) {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
-  const [draft, setDraft] = useState<ContentDraftWithDetails | null>(null)
+  const [contentItem, setContentItem] = useState<ContentItemWithDetails | null>(null)
   const [loading, setLoading] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
   const [error, setError] = useState('')
@@ -50,31 +107,53 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   const [showReasoning, setShowReasoning] = useState(false)
 
   useEffect(() => {
-    fetchDraft()
-  }, [params.id])
+    if (session?.user && params.id) {
+      fetchContentItem()
+    }
+  }, [session, params.id])
 
-  const fetchDraft = async () => {
+  const fetchContentItem = async () => {
     try {
-      const response = await fetch(`/api/content-drafts/${params.id}`)
-      if (!response.ok) throw new Error('Failed to fetch draft')
+      setLoading(true)
+      setError('')
+      console.log('Fetching content item with ID:', params.id)
+      
+      const response = await fetch(`/api/content-items/${params.id}`)
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error Response:', errorText)
+        throw new Error(`Failed to fetch content item: ${response.status} ${response.statusText}`)
+      }
+      
       const data = await response.json()
-      setDraft(data)
-      setContent(data.body)
+      console.log('Fetched content item data:', data)
+      
+      if (!data || !data.id) {
+        throw new Error('Invalid content item data received')
+      }
+      
+      setContentItem(data)
+      setContent(data.body || '')
     } catch (error) {
-      setError('Error loading draft')
-      console.error('Error:', error)
+      console.error('Error fetching content item:', error)
+      setError(error instanceof Error ? error.message : 'Error loading content item')
+    } finally {
+      setLoading(false)
     }
   }
 
   const generateContent = async () => {
-    if (!draft) return
+    if (!contentItem) return
     
     setLoading(true)
     setError('')
     try {
       console.log('Generating content for:', {
-        title: draft.idea.title,
-        description: draft.idea.description,
+        title: contentItem.title,
+        description: contentItem.description,
         model: selectedModel.id,
         additionalContext
       });
@@ -83,8 +162,8 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: draft.idea.title,
-          description: draft.idea.description,
+          title: contentItem.title,
+          description: contentItem.description,
           format: 'social',
           model: selectedModel.id,
           additionalContext,
@@ -110,7 +189,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
       setGeneratedContent(data)
       setContent(data.postText || '')
       // Auto-save generated content
-      await fetch(`/api/content-drafts/${params.id}`, {
+      await fetch(`/api/content-items/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -132,11 +211,11 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
     }
   }
 
-  const saveDraft = async (status: 'DRAFT' | 'AWAITING_FEEDBACK' | 'AWAITING_REVISION' | 'APPROVED' | 'REJECTED' | 'PUBLISHED') => {
-    if (!draft) return;
+  const saveDraft = async (status: 'IDEA' | 'CONTENT_REVIEW' | 'APPROVED' | 'REJECTED' | 'PUBLISHED') => {
+    if (!contentItem) return;
     setSavingDraft(true);
     try {
-      const response = await fetch(`/api/content-drafts/${params.id}`, {
+      const response = await fetch(`/api/content-items/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -160,21 +239,86 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         router.push('/content-review');
       }
     } catch (error) {
-      console.error('Error saving draft:', error);
-      setError(error instanceof Error ? error.message : 'Failed to save draft');
+      console.error('Error saving content item:', error);
+      setError(error instanceof Error ? error.message : 'Failed to save content item');
     } finally {
       setSavingDraft(false);
     }
   };
 
-
-
-  if (!session) {
-    return <div>Please sign in to access this page.</div>
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading session...</p>
+        </div>
+      </div>
+    )
   }
 
-  if (!draft) {
-    return <div>Loading...</div>
+  if (!session?.user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Sign In</h2>
+          <p className="text-gray-600 mb-6">You need to be signed in to access this page.</p>
+          <button
+            onClick={() => router.push('/auth/signin')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading content item...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="rounded-md bg-red-50 p-4 max-w-md mx-auto">
+            <p className="text-red-800 mb-4">{error}</p>
+            <button
+              onClick={() => fetchContentItem()}
+              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!contentItem) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="rounded-md bg-yellow-50 p-4 max-w-md mx-auto">
+            <p className="text-yellow-800 mb-4">Content item not found</p>
+            <button
+              onClick={() => router.back()}
+              className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -187,8 +331,38 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           ← Back to Content Review
         </button>
         
-        <h1 className="text-2xl font-bold mb-4">{draft.idea.title}</h1>
-        <p className="text-gray-600 mb-6">{draft.idea.description}</p>
+        <h1 className="text-2xl font-bold mb-4">{contentItem.title}</h1>
+        <p className="text-gray-600 mb-6">{contentItem.description}</p>
+        
+        {/* Content Item Details */}
+        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-gray-700">Status:</span>
+              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                {contentItem.status}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Stage:</span>
+              <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                {contentItem.currentStage}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Type:</span>
+              <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
+                {contentItem.contentType}
+              </span>
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Created:</span>
+              <span className="ml-2 text-gray-600">
+                {new Date(contentItem.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -308,18 +482,18 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           
           <div className="space-y-3">
             <button
-              onClick={() => saveDraft('DRAFT')}
+              onClick={() => saveDraft('IDEA')}
               disabled={savingDraft}
               className="w-full px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
             >
-              {savingDraft ? 'Saving...' : 'Save as Draft'}
+              {savingDraft ? 'Saving...' : 'Save as Idea'}
             </button>
             <button
-              onClick={() => saveDraft('AWAITING_FEEDBACK')}
+              onClick={() => saveDraft('CONTENT_REVIEW')}
               disabled={savingDraft}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {savingDraft ? 'Saving...' : 'Submit for Feedback'}
+              {savingDraft ? 'Saving...' : 'Submit for Review'}
             </button>
             <button
               onClick={() => saveDraft('APPROVED')}

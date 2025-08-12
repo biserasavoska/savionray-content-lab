@@ -7,6 +7,9 @@ import Card from '@/components/ui/layout/Card'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import { useSession } from 'next-auth/react'
+import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
+import { AVAILABLE_MODELS } from '@/lib/models'
 
 interface ContentTemplate {
   id: string
@@ -266,9 +269,9 @@ export default function OrganizationContentCreator({
                   onChange={(e) => handleInputChange('model', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                  <option value="claude-3">Claude 3</option>
+                  {AVAILABLE_MODELS.map(model => (
+                    <option key={model.id} value={model.id}>{model.name}</option>
+                  ))}
                 </select>
               </div>
             </div>

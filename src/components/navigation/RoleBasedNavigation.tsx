@@ -56,8 +56,8 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     // Common items
     { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     
-    // Client-specific items (in requested order)
-    { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
+    // Content Management (Unified System)
+    { name: 'Content Management', href: '/content-review/unified', icon: SparklesIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Approved Content', href: '/approved', icon: DocumentTextIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Feedback', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT'] },

@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
         
         Provide the current tone and suggest improvements.`,
         format: 'tone-analysis',
-        model: 'gpt-4o-mini'
+        model: 'gpt-5-mini'
       })
 
       // Parse tone analysis from AI response
@@ -237,7 +237,7 @@ export async function POST(req: NextRequest) {
         description: `Provide 3 specific suggestions to improve this ${contentType} content: "${content.substring(0, 200)}...". 
         Focus on engagement, clarity, and audience appeal.`,
         format: 'optimization-suggestions',
-        model: 'gpt-4o-mini'
+        model: 'gpt-5-mini'
       })
 
       const aiSuggestions = aiResponse.postText.split('\n').filter(s => s.trim()).slice(0, 3)

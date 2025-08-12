@@ -183,7 +183,7 @@ export class EnhancedAPISecurity {
       /^\/api\/organization/,
       /^\/api\/billing/,
       /^\/api\/ideas\/.*\/edit/,
-      /^\/api\/content-drafts/
+      /^\/api\/content-items/
     ]
     return protectedPatterns.some(pattern => pattern.test(pathname))
   }

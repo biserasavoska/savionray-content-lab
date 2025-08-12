@@ -99,7 +99,6 @@ export default function TestGPT5Page() {
               <option value="gpt-5">GPT-5 (Full)</option>
               <option value="gpt-5-mini">GPT-5 Mini</option>
               <option value="gpt-5-nano">GPT-5 Nano</option>
-              <option value="gpt-4o">GPT-4o (Fallback)</option>
             </select>
           </div>
 

@@ -17,7 +17,7 @@ const isApiKeyAvailable = () => {
 };
 
 // Default model configuration
-const DEFAULT_MODEL = "gpt-4o";
+const DEFAULT_MODEL = "gpt-5-mini";
 
 // Smart model routing for optimal performance and cost
 export function getOptimalGPT5Model(
@@ -150,11 +150,11 @@ Call to Action:
       try {
         return await generateWithGPT5API(openai, selectedModel, prompt, gpt5Options || {});
       } catch (gpt5Error: any) {
-        // If GPT-5 model fails, fallback to GPT-4o
+        // If GPT-5 model fails, fallback to GPT-5 Mini
         console.warn(`GPT-5 model ${selectedModel.id} failed:`, gpt5Error.message);
-        console.log('Falling back to GPT-4o model...');
+        console.log('Falling back to GPT-5 Mini model...');
         
-        const fallbackModel = AVAILABLE_MODELS.find(m => m.id === 'gpt-4o');
+        const fallbackModel = AVAILABLE_MODELS.find(m => m.id === 'gpt-5-mini');
         if (!fallbackModel) {
           throw new Error('Fallback model not available');
         }
@@ -171,11 +171,11 @@ Call to Action:
           encryptedReasoning
         });
       } catch (reasoningError: any) {
-        // If reasoning model fails (e.g., organization not verified), fallback to GPT-4o
+        // If reasoning model fails (e.g., organization not verified), fallback to GPT-5 Mini
         console.warn(`Reasoning model ${selectedModel.id} failed:`, reasoningError.message);
-        console.log('Falling back to GPT-4o model...');
+        console.log('Falling back to GPT-5 Mini model...');
         
-        const fallbackModel = AVAILABLE_MODELS.find(m => m.id === 'gpt-4o');
+        const fallbackModel = AVAILABLE_MODELS.find(m => m.id === 'gpt-5-mini');
         if (!fallbackModel) {
           throw new Error('Fallback model not available');
         }

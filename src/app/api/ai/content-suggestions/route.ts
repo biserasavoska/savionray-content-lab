@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
           title: 'Generate engaging titles',
           description: `Based on this content: "${content.substring(0, 200)}...", generate 3 engaging titles for ${contentType} content targeting ${targetAudience} with a ${brandVoice} tone.`,
           format: 'title-suggestions',
-          model: 'gpt-4o-mini'
+          model: 'gpt-5-mini'
         })
 
         const titles = titleResponse.postText.split('\n').filter(t => t.trim()).slice(0, 3)
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         title: 'Generate relevant hashtags',
         description: `Generate 5-8 relevant hashtags for this ${contentType} content: "${content.substring(0, 300)}...". Target audience: ${targetAudience}.`,
         format: 'hashtag-suggestions',
-        model: 'gpt-4o-mini'
+        model: 'gpt-5-mini'
       })
 
       const hashtags = hashtagResponse.hashtags.slice(0, 8)

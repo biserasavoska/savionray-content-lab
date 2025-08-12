@@ -27,39 +27,6 @@ export interface AIModel {
 }
 
 export const AVAILABLE_MODELS: AIModel[] = [
-  {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    description: 'Advanced model for complex content generation with high accuracy',
-    maxTokens: 8192,
-    costPerToken: 0.00002,
-    type: 'advanced',
-    api: 'chat',
-    useCases: ['Complex content creation', 'Detailed analysis', 'Creative writing'],
-    strengths: ['High accuracy', 'Creative capabilities', 'Broad knowledge']
-  },
-  {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini',
-    description: 'Most capable model for high-quality content generation with balanced performance',
-    maxTokens: 4096,
-    costPerToken: 0.00001,
-    type: 'balanced',
-    api: 'chat',
-    useCases: ['General content creation', 'Quick responses', 'Standard analysis'],
-    strengths: ['Fast response', 'Cost-effective', 'Good quality']
-  },
-  {
-    id: 'gpt-3.5-turbo',
-    name: 'GPT-3.5 Turbo',
-    description: 'Fast and cost-effective for most content generation tasks',
-    maxTokens: 4096,
-    costPerToken: 0.000002,
-    type: 'fast',
-    api: 'chat',
-    useCases: ['Quick content generation', 'Simple tasks', 'Cost-sensitive applications'],
-    strengths: ['Very fast', 'Lowest cost', 'Reliable']
-  },
   // Enhanced reasoning models with comprehensive features
   {
     id: 'o4-mini',

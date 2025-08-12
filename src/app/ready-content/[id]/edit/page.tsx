@@ -25,7 +25,7 @@ interface Feedback {
   comment: string
   createdAt: Date
   createdBy: User
-  contentDraftId: string
+  contentItemId: string
 }
 
 export default function ReadyContentEditPage({ params }: { params: { id: string } }) {
@@ -47,7 +47,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
   const fetchContent = async () => {
     try {
-      const response = await fetch(`/api/content-drafts/${params.id}`)
+      const response = await fetch(`/api/content-items/${params.id}`)
       if (response.ok) {
         const data = await response.json()
         setContent(data)
@@ -69,7 +69,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
     setSaving(true)
     try {
-      const response = await fetch(`/api/content-drafts/${params.id}`, {
+      const response = await fetch(`/api/content-items/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
     setSaving(true)
     try {
-      const response = await fetch(`/api/content-drafts/${params.id}`, {
+      const response = await fetch(`/api/content-items/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

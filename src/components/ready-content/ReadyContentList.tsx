@@ -5,10 +5,10 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
 import type { ContentDraft, Idea, User, Media, ContentType } from '../../types/content'
+import { Feedback } from '@prisma/client'
 import { formatDate } from '../../lib/utils/date-helpers'
 
 import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS, CONTENT_TYPE } from '@/lib/utils/enum-utils'
-import EnhancedFeedbackForm from '@/components/feedback/EnhancedFeedbackForm'
 import FeedbackList from '@/components/feedback/FeedbackList'
 
 interface ReadyContentListProps {
@@ -27,18 +27,7 @@ interface ReadyContentListProps {
   isClientUser: boolean
 }
 
-// Local Feedback type for this file
-type Feedback = {
-  id: string
-  comment: string
-  rating: number
-  category: string
-  priority: string
-  actionable: boolean
-  createdAt: Date
-  contentDraftId: string
-  createdById: string
-}
+
 
 export default function ReadyContentList({ content, isCreativeUser, isClientUser }: ReadyContentListProps) {
   const { data: session } = useSession()
@@ -70,12 +59,12 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
     }
   }
 
-  const handleStatusUpdate = async (draftId: string, newStatus: string) => {
+  const handleStatusUpdate = async (contentItemId: string, newStatus: string) => {
     if (!session) return
 
-    setIsSubmitting(draftId)
+    setIsSubmitting(contentItemId)
     try {
-      const response = await fetch(`/api/content-drafts/${draftId}`, {
+      const response = await fetch(`/api/content-items/${contentItemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -380,12 +369,11 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                 {/* Feedback Form */}
                 {showFeedbackForm[item.id] && (
                   <div className="mb-6">
-                    <EnhancedFeedbackForm
-                      targetId={item.id}
-                      targetType="content"
-                      onSuccess={handleFeedbackSuccess}
-                      onCancel={() => toggleFeedbackForm(item.id)}
-                    />
+                    <div className="bg-gray-50 p-4 rounded-md">
+                      <p className="text-sm text-gray-600 mb-2">
+                        Feedback form temporarily unavailable. Please use the main feedback system.
+                      </p>
+                    </div>
                   </div>
                 )}
 

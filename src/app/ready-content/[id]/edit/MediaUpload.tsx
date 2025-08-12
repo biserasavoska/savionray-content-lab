@@ -22,7 +22,7 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
 
   const fetchMedia = async () => {
     try {
-      const response = await fetch(`/api/content-drafts/${contentId}/media`)
+      const response = await fetch(`/api/content-items/${contentId}/media`)
       if (response.ok) {
         const data = await response.json()
         setMedia(data)
@@ -49,7 +49,7 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
         const uploadedFiles = await response.json()
         
         // Associate uploaded files with content draft
-        await fetch(`/api/content-drafts/${contentId}/media`, {
+        await fetch(`/api/content-items/${contentId}/media`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
 
   const handleDeleteMedia = async (mediaId: string) => {
     try {
-      const response = await fetch(`/api/content-drafts/${contentId}/media/${mediaId}`, {
+      const response = await fetch(`/api/content-items/${contentId}/media/${mediaId}`, {
         method: 'DELETE',
       })
 

@@ -73,10 +73,10 @@ async function testReasoningModels() {
     console.log('');
 
     // Test 4: Compare with standard model
-    console.log('⚖️  Test 4: Comparing with standard GPT-4o model...');
+    console.log('⚖️  Test 4: Comparing with standard GPT-5 Mini model...');
     const standardData = {
       ...contentData,
-      model: "gpt-4o",
+      model: "gpt-5-mini",
       includeReasoning: false
     };
 
