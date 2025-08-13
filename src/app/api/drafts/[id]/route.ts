@@ -15,11 +15,11 @@ export async function PUT(
   }
 
   try {
-    const { body, contentType } = await req.json()
+    const { body, contentType, status, metadata } = await req.json()
 
-    if (!body) {
+    if (!body && !status && !metadata) {
       return NextResponse.json(
-        { error: 'Content body is required' },
+        { error: 'At least one field to update is required' },
         { status: 400 }
       )
     }
@@ -37,14 +37,34 @@ export async function PUT(
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
     }
 
+    const updateData: any = {}
+    
+    if (body !== undefined) {
+      updateData.body = body
+    }
+    
+    if (status !== undefined) {
+      updateData.status = status
+    }
+    
+    if (metadata !== undefined) {
+      const currentMetadata = draft.metadata && typeof draft.metadata === 'object' ? draft.metadata as Record<string, any> : {}
+      updateData.metadata = {
+        ...currentMetadata,
+        ...metadata,
+        contentType: contentType || currentMetadata.contentType || 'social-media',
+      }
+    } else if (contentType !== undefined) {
+      const currentMetadata = draft.metadata && typeof draft.metadata === 'object' ? draft.metadata as Record<string, any> : {}
+      updateData.metadata = {
+        ...currentMetadata,
+        contentType: contentType || 'social-media',
+      }
+    }
+
     const updatedDraft = await prisma.contentDraft.update({
       where: { id: params.id },
-      data: {
-        body,
-        metadata: {
-          contentType: contentType || 'social-media',
-        },
-      },
+      data: updateData,
       include: {
         createdBy: {
           select: {

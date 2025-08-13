@@ -116,30 +116,30 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
     try {
       setLoading(true)
       setError('')
-      console.log('Fetching content item with ID:', params.id)
+      console.log('Fetching content draft with ID:', params.id)
       
-      const response = await fetch(`/api/content-items/${params.id}`)
+      const response = await fetch(`/api/drafts/${params.id}`)
       console.log('Response status:', response.status)
       console.log('Response headers:', response.headers)
       
       if (!response.ok) {
         const errorText = await response.text()
         console.error('API Error Response:', errorText)
-        throw new Error(`Failed to fetch content item: ${response.status} ${response.statusText}`)
+        throw new Error(`Failed to fetch content draft: ${response.status} ${response.statusText}`)
       }
       
       const data = await response.json()
-      console.log('Fetched content item data:', data)
+      console.log('Fetched content draft data:', data)
       
       if (!data || !data.id) {
-        throw new Error('Invalid content item data received')
+        throw new Error('Invalid content draft data received')
       }
       
       setContentItem(data)
       setContent(data.body || '')
     } catch (error) {
-      console.error('Error fetching content item:', error)
-      setError(error instanceof Error ? error.message : 'Error loading content item')
+      console.error('Error fetching content draft:', error)
+      setError(error instanceof Error ? error.message : 'Error loading content draft')
     } finally {
       setLoading(false)
     }
@@ -189,7 +189,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
       setGeneratedContent(data)
       setContent(data.postText || '')
       // Auto-save generated content
-      await fetch(`/api/content-items/${params.id}`, {
+      await fetch(`/api/drafts/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -215,7 +215,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
     if (!contentItem) return;
     setSavingDraft(true);
     try {
-      const response = await fetch(`/api/content-items/${params.id}`, {
+      const response = await fetch(`/api/drafts/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -239,8 +239,8 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         router.push('/content-review');
       }
     } catch (error) {
-      console.error('Error saving content item:', error);
-      setError(error instanceof Error ? error.message : 'Failed to save content item');
+      console.error('Error saving content draft:', error);
+      setError(error instanceof Error ? error.message : 'Failed to save content draft');
     } finally {
       setSavingDraft(false);
     }
