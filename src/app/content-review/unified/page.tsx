@@ -76,6 +76,7 @@ export default function UnifiedContentReviewPage() {
   const fetchContentItems = async () => {
     try {
       setLoading(true)
+      setError('')
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
         ...filters
@@ -85,10 +86,12 @@ export default function UnifiedContentReviewPage() {
       if (!response.ok) throw new Error('Failed to fetch content items')
       
       const data = await response.json()
-      setContentItems(data.items)
-      setTotalPages(data.totalPages)
+      setContentItems(data.items || [])
+      setTotalPages(data.totalPages || 1)
     } catch (error) {
       setError('Failed to load content items')
+      setContentItems([])
+      setTotalPages(1)
       console.error('Error:', error)
     } finally {
       setLoading(false)
@@ -177,7 +180,7 @@ export default function UnifiedContentReviewPage() {
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="info" size="lg">
-                {contentItems.length} items
+                {contentItems?.length || 0} items
               </Badge>
             </div>
           </div>
@@ -258,7 +261,7 @@ export default function UnifiedContentReviewPage() {
               <p className="text-red-800">{error}</p>
             </div>
           </div>
-        ) : contentItems.length === 0 ? (
+        ) : !contentItems || contentItems.length === 0 ? (
           <div className="text-center py-12">
             <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No content items</h3>
@@ -268,7 +271,7 @@ export default function UnifiedContentReviewPage() {
           </div>
         ) : (
           <div className="grid gap-6">
-            {contentItems.map((contentItem) => {
+            {contentItems?.map((contentItem) => {
               const ContentTypeIcon = getContentTypeIcon(contentItem.contentType)
               
               return (
@@ -374,7 +377,7 @@ export default function UnifiedContentReviewPage() {
         )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
+        {totalPages && totalPages > 1 && (
           <div className="mt-8 flex justify-center">
             <nav className="flex items-center space-x-2">
               <Button
