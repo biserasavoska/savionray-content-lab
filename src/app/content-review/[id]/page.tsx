@@ -74,6 +74,71 @@ type ContentItemWithDetails = {
       email: string | null
     }
   }>
+  idea?: {
+    id: string
+    title: string
+    description: string
+    body: string
+    contentType: string
+    status: string
+    currentStage: string
+    createdAt: string
+    updatedAt: string
+    createdBy: {
+      id: string
+      name: string | null
+      email: string | null
+      role: string
+    }
+    assignedTo?: {
+      id: string
+      name: string | null
+      email: string | null
+    } | null
+    metadata: any
+    feedbacks?: Array<{
+      id: string
+      comment: string
+      createdAt: string
+      createdBy: {
+        id: string
+        name: string | null
+        email: string | null
+        role: string
+      }
+    }>
+    comments?: Array<{
+      id: string
+      comment: string
+      createdAt: string
+      createdBy: {
+        id: string
+        name: string | null
+        email: string | null
+        role: string
+      }
+    }>
+    media?: Array<{
+      id: string
+      url: string
+      filename: string
+      contentType: string
+      size: number
+    }>
+    stageHistory?: Array<{
+      id: string
+      fromStage: string
+      toStage: string
+      transitionedAt: string
+      transitionedBy: string
+      notes: string | null
+      user: {
+        id: string
+        name: string | null
+        email: string | null
+      }
+    }>
+  }
 }
 
 interface GeneratedContent {
@@ -152,8 +217,8 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
     setError('')
     try {
       console.log('Generating content for:', {
-        title: contentItem.title,
-        description: contentItem.description,
+        title: contentItem.idea?.title || 'Untitled',
+        description: contentItem.idea?.description || 'No description',
         model: selectedModel.id,
         additionalContext
       });
@@ -162,8 +227,8 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: contentItem.title,
-          description: contentItem.description,
+          title: contentItem.idea?.title || 'Untitled',
+          description: contentItem.idea?.description || 'No description',
           format: 'social',
           model: selectedModel.id,
           additionalContext,
