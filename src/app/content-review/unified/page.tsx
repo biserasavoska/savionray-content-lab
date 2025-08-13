@@ -9,6 +9,8 @@ import { useInterface } from '@/hooks/useInterface'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/layout/Card'
+import { GPT5EnhancedApprovalWorkflow } from '@/components/content/GPT5EnhancedApprovalWorkflow'
+import ContentApprovalWorkflow from '@/components/content/ContentApprovalWorkflow'
 
 interface ContentItem {
   id: string
