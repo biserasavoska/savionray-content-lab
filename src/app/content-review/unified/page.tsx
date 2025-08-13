@@ -3,30 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { 
-  SparklesIcon, 
-  LightBulbIcon, 
-  ChartBarIcon, 
-  CheckCircleIcon, 
-  XCircleIcon,
-  ClockIcon,
-  UserIcon,
-  DocumentTextIcon
-} from '@heroicons/react/24/outline'
+import { DocumentTextIcon, UserIcon, ClockIcon, SparklesIcon, LightBulbIcon, ChartBarIcon } from '@heroicons/react/24/outline'
 
 import { useInterface } from '@/hooks/useInterface'
-import ContentApprovalWorkflow from '@/components/content/ContentApprovalWorkflow'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/layout/Card'
 
 interface ContentItem {
   id: string
-  title: string
-  description: string
-  contentType: string
   status: string
-  currentStage: string
   createdAt: string
   updatedAt: string
   createdBy: {
@@ -41,6 +27,13 @@ interface ContentItem {
     email: string | null
   }
   metadata: any
+  contentType: string
+  body: string | null
+  idea: {
+    title: string
+    description: string
+    status: string
+  }
 }
 
 interface UnifiedContentReviewProps {
@@ -58,8 +51,6 @@ export default function UnifiedContentReviewPage() {
   const [error, setError] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [selectedContentItem, setSelectedContentItem] = useState<ContentItem | null>(null)
-  const [showApprovalWorkflow, setShowApprovalWorkflow] = useState(false)
   const [filters, setFilters] = useState({
     status: '',
     currentStage: '',
@@ -82,14 +73,14 @@ export default function UnifiedContentReviewPage() {
         ...filters
       })
 
-      const response = await fetch(`/api/content-items?${queryParams}`)
-      if (!response.ok) throw new Error('Failed to fetch content items')
+      const response = await fetch(`/api/drafts?${queryParams}`)
+      if (!response.ok) throw new Error('Failed to fetch content drafts')
       
       const data = await response.json()
-      setContentItems(data.items || [])
-      setTotalPages(data.totalPages || 1)
+      setContentItems(data.drafts || [])
+      setTotalPages(data.pagination?.pages || 1)
     } catch (error) {
-      setError('Failed to load content items')
+      setError('Failed to load content drafts')
       setContentItems([])
       setTotalPages(1)
       console.error('Error:', error)
@@ -99,15 +90,8 @@ export default function UnifiedContentReviewPage() {
   }
 
   const handleContentItemSelect = (contentItem: ContentItem) => {
-    setSelectedContentItem(contentItem)
-    setShowApprovalWorkflow(true)
-  }
-
-  const handleApprovalComplete = (approved: boolean, feedback?: string) => {
-    // Refresh the content items list
-    fetchContentItems()
-    setShowApprovalWorkflow(false)
-    setSelectedContentItem(null)
+    // Navigate to the content review detail page
+    window.location.href = `/content-review/${contentItem.id}`
   }
 
   const handleFilterChange = (key: string, value: string) => {
@@ -175,12 +159,12 @@ export default function UnifiedContentReviewPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Content Review</h1>
               <p className="mt-2 text-gray-600">
-                Unified content management and approval workflow
+                Review and manage content drafts for approved ideas
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <Badge variant="info" size="lg">
-                {contentItems?.length || 0} items
+                {contentItems?.length || 0} drafts
               </Badge>
             </div>
           </div>
@@ -282,12 +266,12 @@ export default function UnifiedContentReviewPage() {
                         <div className="flex items-center space-x-3 mb-3">
                           <ContentTypeIcon className="h-6 w-6 text-blue-500" />
                           <h3 className="text-xl font-semibold text-gray-900">
-                            {contentItem.title}
+                            {contentItem.idea.title}
                           </h3>
                         </div>
                         
                         <p className="text-gray-600 mb-4 text-base leading-relaxed">
-                          {contentItem.description}
+                          {contentItem.idea.description}
                         </p>
                         
                         {/* AI Insights Section */}
@@ -322,8 +306,8 @@ export default function UnifiedContentReviewPage() {
                           <Badge variant={getStatusBadgeVariant(contentItem.status)}>
                             {contentItem.status.replace('_', ' ')}
                           </Badge>
-                          <Badge variant={getStageBadgeVariant(contentItem.currentStage)}>
-                            {contentItem.currentStage.replace('_', ' ')}
+                          <Badge variant={getStageBadgeVariant(contentItem.idea.status)}>
+                            {contentItem.idea.status.replace('_', ' ')}
                           </Badge>
                           <Badge variant="secondary">
                             {contentItem.contentType.replace('_', ' ')}
@@ -405,62 +389,6 @@ export default function UnifiedContentReviewPage() {
           </div>
         )}
       </div>
-
-      {/* GPT-5 Enhanced Approval Workflow Modal */}
-      {showApprovalWorkflow && selectedContentItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Review: {selectedContentItem.title}
-              </h2>
-              <Button
-                onClick={() => setShowApprovalWorkflow(false)}
-                variant="outline"
-                size="sm"
-              >
-                Close
-              </Button>
-            </div>
-            
-            <div className="overflow-auto max-h-[calc(90vh-80px)]">
-              <ContentApprovalWorkflow
-                content={{
-                  id: selectedContentItem.id,
-                  title: selectedContentItem.title,
-                  description: selectedContentItem.description,
-                  contentType: selectedContentItem.contentType,
-                  status: selectedContentItem.status as any,
-                  priority: 'MEDIUM',
-                  createdBy: {
-                    id: selectedContentItem.createdBy.id,
-                    name: selectedContentItem.createdBy.name || 'Unknown',
-                    email: selectedContentItem.createdBy.email || 'unknown@example.com',
-                    role: selectedContentItem.createdBy.role
-                  },
-                  assignedReviewer: selectedContentItem.assignedTo ? {
-                    id: selectedContentItem.assignedTo.id,
-                    name: selectedContentItem.assignedTo.name || 'Unknown',
-                    email: selectedContentItem.assignedTo.email || 'unknown@example.com'
-                  } : undefined,
-                  createdAt: new Date(selectedContentItem.createdAt),
-                  updatedAt: new Date(selectedContentItem.updatedAt),
-                  approvalHistory: [],
-                  metadata: {
-                    targetAudience: selectedContentItem.metadata?.targetAudience,
-                    keywords: selectedContentItem.metadata?.keywords,
-                    seoDescription: selectedContentItem.metadata?.seoDescription
-                  }
-                }}
-                onApprove={(approvalData) => handleApprovalComplete(true, approvalData.notes)}
-                onReject={(rejectionData) => handleApprovalComplete(false, rejectionData.feedback)}
-                onAssignReviewer={(reviewerId) => console.log('Reviewer assigned:', reviewerId)}
-                onUpdatePriority={(priority) => console.log('Priority updated:', priority)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
