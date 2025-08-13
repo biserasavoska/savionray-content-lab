@@ -18,8 +18,9 @@ export function formatDate(date: Date | string): string {
  */
 export function formatDateTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  return dateObj.toLocaleDateString('en-GB', {
+
+  // Use toLocaleString to include both date and time components
+  return dateObj.toLocaleString('en-GB', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
