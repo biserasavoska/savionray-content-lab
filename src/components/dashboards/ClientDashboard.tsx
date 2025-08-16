@@ -289,16 +289,7 @@ export default function ClientDashboard() {
               </div>
             )}
           </div>
-          <div className="flex items-center space-x-3">
-            <Button variant="primary" size="sm">
-              <EyeIcon className="h-4 w-4 mr-2" />
-              Review All Content
-            </Button>
-            <Button variant="secondary" size="sm">
-              <ChartBarIcon className="h-4 w-4 mr-2" />
-              View Analytics
-            </Button>
-          </div>
+
         </div>
       </div>
 
@@ -383,6 +374,41 @@ export default function ClientDashboard() {
               <p className="text-2xl font-bold text-gray-900">{stats.thisWeekDeadlines}</p>
               <p className="text-xs text-indigo-600 mt-1">Deadlines</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Quick Actions */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+        </div>
+        <div className="px-6 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link href="/ideas">
+              <Button variant="success" className="w-full justify-center">
+              <CheckCircleIcon className="h-5 w-5 mr-2" />
+              Approve Ideas
+              </Button>
+            </Link>
+            <Link href="/ready-content">
+              <Button variant="primary" className="w-full justify-center">
+              <EyeIcon className="h-5 w-5 mr-2" />
+              Review Content
+              </Button>
+            </Link>
+            <Link href="/feedback-management">
+              <Button variant="secondary" className="w-full justify-center">
+              <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
+              Provide Feedback
+              </Button>
+            </Link>
+            <Link href="/approved">
+              <Button variant="outline" className="w-full justify-center">
+                <DocumentTextIcon className="h-5 w-5 mr-2" />
+                View Approved
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

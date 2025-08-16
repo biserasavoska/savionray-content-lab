@@ -55,6 +55,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
   const navigationItems: NavigationItem[] = [
     // Common items
     { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
+    { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     
     // Content Management (Unified System)
     { name: 'Content Management', href: '/content-review/unified', icon: SparklesIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },

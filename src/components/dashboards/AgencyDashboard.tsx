@@ -228,15 +228,24 @@ export default function AgencyDashboard() {
           <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={() => window.location.href = '/ideas/new'}
+            className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+          >
             <LightBulbIcon className="h-5 w-5 mr-2" />
             Create New Idea
           </button>
-          <button className="flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+          <button 
+            onClick={() => window.location.href = '/ready-content'}
+            className="flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          >
             <DocumentTextIcon className="h-5 w-5 mr-2" />
             Review Content
           </button>
-          <button className="flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+          <button 
+            onClick={() => window.location.href = '/admin/organizations'}
+            className="flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          >
             <UsersIcon className="h-5 w-5 mr-2" />
             Manage Clients
           </button>

@@ -248,13 +248,13 @@ export function GPT5EnhancedApprovalWorkflow({ contentItem }: { contentItem?: Co
               <span className="font-medium">Content Type:</span> {currentItem.contentType}
             </div>
             <div>
-              <span className="font-medium">Created:</span> {new Date(currentItem.createdAt).toLocaleDateString()}
+              <span className="font-medium">Created:</span> {new Date(currentItem.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' })}
             </div>
             <div>
               <span className="font-medium">Created By:</span> {currentItem.createdBy}
             </div>
             <div>
-              <span className="font-medium">Deadline:</span> {new Date(currentItem.deadline).toLocaleDateString()}
+              <span className="font-medium">Deadline:</span> {new Date(currentItem.deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' })}
             </div>
           </div>
           {currentItem.isAIGenerated && (
