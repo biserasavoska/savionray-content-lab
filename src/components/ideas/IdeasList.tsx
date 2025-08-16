@@ -200,15 +200,6 @@ export default function IdeasList() {
                       Edit
                     </Button>
                   </Link>
-                  
-                  {idea.status === 'APPROVED' && (
-                    <Link href={`/ideas/${idea.id}/drafts/new`} className="flex-1">
-                      <Button className="w-full">
-                        <PlusIcon className="h-4 w-4 mr-2" />
-                        Create Draft
-                      </Button>
-                    </Link>
-                  )}
                 </div>
               </CardContent>
             </Card>
