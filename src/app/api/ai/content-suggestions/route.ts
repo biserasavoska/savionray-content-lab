@@ -31,40 +31,51 @@ export async function POST(req: NextRequest) {
     // Generate AI suggestions based on content type
     const suggestions: ContentSuggestion[] = []
 
-    // Title suggestions
-    if (content.length > 10) {
-      try {
-        const titleResponse = await generateSocialContent({
-          title: 'Generate engaging titles',
-          description: `Based on this content: "${content.substring(0, 200)}...", generate 3 engaging titles for ${contentType} content targeting ${targetAudience} with a ${brandVoice} tone.`,
-          format: 'title-suggestions',
-          model: 'gpt-5-mini'
-        })
-
-        const titles = titleResponse.postText.split('\n').filter(t => t.trim()).slice(0, 3)
-        titles.forEach((title, index) => {
-          suggestions.push({
-            id: `title-${index}`,
-            type: 'title',
-            content: title.replace(/^\d+\.\s*/, '').trim(),
-            confidence: 0.85 - (index * 0.1),
-            reasoning: 'AI-generated title based on content analysis and target audience'
+    // Title and hashtag suggestions
+    const [titleResponse, hashtagResponse] = await Promise.all([
+      (async () => {
+        if (content.length <= 10) return null
+        try {
+          return await generateSocialContent({
+            title: 'Generate engaging titles',
+            description: `Based on this content: "${content.substring(0, 200)}...", generate 3 engaging titles for ${contentType} content targeting ${targetAudience} with a ${brandVoice} tone.`,
+            format: 'title-suggestions',
+            model: 'gpt-5-mini'
           })
+        } catch (error) {
+          console.error('Error generating title suggestions:', error)
+          return null
+        }
+      })(),
+      (async () => {
+        try {
+          return await generateSocialContent({
+            title: 'Generate relevant hashtags',
+            description: `Generate 5-8 relevant hashtags for this ${contentType} content: "${content.substring(0, 300)}...". Target audience: ${targetAudience}.`,
+            format: 'hashtag-suggestions',
+            model: 'gpt-5-mini'
+          })
+        } catch (error) {
+          console.error('Error generating hashtag suggestions:', error)
+          return null
+        }
+      })()
+    ])
+
+    if (titleResponse) {
+      const titles = titleResponse.postText.split('\\n').filter(t => t.trim()).slice(0, 3)
+      titles.forEach((title, index) => {
+        suggestions.push({
+          id: `title-${index}`,
+          type: 'title',
+          content: title.replace(/^\\d+\\.\\s*/, '').trim(),
+          confidence: 0.85 - (index * 0.1),
+          reasoning: 'AI-generated title based on content analysis and target audience'
         })
-      } catch (error) {
-        console.error('Error generating title suggestions:', error)
-      }
+      })
     }
 
-    // Hashtag suggestions
-    try {
-      const hashtagResponse = await generateSocialContent({
-        title: 'Generate relevant hashtags',
-        description: `Generate 5-8 relevant hashtags for this ${contentType} content: "${content.substring(0, 300)}...". Target audience: ${targetAudience}.`,
-        format: 'hashtag-suggestions',
-        model: 'gpt-5-mini'
-      })
-
+    if (hashtagResponse) {
       const hashtags = hashtagResponse.hashtags.slice(0, 8)
       hashtags.forEach((hashtag, index) => {
         suggestions.push({
@@ -72,11 +83,9 @@ export async function POST(req: NextRequest) {
           type: 'hashtag',
           content: `#${hashtag}`,
           confidence: 0.9 - (index * 0.05),
-          reasoning: 'AI-generated hashtag based on content relevance and trending topics'
+          reasoning: 'AI-generated hashtag based on content relevance and trending topics',
         })
       })
-    } catch (error) {
-      console.error('Error generating hashtag suggestions:', error)
     }
 
     // Tone suggestions
