@@ -45,22 +45,22 @@ export async function GET(request: NextRequest) {
     // Fetch feedbacks for all organizations the user has access to
     const feedbacks = await prisma.feedback.findMany({
       where: {
-        contentDraft: {
+        ContentDraft: {
           organizationId: {
             in: organizationIds
           }
         }
       },
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,
           },
         },
-        contentDraft: {
+        ContentDraft: {
           include: {
-            idea: {
+            Idea: {
               select: {
                 id: true,
                 title: true,
@@ -79,10 +79,10 @@ export async function GET(request: NextRequest) {
       id: feedback.id,
       comment: feedback.comment,
       createdAt: feedback.createdAt.toISOString(),
-      createdBy: feedback.createdBy,
+      createdBy: feedback.User,
       targetType: 'content' as const,
-      targetTitle: feedback.contentDraft?.idea?.title || 'Unknown Content',
-      targetId: feedback.contentDraft?.idea?.id || '',
+      targetTitle: feedback.ContentDraft?.Idea?.title || 'Unknown Content',
+      targetId: feedback.ContentDraft?.Idea?.id || '',
     }))
 
     // Calculate stats

@@ -22,7 +22,7 @@ export async function POST(
     const draft = await prisma.contentDraft.findUnique({
       where: { id: params.id },
       include: {
-        idea: true,
+        Idea: true,
       },
     })
 
@@ -42,13 +42,13 @@ export async function POST(
         status: 'DRAFT',
       },
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,
           },
         },
-        idea: {
+        Idea: {
           select: {
             title: true,
           },

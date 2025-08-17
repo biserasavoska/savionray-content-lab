@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const orgContext = await requireOrganizationContext(undefined, request)
+    const orgContext = await requireOrganizationContext(undefined, req)
 
     // Try to find the content item
     const contentItem = await prisma.contentItem.findUnique({
@@ -41,7 +41,7 @@ export async function GET(
         },
         feedbacks: {
           include: {
-            User: {
+            createdBy: {
               select: {
                 id: true,
                 name: true,
@@ -54,7 +54,7 @@ export async function GET(
             createdAt: 'desc',
           },
         },
-        deliveryItem: {
+        ContentDeliveryItem: {
           select: {
             id: true,
             contentType: true,
@@ -130,7 +130,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const orgContext = await requireOrganizationContext(undefined, request)
+    const orgContext = await requireOrganizationContext(undefined, req)
     const body = await req.json()
 
     // Check if content item exists and user has permission
@@ -165,7 +165,7 @@ export async function PUT(
         assignedToId: body.assignedToId,
       },
       include: {
-        createdBy: {
+        User_ContentItem_createdByIdToUser: {
           select: {
             id: true,
             name: true,
@@ -173,7 +173,7 @@ export async function PUT(
             role: true,
           },
         },
-        assignedTo: {
+        User_ContentItem_assignedToIdToUser: {
           select: {
             id: true,
             name: true,

@@ -32,7 +32,7 @@ export async function POST(
     const draft = await prisma.contentDraft.findUnique({
       where: { id: params.id },
       include: {
-        idea: true,
+        Idea: true,
       },
     })
 
@@ -53,7 +53,7 @@ export async function POST(
       where: { id: params.id },
       data: {
         status: DraftStatus.AWAITING_REVISION,
-        feedbacks: {
+        Feedback: {
           create: {
             comment: feedback,
             createdById: session.user.id,
@@ -61,9 +61,9 @@ export async function POST(
         },
       },
       include: {
-        feedbacks: {
+        Feedback: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 name: true,
                 email: true,

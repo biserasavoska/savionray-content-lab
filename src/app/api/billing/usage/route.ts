@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       // AI generations (this would need to be tracked separately in a real app)
       prisma.contentDraft.count({
         where: {
-          idea: {
+          Idea: {
             organizationId: organization.id
           },
           createdAt: { gte: start, lte: end },
@@ -191,7 +191,7 @@ async function getHistoricalUsageData(organizationId: string, start: Date, end: 
     // Get AI generations for this day
     const aiGenerations = await prisma.contentDraft.count({
       where: {
-        idea: {
+        Idea: {
           organizationId
         },
         createdAt: { gte: date, lt: nextDate },

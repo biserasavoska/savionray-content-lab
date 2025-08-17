@@ -254,7 +254,7 @@ Stay tuned for more details and exclusive launch offers!`,
             dueDate: new Date('2024-07-15'),
             priority: 1,
             notes: 'Monthly blog posts for July',
-            ideas: {
+            Idea: {
               create: [
                 {
                   title: 'Summer Marketing Trends',
@@ -273,7 +273,7 @@ Stay tuned for more details and exclusive launch offers!`,
             dueDate: new Date('2024-07-10'),
             priority: 2,
             notes: 'Social media content for July',
-            ideas: {
+            Idea: {
               create: [
                 {
                   title: 'Instagram Summer Campaign',
@@ -292,7 +292,7 @@ Stay tuned for more details and exclusive launch offers!`,
             dueDate: new Date('2024-07-20'),
             priority: 3,
             notes: 'Bi-weekly newsletters for July',
-            ideas: {
+            Idea: {
               create: [
                 {
                   title: 'July Newsletter: Summer Edition',

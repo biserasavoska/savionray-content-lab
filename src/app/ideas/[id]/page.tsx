@@ -16,7 +16,7 @@ interface Idea {
   publishingDateTime: string | null
   createdAt: string
   updatedAt: string
-  createdBy: {
+  User: {
     id: string
     name: string
     email: string

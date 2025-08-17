@@ -40,9 +40,9 @@ export async function PATCH(
       include: {
         items: {
           include: {
-            ideas: {
+            Idea: {
               include: {
-                contentDrafts: {
+                ContentDraft: {
                   orderBy: {
                     createdAt: 'desc',
                   },

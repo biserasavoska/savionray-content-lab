@@ -22,7 +22,7 @@ export async function POST(
     const draft = await prisma.contentDraft.findUnique({
       where: { id: params.id },
       include: {
-        idea: true,
+        Idea: true,
       },
     })
 

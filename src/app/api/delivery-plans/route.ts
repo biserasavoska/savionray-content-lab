@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/lib/auth'
@@ -26,7 +26,7 @@ interface CreateDeliveryPlanData {
   items: DeliveryItem[]
 }
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -34,9 +34,9 @@ export async function POST(request: Request) {
 
   try {
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext(undefined, request);
+    const orgContext = await requireOrganizationContext(undefined, req);
 
-    const data = (await request.json()) as CreateDeliveryPlanData
+    const data = (await req.json()) as CreateDeliveryPlanData
 
     // Convert targetMonth string (YYYY-MM) to a Date object
     const targetMonthDate = new Date(data.targetMonth + '-01')
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 }
 
 // Add GET endpoint to fetch plans with filtering by month
-export async function GET(request: Request) {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -97,9 +97,9 @@ export async function GET(request: Request) {
 
   try {
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext(undefined, request);
+    const orgContext = await requireOrganizationContext(undefined, req);
 
-    const url = new URL(request.url)
+    const url = new URL(req.url)
     const month = url.searchParams.get('month') // Format: YYYY-MM
     const showArchived = url.searchParams.get('showArchived') === 'true'
 
@@ -137,9 +137,9 @@ export async function GET(request: Request) {
       include: {
         items: {
           include: {
-            ideas: {
+            Idea: {
               include: {
-                contentDrafts: {
+                ContentDraft: {
                   orderBy: {
                     createdAt: 'desc',
                   },

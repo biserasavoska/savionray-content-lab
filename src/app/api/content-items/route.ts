@@ -62,21 +62,21 @@ export async function POST(req: NextRequest) {
         organizationId: orgContext.organizationId, // Use the resolved organization ID
       },
       include: {
-        createdBy: {
+        User_ContentItem_createdByIdToUser: {
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-        assignedTo: {
+        User_ContentItem_assignedToIdToUser: {
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-        organization: {
+        Organization: {
           select: {
             id: true,
             name: true,
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       contentItemId: contentItem.id,
       title: contentItem.title,
       organizationId: contentItem.organizationId,
-      organizationName: contentItem.organization.name,
+      organizationName: contentItem.Organization.name,
       createdBy: session.user.id,
       manualOverride: !!manualOrganizationId
     })
@@ -143,21 +143,21 @@ export async function GET(req: NextRequest) {
       prisma.contentItem.findMany({
         where,
         include: {
-          createdBy: {
+          User_ContentItem_createdByIdToUser: {
             select: {
               id: true,
               name: true,
               email: true,
             },
           },
-          assignedTo: {
+          User_ContentItem_assignedToIdToUser: {
             select: {
               id: true,
               name: true,
               email: true,
             },
           },
-          organization: {
+          Organization: {
             select: {
               id: true,
               name: true,

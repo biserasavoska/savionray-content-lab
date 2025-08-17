@@ -46,7 +46,7 @@ export async function GET(
         organizationId: organizationId
       },
       include: {
-        user: {
+        User_OrganizationUser_userIdToUser: {
           select: {
             id: true,
             name: true,
@@ -63,10 +63,10 @@ export async function GET(
 
     // Transform data for frontend
     const users = organizationUsers.map((orgUser: any) => ({
-      id: orgUser.user.id,
-      name: orgUser.user.name || 'Unknown',
-      email: orgUser.user.email || '',
-      role: orgUser.user.role,
+      id: orgUser.User_OrganizationUser_userIdToUser.id,
+      name: orgUser.User_OrganizationUser_userIdToUser.name || 'Unknown',
+      email: orgUser.User_OrganizationUser_userIdToUser.email || '',
+      role: orgUser.User_OrganizationUser_userIdToUser.role,
       organizationRole: orgUser.role,
       joinedAt: orgUser.joinedAt?.toISOString() || new Date().toISOString(),
       isActive: orgUser.isActive,

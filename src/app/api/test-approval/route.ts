@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const idea = await prisma.idea.findUnique({
       where: { id: ideaId },
       include: {
-        createdBy: true,
+        User: true,
       },
     })
 

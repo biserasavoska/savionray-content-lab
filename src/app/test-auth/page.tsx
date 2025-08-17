@@ -19,7 +19,7 @@ export default async function TestAuthPage() {
   const drafts = await prisma.contentDraft.findMany({
     where: {
       createdById: session.user.id,
-      idea: {
+      Idea: {
         status: 'APPROVED'
       },
       status: {
@@ -27,7 +27,7 @@ export default async function TestAuthPage() {
       }
     },
     include: {
-      idea: {
+      Idea: {
         select: {
           title: true,
           status: true
@@ -60,7 +60,7 @@ export default async function TestAuthPage() {
             <ul className="list-disc list-inside">
               {drafts.map((draft) => (
                 <li key={draft.id}>
-                  {draft.idea.title} - {draft.status}
+                  {draft.Idea.title} - {draft.status}
                 </li>
               ))}
             </ul>

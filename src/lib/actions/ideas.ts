@@ -44,13 +44,13 @@ export async function getIdeas(filters: IdeaFilters = {}) {
     prisma.idea.findMany({
       where,
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,
           },
         },
-        contentDrafts: {
+        ContentDraft: {
           select: {
             id: true,
             status: true,
@@ -92,7 +92,7 @@ export async function createIdea(data: {
       organizationId: orgContext.organizationId, // Add organization isolation
     },
     include: {
-      createdBy: {
+      User: {
         select: {
           name: true,
           email: true,
@@ -131,7 +131,7 @@ export async function updateIdea(
     where: { id },
     data,
     include: {
-      createdBy: {
+      User: {
         select: {
           name: true,
           email: true,
@@ -168,7 +168,7 @@ export async function updateIdeaStatus(
     where: { id },
     data: { status },
     include: {
-      createdBy: {
+      User: {
         select: {
           name: true,
           email: true,

@@ -89,7 +89,7 @@ export async function PATCH(
         where: { id: params.id },
         data: { status },
         include: {
-          createdBy: {
+          User: {
             select: {
               id: true,
               name: true,
@@ -160,7 +160,7 @@ export async function PATCH(
           savedForLater: savedForLater || false,
         },
         include: {
-          createdBy: {
+          User: {
             select: {
               id: true,
               name: true,

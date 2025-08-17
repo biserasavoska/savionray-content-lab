@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const draft = await prisma.contentDraft.findUnique({
       where: { id: contentDraftId },
       include: {
-        idea: true,
+        Idea: true,
       },
     })
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
         createdById: session.user.id,
       },
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
         contentDraftId: draftId,
       },
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,

@@ -28,18 +28,18 @@ export interface UpdateContentItemData {
 }
 
 export interface ContentItemWithDetails extends ContentItem {
-  createdBy: {
+  User_ContentItem_createdByIdToUser: {
     id: string
     name: string | null
     email: string | null
     role: string
   }
-  assignedTo: {
+  User_ContentItem_assignedToIdToUser: {
     id: string
     name: string | null
     email: string | null
   } | null
-  organization: {
+  Organization: {
     id: string
     name: string
   }
@@ -47,7 +47,7 @@ export interface ContentItemWithDetails extends ContentItem {
     id: string
     comment: string
     createdAt: Date
-    createdBy: {
+    User: {
       id: string
       name: string | null
       email: string | null
@@ -57,7 +57,7 @@ export interface ContentItemWithDetails extends ContentItem {
     id: string
     comment: string
     createdAt: Date
-    createdBy: {
+    User: {
       id: string
       name: string | null
       email: string | null
@@ -122,12 +122,9 @@ export class ContentItemService {
    */
   static async getById(id: string, organizationId: string): Promise<ContentItemWithDetails | null> {
     return prisma.contentItem.findFirst({
-      where: {
-        id,
-        organizationId
-      },
+      where: { id, organizationId },
       include: {
-        createdBy: {
+        User_ContentItem_createdByIdToUser: {
           select: {
             id: true,
             name: true,
@@ -135,22 +132,25 @@ export class ContentItemService {
             role: true
           }
         },
-        assignedTo: {
+        User_ContentItem_assignedToIdToUser: {
           select: {
             id: true,
             name: true,
             email: true
           }
         },
-        organization: {
+        Organization: {
           select: {
             id: true,
             name: true
           }
         },
         comments: {
-          include: {
-            createdBy: {
+          select: {
+            id: true,
+            comment: true,
+            createdAt: true,
+            User: {
               select: {
                 id: true,
                 name: true,
@@ -163,8 +163,11 @@ export class ContentItemService {
           }
         },
         feedbacks: {
-          include: {
-            createdBy: {
+          select: {
+            id: true,
+            comment: true,
+            createdAt: true,
+            User: {
               select: {
                 id: true,
                 name: true,
@@ -177,11 +180,23 @@ export class ContentItemService {
           }
         },
         media: {
-          orderBy: {
-            createdAt: 'desc'
+          select: {
+            id: true,
+            url: true,
+            filename: true,
+            contentType: true,
+            size: true
           }
         },
         stageHistory: {
+          select: {
+            id: true,
+            fromStage: true,
+            toStage: true,
+            transitionedAt: true,
+            transitionedBy: true,
+            notes: true
+          },
           orderBy: {
             transitionedAt: 'desc'
           }
@@ -190,7 +205,7 @@ export class ContentItemService {
     })
   }
 
-  /**
+    /**
    * Get content items by organization with filtering
    */
   static async getByOrganization(
@@ -219,7 +234,7 @@ export class ContentItemService {
       prisma.contentItem.findMany({
         where,
         include: {
-          createdBy: {
+          User_ContentItem_createdByIdToUser: {
             select: {
               id: true,
               name: true,
@@ -227,14 +242,14 @@ export class ContentItemService {
               role: true
             }
           },
-          assignedTo: {
+          User_ContentItem_assignedToIdToUser: {
             select: {
               id: true,
               name: true,
               email: true
             }
           },
-          organization: {
+          Organization: {
             select: {
               id: true,
               name: true
@@ -242,7 +257,7 @@ export class ContentItemService {
           },
           comments: {
             include: {
-              createdBy: {
+              User: {
                 select: {
                   id: true,
                   name: true,
@@ -256,7 +271,7 @@ export class ContentItemService {
           },
           feedbacks: {
             include: {
-              createdBy: {
+              User: {
                 select: {
                   id: true,
                   name: true,

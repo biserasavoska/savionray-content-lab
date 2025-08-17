@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Temporarily comment out admin check to debug
-  // if (!isAdmin(session)) {
-  //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  // }
+  // Re-enable admin check for security
+  if (!isAdmin(session)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   try {
     const orgContext = await requireOrganizationContext(undefined, request)
@@ -23,65 +23,60 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Organization context required' }, { status: 400 })
     }
 
-    // For now, just return an empty list to test if the endpoint works
-    // We'll implement the actual invitation logic once we confirm the endpoint is working
-    return NextResponse.json({ invitations: [] })
-    
-    // TODO: Implement actual invitation fetching logic
-    // const { searchParams } = new URL(request.url)
-    // const status = searchParams.get('status')
-    // 
-    // // Get organization users that are invitations (have invitedAt but no joinedAt)
-    // const invitations = await prisma.organizationUser.findMany({
-    //   where: {
-    //     organizationId: orgContext.organizationId,
-    //     invitedAt: { not: null },
-    //     joinedAt: null, // This indicates it's still an invitation
-    //     ...(status === 'PENDING' && { isActive: true }),
-    //     ...(status === 'EXPIRED' && { 
-    //       invitedAt: { 
-    //         lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 7 days ago
-    //           }
-    //     })
-    //   },
-    //   include: {
-    //     User_OrganizationUser_userIdToUser: {
-    //       select: {
-    //         id: true,
-    //         name: true,
-    //         email: true,
-    //         role: true,
-    //         image: true
-    //       }
-    //     },
-    //     User_OrganizationUser_invitedByToUser: {
-    //       select: {
-    //         name: true,
-    //         email: true
-    //       }
-    //     }
-    //   },
-    //   orderBy: {
-    //     invitedAt: 'desc'
-    //   }
-    // })
-    // 
-    // // Transform the data to match the expected format
-    // const transformedInvitations = invitations.map(inv => ({
-    //   id: inv.id,
-    //   email: inv.User_OrganizationUser_userIdToUser?.email || 'Unknown',
-    //   role: inv.role,
-    //   status: inv.isActive ? 'PENDING' : 'EXPIRED',
-    //   invitedAt: inv.invitedAt,
-    //   invitedBy: inv.User_OrganizationUser_invitedByToUser?.name || 'Unknown',
-    //   expiresAt: inv.invitedAt ? new Date(inv.invitedAt.getTime() + 7 * 24 * 60 * 60 * 1000) : null
-    // }))
-    // 
-    // return NextResponse.json({ invitations: transformedInvitations })
+    // Get the status filter from query params
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+
+    // Build the where clause
+    const where: any = {
+      organizationId: orgContext.organizationId,
+    }
+
+    // Filter by status if provided
+    if (status === 'PENDING') {
+      where.isActive = true
+      where.joinedAt = null
+      where.invitedAt = { not: null }
+    } else if (status === 'ACTIVE') {
+      where.isActive = true
+      where.joinedAt = { not: null }
+    } else if (status === 'INACTIVE') {
+      where.isActive = false
+    }
+
+    // Fetch organization users that match the criteria
+    const invitations = await prisma.organizationUser.findMany({
+      where,
+      include: {
+        User_OrganizationUser_userIdToUser: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { invitedAt: 'desc' },
+    })
+
+    // Transform the data to match what the frontend expects
+    const transformedInvitations = invitations.map((invitation: any) => ({
+      id: invitation.id,
+      email: invitation.User_OrganizationUser_userIdToUser.email,
+      name: invitation.User_OrganizationUser_userIdToUser.name,
+      role: invitation.role,
+      status: invitation.joinedAt ? 'ACTIVE' : 'PENDING',
+      invitedAt: invitation.invitedAt,
+      joinedAt: invitation.joinedAt,
+      isActive: invitation.isActive,
+    }))
+
+    return NextResponse.json({ invitations: transformedInvitations })
   } catch (error) {
-    console.error('Failed to fetch invitations:', error)
+    console.error('Error fetching invitations:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch invitations' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

@@ -83,7 +83,7 @@ export async function GET(
           take: 5,
           orderBy: { createdAt: 'desc' },
           include: {
-            createdBy: {
+            User: {
               select: { name: true }
             }
           }
@@ -93,7 +93,7 @@ export async function GET(
           take: 5,
           orderBy: { createdAt: 'desc' },
           include: {
-            createdBy: {
+            User: {
               select: { name: true }
             }
           }
@@ -106,7 +106,7 @@ export async function GET(
           take: 5,
           orderBy: { createdAt: 'desc' },
           include: {
-            createdBy: {
+            User_ContentItem_createdByIdToUser: {
               select: { name: true }
             }
           }
@@ -130,21 +130,21 @@ export async function GET(
           type: 'idea' as const,
           title: idea.title,
           createdAt: idea.createdAt.toISOString(),
-          createdBy: idea.createdBy.name || 'Unknown'
+          createdBy: idea.User.name || 'Unknown'
         })),
         ...recentDrafts.map(draft => ({
           id: draft.id,
           type: 'draft' as const,
           title: `Draft for ${draft.contentType}`,
           createdAt: draft.createdAt.toISOString(),
-          createdBy: draft.createdBy.name || 'Unknown'
+          createdBy: draft.User.name || 'Unknown'
         })),
         ...recentPublished.map(item => ({
           id: item.id,
           type: 'published' as const,
           title: item.title || 'Untitled Content',
           createdAt: item.createdAt.toISOString(),
-          createdBy: item.createdBy.name || 'Unknown'
+          createdBy: item.User_ContentItem_createdByIdToUser.name || 'Unknown'
         })),
         ...recentPlans.map(plan => ({
           id: plan.id,

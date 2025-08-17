@@ -48,7 +48,7 @@ export async function PUT(
         userId: userId
       },
       include: {
-        user: {
+        User_OrganizationUser_userIdToUser: {
           select: {
             name: true,
             email: true
@@ -73,7 +73,7 @@ export async function PUT(
         isActive: true
       },
       include: {
-        user: {
+        User_OrganizationUser_userIdToUser: {
           select: {
             name: true,
             email: true
@@ -87,16 +87,16 @@ export async function PUT(
       adminEmail: session.user.email,
       organizationId,
       userId,
-      userName: updatedUser.user.name,
-      userEmail: updatedUser.user.email
+      userName: updatedUser.User_OrganizationUser_userIdToUser.name,
+      userEmail: updatedUser.User_OrganizationUser_userIdToUser.email
     })
 
     return NextResponse.json({
       message: 'User activated successfully',
       user: {
         id: userId,
-        name: updatedUser.user.name,
-        email: updatedUser.user.email,
+        name: updatedUser.User_OrganizationUser_userIdToUser.name,
+        email: updatedUser.User_OrganizationUser_userIdToUser.email,
         isActive: true
       }
     })

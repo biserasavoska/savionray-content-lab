@@ -15,18 +15,18 @@ interface OrganizationUser {
   userId: string
   role: string
   isActive: boolean
-  user: User
+  User_OrganizationUser_userIdToUser: User
 }
 
 interface Organization {
   id: string
   name: string
   slug: string
-  users: OrganizationUser[]
+  OrganizationUser: OrganizationUser[]
 }
 
 interface OrganizationWithUsers extends Organization {
-  users: OrganizationUser[]
+  OrganizationUser: OrganizationUser[]
 }
 
 interface UserManagementListProps {
@@ -114,7 +114,7 @@ export default function UserManagementList({ organization }: UserManagementListP
     <div className="p-6">
       <div className="mb-6">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900">Team Members ({organization.users.length})</h3>
+          <h3 className="text-lg font-medium text-gray-900">Team Members ({organization.OrganizationUser.length})</h3>
           <button
             type="button"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -135,28 +135,28 @@ export default function UserManagementList({ organization }: UserManagementListP
         </div>
         
         <div className="divide-y divide-gray-200">
-          {organization.users.map((orgUser) => (
+          {organization.OrganizationUser.map((orgUser) => (
             <div key={orgUser.id} className="px-6 py-4">
               <div className="grid grid-cols-12 gap-4 items-center">
                 {/* User Info */}
                 <div className="col-span-4">
                   <div className="flex items-center space-x-3">
                     <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      {orgUser.user.image ? (
-                        <img
-                          src={orgUser.user.image}
-                          alt={orgUser.user.name || ''}
-                          className="h-10 w-10 rounded-full"
-                        />
-                      ) : (
-                        <span className="text-sm font-medium text-gray-600">
-                          {orgUser.user.name?.[0] || orgUser.user.email?.[0] || '?'}
-                        </span>
-                      )}
+                                          {orgUser.User_OrganizationUser_userIdToUser.image ? (
+                      <img
+                        src={orgUser.User_OrganizationUser_userIdToUser.image}
+                        alt={orgUser.User_OrganizationUser_userIdToUser.name || ''}
+                        className="h-10 w-10 rounded-full"
+                      />
+                    ) : (
+                      <span className="text-sm font-medium text-gray-600">
+                        {orgUser.User_OrganizationUser_userIdToUser.name?.[0] || orgUser.User_OrganizationUser_userIdToUser.email?.[0] || '?'}
+                      </span>
+                    )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{orgUser.user.name}</p>
-                      <p className="text-sm text-gray-500">{orgUser.user.email}</p>
+                      <p className="text-sm font-medium text-gray-900">{orgUser.User_OrganizationUser_userIdToUser.name}</p>
+                      <p className="text-sm text-gray-500">{orgUser.User_OrganizationUser_userIdToUser.email}</p>
                     </div>
                   </div>
                 </div>
@@ -179,8 +179,8 @@ export default function UserManagementList({ organization }: UserManagementListP
 
                 {/* System Role */}
                 <div className="col-span-3">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(orgUser.user.role)}`}>
-                    {orgUser.user.role.toLowerCase()}
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(orgUser.User_OrganizationUser_userIdToUser.role)}`}>
+                    {orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()}
                   </span>
                 </div>
 

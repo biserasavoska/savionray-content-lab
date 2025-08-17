@@ -66,7 +66,7 @@ export async function PUT(
       where: { id: params.id },
       data: updateData,
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,
