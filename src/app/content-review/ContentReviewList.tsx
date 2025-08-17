@@ -19,19 +19,19 @@ interface ContentDraft {
   createdById: string
   body: string | null
   metadata: any
-  contentItemId: string | null
+  ideaId: string
   contentType: string
-  feedbacks?: (Feedback & {
-    createdBy: Pick<User, 'name' | 'email'>
+  Feedback?: (Feedback & {
+    User: Pick<User, 'name' | 'email'>
   })[]
 }
 
-interface ContentItem {
+interface Idea {
   id: string
   title: string
   description: string | null
   status: string
-  createdBy: {
+  User: {
     name: string | null
     email: string
   }
@@ -46,8 +46,8 @@ interface User {
 
 interface ContentReviewListProps {
   drafts: (ContentDraft & {
-    contentItem: ContentItem
-    createdBy: User
+    Idea: Idea
+    User: User
   })[]
   isCreativeUser: boolean
   isClientUser: boolean
@@ -155,14 +155,14 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-3">
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {draft.contentItem?.title || 'Untitled content item'}
+                  {draft.Idea?.title || 'Untitled content item'}
                 </h3>
                 <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${getStatusBadgeClasses(draft.status)}`}>
                   {getStatusLabel(draft.status)}
                 </span>
               </div>
               
-              <p className="text-gray-600 mb-4 text-base leading-relaxed">{draft.contentItem?.description || 'No description available'}</p>
+                              <p className="text-gray-600 mb-4 text-base leading-relaxed">{draft.Idea?.description || 'No description available'}</p>
               
               {/* Enhanced AI Content Insights */}
               <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -195,7 +195,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500 mb-4">
                 <div className="flex items-center space-x-1">
                   <UserIcon className="h-4 w-4" />
-                  <span><span className="font-medium">Created by:</span> {draft.createdBy?.name || draft.createdBy?.email || 'Unknown'}</span>
+                  <span><span className="font-medium">Created by:</span> {draft.User?.name || draft.User?.email || 'Unknown'}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <DocumentTextIcon className="h-4 w-4" />
@@ -258,8 +258,8 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                   status: draft.status,
                   createdAt: draft.createdAt.toISOString(),
                   createdBy: {
-                    name: draft.createdBy.name || '',
-                    email: draft.createdBy.email
+                              name: draft.User.name || '',
+          email: draft.User.email
                   },
                   metadata: draft.metadata
                 }}
@@ -295,12 +295,12 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
               )}
 
               {/* Feedback History */}
-              {draft.feedbacks && draft.feedbacks.length > 0 && (
-                <div>
-                  <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({draft.feedbacks.length})</h5>
-                  <FeedbackList feedbacks={draft.feedbacks} />
-                </div>
-              )}
+                              {draft.Feedback && draft.Feedback.length > 0 && (
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({draft.Feedback.length})</h5>
+                    <FeedbackList feedbacks={draft.Feedback} />
+                  </div>
+                )}
             </div>
           )}
         </div>

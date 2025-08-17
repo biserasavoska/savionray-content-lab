@@ -35,116 +35,31 @@ model Session {
 }
 
 model User {
-  id                   String                @id @default(cuid())
-  name                 String?
-  email                String?               @unique
-  emailVerified        DateTime?
-  image                String?
-  role                 UserRole              @default(CREATIVE)
-  password             String?
-  isSuperAdmin         Boolean               @default(false)
-  accounts             Account[]
-  deliveryPlans        ContentDeliveryPlan[]
-  contentDrafts        ContentDraft[]
-  assignedContentItems ContentItem[]         @relation("AssignedContentItems")
-  createdContentItems  ContentItem[]         @relation("CreatedContentItems")
-  contentItemComments  ContentItemComment[]
-  contentItemFeedbacks ContentItemFeedback[]
-  contentItemMedia     ContentItemMedia[]
-  feedbacks            Feedback[]
-  ideas                Idea[]
-  ideaComments         IdeaComment[]
-  media                Media[]
-  sessions             Session[]
-  stageTransitions     StageTransition[]
-  organizationUsers    OrganizationUser[]
-  organizationInvitations OrganizationUser[] @relation("OrganizationInvitations")
-  emailVerificationTokens EmailVerificationToken[]
-}
-
-model Idea {
-  id                 String               @id @default(cuid())
-  title              String
-  description        String
-  status             IdeaStatus           @default(PENDING)
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  createdById        String
-  organizationId     String
-  mediaType          MediaType?
-  publishingDateTime DateTime?
-  savedForLater      Boolean              @default(false)
-  contentType        ContentType?
-  deliveryItemId     String?
-  contentDrafts      ContentDraft[]
-  createdBy          User                 @relation(fields: [createdById], references: [id])
-  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  deliveryItem       ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
-  comments           IdeaComment[]
-
-  @@index([organizationId])
-  @@index([createdById, organizationId])
-  @@index([status, organizationId])
-  @@map("ideas")
-}
-
-model ContentDraft {
-  id             String          @id @default(cuid())
-  status         DraftStatus     @default(DRAFT)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  createdById    String
-  organizationId String
-  body           String
-  metadata       Json?           @default("{\"contentType\": \"social-media\"}")
-  ideaId         String
-  contentType    ContentType
-  createdBy      User            @relation(fields: [createdById], references: [id])
-  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  idea           Idea            @relation(fields: [ideaId], references: [id])
-  feedbacks      Feedback[]
-  media          Media[]
-  scheduledPosts ScheduledPost[]
-
-  @@index([organizationId])
-  @@index([createdById, organizationId])
-  @@index([status, organizationId])
-  @@index([ideaId, organizationId])
-  @@map("content_drafts")
-}
-
-model Feedback {
-  id             String        @id @default(cuid())
-  comment        String
-  createdAt      DateTime      @default(now())
-  contentDraftId String?
-  createdById    String
-  contentDraft   ContentDraft? @relation(fields: [contentDraftId], references: [id])
-  createdBy      User          @relation(fields: [createdById], references: [id])
-
-  @@index([contentDraftId])
-  @@index([createdById])
-  @@map("feedbacks")
-}
-
-model Media {
-  id             String       @id @default(cuid())
-  url            String
-  filename       String
-  contentType    String
-  size           Int
-  createdAt      DateTime     @default(now())
-  contentDraftId String
-  organizationId String
-  uploadedById   String
-  contentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  uploadedBy     User         @relation(fields: [uploadedById], references: [id])
-
-  @@index([organizationId])
-  @@index([uploadedById, organizationId])
-  @@index([contentDraftId, organizationId])
-  @@map("media")
+  id                                         String                   @id @default(cuid())
+  name                                       String?
+  email                                      String?                  @unique
+  emailVerified                              DateTime?
+  image                                      String?
+  role                                       UserRole                 @default(CREATIVE)
+  password                                   String?
+  isSuperAdmin                               Boolean                  @default(false)
+  accounts                                   Account[]
+  deliveryPlans                              ContentDeliveryPlan[]
+  ContentDraft                               ContentDraft[]
+  ContentItem_ContentItem_assignedToIdToUser ContentItem[]            @relation("ContentItem_assignedToIdToUser")
+  ContentItem_ContentItem_createdByIdToUser  ContentItem[]            @relation("ContentItem_createdByIdToUser")
+  contentItemComments                        ContentItemComment[]
+  contentItemFeedbacks                       ContentItemFeedback[]
+  contentItemMedia                           ContentItemMedia[]
+  emailVerificationTokens                    EmailVerificationToken[]
+  Feedback                                   Feedback[]
+  Idea                                       Idea[]
+  ideaComments                               IdeaComment[]
+  Media                                      Media[]
+  invitedUsers                               OrganizationUser[]       @relation("OrganizationUser_invitedByToUser")
+  organizationUsers                          OrganizationUser[]       @relation("OrganizationUser_userIdToUser")
+  sessions                                   Session[]
+  stageTransitions                           StageTransition[]
 }
 
 model ScheduledPost {
@@ -172,8 +87,8 @@ model EmailVerificationToken {
   token     String   @unique
   expiresAt DateTime
   used      Boolean  @default(false)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -189,9 +104,9 @@ model ContentDeliveryPlan {
   createdAt      DateTime              @default(now())
   updatedAt      DateTime              @updatedAt
   clientId       String
-  organizationId String
   targetMonth    DateTime
   isArchived     Boolean               @default(false)
+  organizationId String
   items          ContentDeliveryItem[]
   client         User                  @relation(fields: [clientId], references: [id])
   organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -200,19 +115,19 @@ model ContentDeliveryPlan {
 }
 
 model ContentDeliveryItem {
-  id           String              @id @default(cuid())
-  contentType  ContentType
-  quantity     Int
-  dueDate      DateTime
-  status       DeliveryItemStatus  @default(PENDING)
-  priority     Int                 @default(0)
-  notes        String?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  planId       String
-  plan         ContentDeliveryPlan @relation(fields: [planId], references: [id])
-  contentItems ContentItem[]
-  ideas        Idea[]
+  id          String              @id @default(cuid())
+  contentType ContentType
+  quantity    Int
+  dueDate     DateTime
+  status      DeliveryItemStatus  @default(PENDING)
+  priority    Int                 @default(0)
+  notes       String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  planId      String
+  plan        ContentDeliveryPlan @relation(fields: [planId], references: [id])
+  ContentItem ContentItem[]
+  Idea        Idea[]
 }
 
 model IdeaComment {
@@ -223,45 +138,6 @@ model IdeaComment {
   createdById String
   createdBy   User     @relation(fields: [createdById], references: [id])
   idea        Idea     @relation(fields: [ideaId], references: [id])
-}
-
-model ContentItem {
-  id             String                     @id @default(cuid())
-  title          String
-  description    String
-  body           String?
-  status         ContentItemStatus          @default(IDEA)
-  contentType    ContentType
-  mediaType      MediaType?
-  metadata       Json?                      @default("{}")
-  currentStage   WorkflowStage              @default(IDEA)
-  createdById    String
-  assignedToId   String?
-  organizationId String
-  deliveryItemId String?
-  createdAt      DateTime                   @default(now())
-  updatedAt      DateTime                   @updatedAt
-  publishedAt    DateTime?
-  assignedTo     User?                      @relation("AssignedContentItems", fields: [assignedToId], references: [id])
-  createdBy      User                       @relation("CreatedContentItems", fields: [createdById], references: [id])
-  organization   Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  deliveryItem   ContentDeliveryItem?       @relation(fields: [deliveryItemId], references: [id])
-  comments       ContentItemComment[]
-  feedbacks      ContentItemFeedback[]
-  media          ContentItemMedia[]
-  scheduledPosts ContentItemScheduledPost[]
-  stageHistory   StageTransition[]
-
-  @@index([currentStage])
-  @@index([status])
-  @@index([createdById])
-  @@index([assignedToId])
-  @@index([organizationId])
-  @@index([createdById, organizationId])
-  @@index([assignedToId, organizationId])
-  @@index([status, organizationId])
-  @@index([currentStage, organizationId])
-  @@map("content_items")
 }
 
 model StageTransition {
@@ -332,68 +208,16 @@ model ContentItemComment {
   @@index([createdById])
 }
 
-model Organization {
-  id                String                @id @default(cuid())
-  name              String
-  slug              String                @unique
-  domain            String?               @unique
-  logo              String?
-  primaryColor      String?
-  settings          Json                  @default("{}")
-  subscriptionPlan  SubscriptionPlanType  @default(FREE)
-  subscriptionStatus SubscriptionStatus   @default(ACTIVE)
-  trialEndsAt       DateTime?
-  billingCycle      BillingCycle          @default(MONTHLY)
-  maxUsers          Int                   @default(5)
-  maxStorageGB      Int                   @default(10)
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  users             OrganizationUser[]
-  ideas             Idea[]
-  contentDrafts     ContentDraft[]
-  media             Media[]
-  deliveryPlans     ContentDeliveryPlan[]
-  contentItems      ContentItem[]
-  billingRecords    BillingRecord[]
-  securityAuditLogs SecurityAuditLog[]
-
-  @@index([slug])
-  @@index([domain])
-  @@map("organizations")
-}
-
-model OrganizationUser {
-  id             String           @id @default(cuid())
-  organizationId String
-  userId         String
-  role           OrganizationRole @default(MEMBER)
-  permissions    Json             @default("[]")
-  isActive       Boolean          @default(true)
-  invitedBy      String?
-  invitedAt      DateTime         @default(now())
-  joinedAt       DateTime?
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invitedByUser  User?            @relation("OrganizationInvitations", fields: [invitedBy], references: [id], onDelete: SetNull)
-
-  @@unique([organizationId, userId])
-  @@index([userId])
-  @@index([organizationId])
-  @@index([userId, isActive])
-  @@index([organizationId, isActive])
-  @@map("organization_users")
-}
-
 model SubscriptionPlan {
-  id           String        @id @default(cuid())
-  name         String        @unique
+  id           String       @id @default(cuid())
+  name         String       @unique
   price        Float
-  currency     String        @default("USD")
+  currency     String       @default("USD")
   interval     BillingCycle
   maxUsers     Int
   maxStorageGB Int
-  features     Json          @default("[]")
-  isActive     Boolean       @default(true)
+  features     Json         @default("[]")
+  isActive     Boolean      @default(true)
 }
 
 model BillingRecord {
@@ -407,6 +231,161 @@ model BillingRecord {
   paidAt         DateTime?
   createdAt      DateTime      @default(now())
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model ContentDraft {
+  id             String          @id @default(cuid())
+  status         DraftStatus     @default(DRAFT)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  createdById    String
+  body           String
+  metadata       Json?           @default("{\"contentType\": \"social-media\"}")
+  ideaId         String
+  contentType    ContentType
+  organizationId String
+  User           User            @relation(fields: [createdById], references: [id])
+  Idea           Idea            @relation(fields: [ideaId], references: [id])
+  Organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  Feedback       Feedback[]
+  Media          Media[]
+  scheduledPosts ScheduledPost[]
+
+  @@index([organizationId])
+  @@map("ContentDraft")
+}
+
+model ContentItem {
+  id                                  String                     @id @default(cuid())
+  title                               String
+  description                         String
+  body                                String?
+  status                              ContentItemStatus          @default(IDEA)
+  contentType                         ContentType
+  mediaType                           MediaType?
+  metadata                            Json?                      @default("{}")
+  currentStage                        WorkflowStage              @default(IDEA)
+  createdById                         String
+  assignedToId                        String?
+  deliveryItemId                      String?
+  createdAt                           DateTime                   @default(now())
+  updatedAt                           DateTime                   @updatedAt
+  publishedAt                         DateTime?
+  organizationId                      String
+  User_ContentItem_assignedToIdToUser User?                      @relation("ContentItem_assignedToIdToUser", fields: [assignedToId], references: [id])
+  User_ContentItem_createdByIdToUser  User                       @relation("ContentItem_createdByIdToUser", fields: [createdById], references: [id])
+  ContentDeliveryItem                 ContentDeliveryItem?       @relation(fields: [deliveryItemId], references: [id])
+  Organization                        Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  comments                            ContentItemComment[]
+  feedbacks                           ContentItemFeedback[]
+  media                               ContentItemMedia[]
+  scheduledPosts                      ContentItemScheduledPost[]
+  stageHistory                        StageTransition[]
+
+  @@index([assignedToId])
+  @@index([createdById])
+  @@index([currentStage])
+  @@index([organizationId])
+  @@index([status])
+  @@map("ContentItem")
+}
+
+model Feedback {
+  id             String        @id @default(cuid())
+  comment        String
+  createdAt      DateTime      @default(now())
+  contentDraftId String?
+  createdById    String
+  ContentDraft   ContentDraft? @relation(fields: [contentDraftId], references: [id])
+  User           User          @relation(fields: [createdById], references: [id])
+
+  @@index([contentDraftId])
+  @@index([createdById])
+}
+
+model Idea {
+  id                  String               @id @default(cuid())
+  title               String
+  description         String
+  status              IdeaStatus           @default(PENDING)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  createdById         String
+  mediaType           MediaType?
+  publishingDateTime  DateTime?
+  savedForLater       Boolean              @default(false)
+  contentType         ContentType?
+  deliveryItemId      String?
+  organizationId      String
+  ContentDraft        ContentDraft[]
+  User                User                 @relation(fields: [createdById], references: [id])
+  ContentDeliveryItem ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
+  Organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  comments            IdeaComment[]
+
+  @@index([organizationId])
+}
+
+model Media {
+  id             String       @id @default(cuid())
+  url            String
+  filename       String
+  contentType    String
+  size           Int
+  createdAt      DateTime     @default(now())
+  contentDraftId String
+  uploadedById   String
+  organizationId String
+  ContentDraft   ContentDraft @relation(fields: [contentDraftId], references: [id])
+  Organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  User           User         @relation(fields: [uploadedById], references: [id])
+
+  @@index([organizationId])
+}
+
+model Organization {
+  id                 String                @id @default(cuid())
+  name               String
+  slug               String                @unique
+  domain             String?               @unique
+  logo               String?
+  primaryColor       String?
+  settings           Json                  @default("{}")
+  subscriptionPlan   SubscriptionPlanType  @default(FREE)
+  subscriptionStatus SubscriptionStatus    @default(ACTIVE)
+  trialEndsAt        DateTime?
+  billingCycle       BillingCycle          @default(MONTHLY)
+  maxUsers           Int                   @default(5)
+  maxStorageGB       Int                   @default(10)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  billingRecords     BillingRecord[]
+  deliveryPlans      ContentDeliveryPlan[]
+  ContentDraft       ContentDraft[]
+  ContentItem        ContentItem[]
+  Idea               Idea[]
+  Media              Media[]
+  OrganizationUser   OrganizationUser[]
+}
+
+model OrganizationUser {
+  id                                    String           @id @default(cuid())
+  organizationId                        String
+  userId                                String
+  role                                  OrganizationRole @default(MEMBER)
+  permissions                           Json             @default("[]")
+  isActive                              Boolean          @default(true)
+  invitedBy                             String?
+  invitedAt                             DateTime         @default(now())
+  joinedAt                              DateTime?
+  User_OrganizationUser_invitedByToUser User?            @relation("OrganizationUser_invitedByToUser", fields: [invitedBy], references: [id])
+  organization                          Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  User_OrganizationUser_userIdToUser    User             @relation("OrganizationUser_userIdToUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("OrganizationUser")
 }
 
 enum UserRole {
@@ -517,28 +496,4 @@ enum BillingStatus {
   PAID
   FAILED
   REFUNDED
-}
-
-model SecurityAuditLog {
-  id             String   @id @default(cuid())
-  timestamp      DateTime @default(now())
-  userId         String
-  organizationId String
-  userEmail      String
-  action         String
-  resource       String
-  method         String
-  ipAddress      String
-  userAgent      String
-  success        Boolean
-  errorMessage   String?
-  metadata       Json?
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([timestamp])
-  @@index([userId])
-  @@index([organizationId])
-  @@index([action])
-  @@index([success])
-  @@map("security_audit_logs")
 }

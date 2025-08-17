@@ -99,21 +99,21 @@ export async function GET(
     const draft = await prisma.contentDraft.findUnique({
       where: { id: params.id },
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,
           },
         },
-        idea: {
+        Idea: {
           select: {
             title: true,
             status: true,
           },
         },
-        feedbacks: {
+        Feedback: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 name: true,
                 email: true,

@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   try {
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext();
+    const orgContext = await requireOrganizationContext(undefined, request);
 
     const data = (await request.json()) as CreateDeliveryPlanData
 
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
 
   try {
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext();
+    const orgContext = await requireOrganizationContext(undefined, request);
 
     const url = new URL(request.url)
     const month = url.searchParams.get('month') // Format: YYYY-MM

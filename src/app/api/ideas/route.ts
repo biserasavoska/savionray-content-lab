@@ -4,7 +4,7 @@ import { requireOrganizationContext } from '@/lib/utils/organization-context';
 
 export async function GET(request: NextRequest) {
   try {
-    const context = await requireOrganizationContext();
+    const context = await requireOrganizationContext(undefined, request);
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit,
         include: {
-          createdBy: {
+          User: {
             select: {
               id: true,
               name: true,
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const context = await requireOrganizationContext();
+    const context = await requireOrganizationContext(undefined, request);
     const body = await request.json();
     
     const { title, description, contentType, mediaType, publishingDateTime } = body;
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         organizationId: context.organizationId,
       },
       include: {
-        createdBy: {
+        User: {
           select: {
             id: true,
             name: true,

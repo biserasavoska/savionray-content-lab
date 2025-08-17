@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext();
+    const orgContext = await requireOrganizationContext(undefined, req);
 
     const formData = await req.formData()
     const file = formData.get('file') as File

@@ -23,7 +23,7 @@ export interface Idea {
   mediaType: MediaType | null
   createdAt: Date
   updatedAt: Date
-  createdBy: User
+  User: User
   createdById: string
   contentType: ContentType | null
   deliveryItemId?: string | null
@@ -35,11 +35,11 @@ export interface ContentDraft {
   contentType: ContentType
   createdAt: Date
   updatedAt: Date
-  createdBy: User
+  User: User
   createdById: string
   body: string
   metadata: any
-  idea: Idea
+  Idea: Idea
   ideaId: string
 }
 

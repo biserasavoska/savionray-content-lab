@@ -34,9 +34,9 @@ export async function GET(request: NextRequest) {
         status: DRAFT_STATUS.AWAITING_FEEDBACK
       },
       include: {
-        idea: {
+        Idea: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 id: true,
                 name: true,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        createdBy: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -56,9 +56,9 @@ export async function GET(request: NextRequest) {
             image: true
           }
         },
-        feedbacks: {
+        Feedback: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 name: true,
                 email: true
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
             createdAt: 'desc'
           }
         },
-        media: {
+        Media: {
           orderBy: {
             createdAt: 'desc'
           }

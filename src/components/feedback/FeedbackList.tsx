@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns'
 
 interface FeedbackListProps {
   feedbacks: (Feedback & {
-    createdBy: Pick<User, 'name' | 'email'>
+    User: Pick<User, 'name' | 'email'>
   })[]
 }
 
@@ -34,16 +34,16 @@ export default function FeedbackList({ feedbacks }: FeedbackListProps) {
                 <div className="relative">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 ring-8 ring-white">
                     <span className="text-sm font-medium text-red-600">
-                      {(feedback.createdBy.name || feedback.createdBy.email || '?')[0].toUpperCase()}
+                      {(feedback.User.name || feedback.User.email || '?')[0].toUpperCase()}
                     </span>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div>
                     <div className="text-sm">
-                      <span className="font-medium text-gray-900">
-                        {feedback.createdBy.name || feedback.createdBy.email}
-                      </span>
+                                              <span className="font-medium text-gray-900">
+                          {feedback.User.name || feedback.User.email}
+                        </span>
                     </div>
                     <p className="mt-0.5 text-sm text-gray-500">
                       {formatDistanceToNow(new Date(feedback.createdAt), { addSuffix: true })}

@@ -70,9 +70,9 @@ export default async function ReadyContentPage() {
         status: DRAFT_STATUS.AWAITING_FEEDBACK // Only show content awaiting client approval
       },
       include: {
-        idea: {
+        Idea: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 id: true,
                 name: true,
@@ -83,7 +83,7 @@ export default async function ReadyContentPage() {
             }
           }
         },
-        createdBy: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -92,9 +92,9 @@ export default async function ReadyContentPage() {
             image: true
           }
         },
-        feedbacks: {
+        Feedback: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 name: true,
                 email: true
@@ -105,7 +105,7 @@ export default async function ReadyContentPage() {
             createdAt: 'desc'
           }
         },
-        media: {
+        Media: {
           orderBy: {
             createdAt: 'desc'
           }

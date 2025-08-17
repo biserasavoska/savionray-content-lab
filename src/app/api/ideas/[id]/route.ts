@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const context = await requireOrganizationContext()
+    const context = await requireOrganizationContext(undefined, request)
     
     const idea = await prisma.idea.findFirst({
       where: {
@@ -15,7 +15,7 @@ export async function GET(
         organizationId: context.organizationId,
       },
       include: {
-        createdBy: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -47,7 +47,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const context = await requireOrganizationContext()
+    const context = await requireOrganizationContext(undefined, request)
     const body = await request.json()
     
     // Check if this is a status-only update or a full update
@@ -186,7 +186,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const context = await requireOrganizationContext()
+    const context = await requireOrganizationContext(undefined, request)
     
     const idea = await prisma.idea.findFirst({
       where: {

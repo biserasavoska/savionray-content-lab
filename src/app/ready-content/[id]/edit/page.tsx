@@ -47,17 +47,17 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
   const fetchContent = async () => {
     try {
-      const response = await fetch(`/api/content-items/${params.id}`)
+      const response = await fetch(`/api/drafts/${params.id}`)
       if (response.ok) {
         const data = await response.json()
         setContent(data)
         setBody(data.body)
       } else {
-        console.error('Failed to fetch content')
+        console.error('Failed to fetch content draft')
         router.push('/ready-content')
       }
     } catch (error) {
-      console.error('Error fetching content:', error)
+      console.error('Error fetching content draft:', error)
       router.push('/ready-content')
     } finally {
       setLoading(false)
@@ -69,7 +69,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
     setSaving(true)
     try {
-      const response = await fetch(`/api/content-items/${params.id}`, {
+      const response = await fetch(`/api/drafts/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
     setSaving(true)
     try {
-      const response = await fetch(`/api/content-items/${params.id}`, {
+      const response = await fetch(`/api/drafts/${params.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

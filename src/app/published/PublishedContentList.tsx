@@ -14,10 +14,10 @@ interface ScheduledPost {
 
 interface PublishedContentListProps {
   publishedContent: (ContentDraft & {
-    idea: Idea & {
-      createdBy: Pick<User, 'name' | 'email'>
+    Idea: Idea & {
+      User: Pick<User, 'name' | 'email'>
     }
-    createdBy: Pick<User, 'name' | 'email'>
+    User: Pick<User, 'name' | 'email'>
     scheduledPosts: ScheduledPost[]
   })[]
   isCreativeUser: boolean
@@ -41,18 +41,18 @@ export default function PublishedContentList({ publishedContent, isCreativeUser 
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-2">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {content.idea.title}
+                  {content.Idea.title}
                 </h3>
                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                   PUBLISHED
                 </span>
               </div>
               
-              <p className="text-gray-600 mb-4">{content.idea.description}</p>
+              <p className="text-gray-600 mb-4">{content.Idea.description}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500 mb-4">
                 <div>
-                  <span className="font-medium">Created by:</span> {content.createdBy.name || content.createdBy.email}
+                  <span className="font-medium">Created by:</span> {content.User.name || content.User.email}
                 </div>
                 <div>
                   <span className="font-medium">Content Type:</span> {content.contentType}

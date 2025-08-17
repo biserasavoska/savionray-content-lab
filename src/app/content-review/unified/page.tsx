@@ -17,7 +17,7 @@ interface ContentItem {
   status: string
   createdAt: string
   updatedAt: string
-  createdBy: {
+  User: {
     id: string
     name: string | null
     email: string | null
@@ -31,7 +31,7 @@ interface ContentItem {
   metadata: any
   contentType: string
   body: string | null
-  idea: {
+  Idea: {
     title: string
     description: string
     status: string
@@ -109,8 +109,8 @@ export default function UnifiedContentReviewPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: contentItem.idea.title,
-          description: contentItem.idea.description,
+                  title: contentItem.Idea?.title || 'Untitled',
+        description: contentItem.Idea?.description || 'No description',
           contentType: contentItem.contentType,
           body: contentItem.body
         })
@@ -339,12 +339,12 @@ export default function UnifiedContentReviewPage() {
                         <div className="flex items-center space-x-3 mb-3">
                           <ContentTypeIcon className="h-6 w-6 text-blue-500" />
                           <h3 className="text-xl font-semibold text-gray-900">
-                            {contentItem.idea.title}
+                            {contentItem.Idea?.title || 'Untitled'}
                           </h3>
                         </div>
                         
                         <p className="text-gray-600 mb-4 text-base leading-relaxed">
-                          {contentItem.idea.description}
+                          {contentItem.Idea?.description || 'No description'}
                         </p>
                         
                         {/* AI Insights Section */}
@@ -379,8 +379,8 @@ export default function UnifiedContentReviewPage() {
                           <Badge variant={getStatusBadgeVariant(contentItem.status)}>
                             {contentItem.status.replace('_', ' ')}
                           </Badge>
-                          <Badge variant={getStageBadgeVariant(contentItem.idea.status)}>
-                            {contentItem.idea.status.replace('_', ' ')}
+                          <Badge variant={getStageBadgeVariant(contentItem.Idea?.status || 'DRAFT')}>
+                            {(contentItem.Idea?.status || 'DRAFT').replace('_', ' ')}
                           </Badge>
                           <Badge variant="secondary">
                             {contentItem.contentType.replace('_', ' ')}
@@ -390,7 +390,7 @@ export default function UnifiedContentReviewPage() {
                         <div className="flex items-center space-x-6 text-sm text-gray-500">
                           <div className="flex items-center space-x-1">
                             <UserIcon className="h-4 w-4" />
-                            <span>{contentItem.createdBy.name || 'Unknown'}</span>
+                            <span>{contentItem.User?.name || contentItem.User?.email || 'Unknown'}</span>
                           </div>
                           <div className="flex items-center space-x-1">
                             <ClockIcon className="h-4 w-4" />

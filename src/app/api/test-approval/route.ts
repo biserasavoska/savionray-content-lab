@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       }, { status: 403 })
     }
 
-    const orgContext = await requireOrganizationContext()
+    const orgContext = await requireOrganizationContext(undefined, req)
     
     // Test idea status update
     const { ideaId, status } = await req.json()

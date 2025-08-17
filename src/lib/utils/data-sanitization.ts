@@ -36,26 +36,26 @@ export function sanitizeUser(user: User | null | undefined): SafeUser {
 export function sanitizeContentDraftData(draft: any): any {
   return {
     ...draft,
-    idea: {
-      ...draft.idea,
-      createdBy: {
-        ...draft.idea.createdBy,
-        email: draft.idea.createdBy.email ?? '',
-        name: draft.idea.createdBy.name ?? '',
+    Idea: {
+      ...draft.Idea,
+      User: {
+        ...draft.Idea?.User,
+        email: draft.Idea?.User?.email ?? '',
+        name: draft.Idea?.User?.name ?? '',
       }
     },
-    createdBy: {
-      ...draft.createdBy,
-      email: draft.createdBy.email ?? '',
-      name: draft.createdBy.name ?? '',
+    User: {
+      ...draft.User,
+      email: draft.User?.email ?? '',
+      name: draft.User?.name ?? '',
     },
-    feedbacks: (draft.feedbacks || []).map((fb: any) => ({
+    Feedback: (draft.Feedback || []).map((fb: any) => ({
       ...fb,
       contentDraftId: fb.contentDraftId ?? '',
-      createdBy: {
-        ...fb.createdBy,
-        email: fb.createdBy.email ?? '',
-        name: fb.createdBy.name ?? '',
+      User: {
+        ...fb.User,
+        email: fb.User?.email ?? '',
+        name: fb.User?.name ?? '',
       }
     }))
   }

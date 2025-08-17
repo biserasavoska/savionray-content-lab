@@ -31,9 +31,9 @@ export default async function DeliveryPlansPage() {
       },
       items: {
         include: {
-          ideas: {
+          Idea: {
             include: {
-              contentDrafts: true,
+              ContentDraft: true,
             },
           },
         },

@@ -61,9 +61,9 @@ export default async function PublishedPage() {
       status: DRAFT_STATUS.PUBLISHED
     },
     include: {
-      idea: {
+      Idea: {
         include: {
-          createdBy: {
+          User: {
             select: {
               id: true,
               name: true,
@@ -74,7 +74,7 @@ export default async function PublishedPage() {
           }
         }
       },
-      createdBy: {
+      User: {
         select: {
           id: true,
           name: true,

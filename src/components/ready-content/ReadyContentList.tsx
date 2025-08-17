@@ -14,13 +14,13 @@ import FeedbackList from '@/components/feedback/FeedbackList'
 interface ReadyContentListProps {
   content: (Omit<ContentDraft, 'status'> & {
     status: string
-    idea: Idea & {
-      createdBy: Pick<User, 'name' | 'email'>
+    Idea: Idea & {
+      User: Pick<User, 'name' | 'email'>
     }
-    createdBy: Pick<User, 'name' | 'email'>
-    media: Media[]
-    feedbacks: (Feedback & {
-      createdBy: Pick<User, 'name' | 'email'>
+    User: Pick<User, 'name' | 'email'>
+    Media: Media[]
+    Feedback: (Feedback & {
+      User: Pick<User, 'name' | 'email'>
     })[]
   })[]
   isCreativeUser: boolean
@@ -59,12 +59,12 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
     }
   }
 
-  const handleStatusUpdate = async (contentItemId: string, newStatus: string) => {
+  const handleStatusUpdate = async (draftId: string, newStatus: string) => {
     if (!session) return
 
-    setIsSubmitting(contentItemId)
+    setIsSubmitting(draftId)
     try {
-      const response = await fetch(`/api/content-items/${contentItemId}`, {
+      const response = await fetch(`/api/drafts/${draftId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-3">
                   <h3 className="text-lg font-medium text-gray-900">
-                    {item.idea?.title || 'Untitled Idea'}
+                    {item.Idea?.title || 'Untitled Idea'}
                   </h3>
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClasses(item.status)}`}>
                     {getStatusLabel(item.status)}
@@ -191,7 +191,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                   )}
                 </div>
                 
-                <p className="text-gray-600 mb-4">{item.idea?.description || 'No description available'}</p>
+                <p className="text-gray-600 mb-4">{item.Idea?.description || 'No description available'}</p>
                 
                 {/* AI Generated Content (Main Post Text) */}
                 <div className="bg-green-50 rounded-md p-4 mb-4">
@@ -290,25 +290,25 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                 {/* Metadata */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm text-gray-500 mb-4">
                   <div>
-                    <span className="font-medium">Created by:</span> {item.createdBy?.name || item.createdBy?.email || 'Unknown'}
+                    <span className="font-medium">Created by:</span> {item.User?.name || item.User?.email || 'Unknown'}
                   </div>
                   <div>
-                    <span className="font-medium">Idea by:</span> {item.idea.createdBy?.name || item.idea.createdBy?.email || 'Unknown'}
+                    <span className="font-medium">Idea by:</span> {item.Idea?.User?.name || item.Idea?.User?.email || 'Unknown'}
                   </div>
                   <div>
                     <span className="font-medium">Updated:</span> {formatDate(item.updatedAt)}
                   </div>
                   <div>
-                    <span className="font-medium">Feedback:</span> {item.feedbacks.length} comments
+                    <span className="font-medium">Feedback:</span> {item.Feedback?.length || 0} comments
                   </div>
                 </div>
 
                 {/* Media Attachments */}
-                {item.media.length > 0 && (
+                {item.Media && item.Media.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Attachments:</h4>
                     <div className="flex flex-wrap gap-2">
-                      {item.media.map((media) => (
+                      {item.Media.map((media) => (
                         <div key={media.id} className="flex items-center space-x-2 bg-gray-100 rounded-md px-3 py-1">
                           <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -378,10 +378,10 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                 )}
 
                 {/* Feedback History */}
-                {item.feedbacks && item.feedbacks.length > 0 && (
+                {item.Feedback && item.Feedback.length > 0 && (
                   <div>
-                    <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({item.feedbacks.length})</h5>
-                    <FeedbackList feedbacks={item.feedbacks} />
+                    <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({item.Feedback.length})</h5>
+                    <FeedbackList feedbacks={item.Feedback} />
                   </div>
                 )}
               </div>

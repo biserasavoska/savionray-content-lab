@@ -16,7 +16,7 @@ interface OrganizationUser {
   userId: string
   role: string
   isActive: boolean
-  user: User
+  User_OrganizationUser_userIdToUser: User
 }
 
 interface Organization {
@@ -28,12 +28,12 @@ interface Organization {
   subscriptionPlan: string | null
   subscriptionStatus: string | null
   maxUsers: number | null
-  users: OrganizationUser[]
+  OrganizationUser: OrganizationUser[]
 }
 
 interface OrganizationWithUsers extends Organization {
-  users: (OrganizationUser & {
-    user: User
+  OrganizationUser: (OrganizationUser & {
+    User_OrganizationUser_userIdToUser: User
   })[]
 }
 
@@ -171,7 +171,7 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
           <div className="bg-white border border-gray-200 rounded-md">
             <div className="px-4 py-3 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Active Members ({organization.users.length})</span>
+                <span className="text-sm font-medium text-gray-700">Active Members ({organization.OrganizationUser.length})</span>
                 <div className="flex space-x-2">
                   <Link
                     href="/organization/users"
@@ -189,18 +189,18 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
               </div>
             </div>
             <div className="divide-y divide-gray-200">
-              {organization.users.map((orgUser) => (
+              {organization.OrganizationUser.map((orgUser) => (
                 <div key={orgUser.id} className="px-4 py-3 flex justify-between items-center">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{orgUser.user.name}</p>
-                    <p className="text-sm text-gray-500">{orgUser.user.email}</p>
+                    <p className="text-sm font-medium text-gray-900">{orgUser.User_OrganizationUser_userIdToUser.name}</p>
+                    <p className="text-sm text-gray-500">{orgUser.User_OrganizationUser_userIdToUser.email}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
                       {orgUser.role.toLowerCase()}
                     </span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
-                      {orgUser.user.role.toLowerCase()}
+                      {orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()}
                     </span>
                   </div>
                 </div>

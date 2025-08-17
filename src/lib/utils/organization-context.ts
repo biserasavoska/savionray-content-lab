@@ -236,8 +236,8 @@ export async function getOrganizationContextWithOverride(
 /**
  * Require organization context - throws error if not available
  */
-export async function requireOrganizationContext(organizationId?: string): Promise<OrganizationContext> {
-  const context = await getOrganizationContext(organizationId);
+export async function requireOrganizationContext(organizationId?: string, request?: NextRequest): Promise<OrganizationContext> {
+  const context = await getOrganizationContext(organizationId, request);
   
   if (!context) {
     throw new Error("Organization context required but not available");
@@ -249,8 +249,8 @@ export async function requireOrganizationContext(organizationId?: string): Promi
 /**
  * Require organization context with manual override support
  */
-export async function requireOrganizationContextWithOverride(manualOrganizationId?: string): Promise<OrganizationContext> {
-  const context = await getOrganizationContextWithOverride(manualOrganizationId);
+export async function requireOrganizationContextWithOverride(manualOrganizationId?: string, request?: NextRequest): Promise<OrganizationContext> {
+  const context = await getOrganizationContextWithOverride(manualOrganizationId, request);
   
   if (!context) {
     throw new Error("Organization context required but not available");

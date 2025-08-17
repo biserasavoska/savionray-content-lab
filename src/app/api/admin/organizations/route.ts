@@ -52,10 +52,10 @@ export async function GET(request: NextRequest) {
       prisma.organization.findMany({
         where,
         include: {
-          users: {
+          OrganizationUser: {
             where: { isActive: true },
             include: {
-              user: {
+              User_OrganizationUser_userIdToUser: {
                 select: {
                   id: true,
                   name: true,
@@ -67,10 +67,10 @@ export async function GET(request: NextRequest) {
           },
           _count: {
             select: {
-              ideas: true,
-              contentDrafts: true,
+              Idea: true,
+              ContentDraft: true,
               deliveryPlans: true,
-              contentItems: true
+              ContentItem: true
             }
           }
         },
@@ -93,18 +93,18 @@ export async function GET(request: NextRequest) {
       maxUsers: org.maxUsers,
       createdAt: org.createdAt,
       updatedAt: org.updatedAt,
-      userCount: org.users.length,
+      userCount: org.OrganizationUser.length,
       stats: {
-        ideas: org._count.ideas,
-        contentDrafts: org._count.contentDrafts,
+        ideas: org._count.Idea,
+        contentDrafts: org._count.ContentDraft,
         deliveryPlans: org._count.deliveryPlans,
-        contentItems: org._count.contentItems
+        contentItems: org._count.ContentItem
       },
-      users: org.users.map((orgUser: any) => ({
-        id: orgUser.user.id,
-        name: orgUser.user.name,
-        email: orgUser.user.email,
-        systemRole: orgUser.user.role,
+      users: org.OrganizationUser.map((orgUser: any) => ({
+        id: orgUser.User_OrganizationUser_userIdToUser.id,
+        name: orgUser.User_OrganizationUser_userIdToUser.name,
+        email: orgUser.User_OrganizationUser_userIdToUser.email,
+        systemRole: orgUser.User_OrganizationUser_userIdToUser.role,
         organizationRole: orgUser.role
       }))
     }))

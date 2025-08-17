@@ -64,9 +64,9 @@ export default async function ApprovedContentPage() {
         status: DRAFT_STATUS.APPROVED
       },
       include: {
-        idea: {
+        Idea: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 id: true,
                 name: true,
@@ -77,7 +77,7 @@ export default async function ApprovedContentPage() {
             }
           }
         },
-        createdBy: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -86,9 +86,9 @@ export default async function ApprovedContentPage() {
             image: true
           }
         },
-        feedbacks: {
+        Feedback: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 name: true,
                 email: true
@@ -99,7 +99,7 @@ export default async function ApprovedContentPage() {
             createdAt: 'desc'
           }
         },
-        media: {
+        Media: {
           orderBy: {
             createdAt: 'desc'
           }

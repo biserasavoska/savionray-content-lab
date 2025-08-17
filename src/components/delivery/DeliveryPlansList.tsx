@@ -32,8 +32,8 @@ interface DeliveryPlansListProps {
       createdAt: string | Date
       updatedAt: string | Date
       planId: string
-      ideas: Array<{
-        contentDrafts: Array<{
+      Idea: Array<{
+        ContentDraft: Array<{
           status: string
         }>
       }>
@@ -228,8 +228,8 @@ export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
                 <div className="mt-2 divide-y divide-gray-200">
                   {plan.items.map((item) => {
                     const itemBadgeVariant = ITEM_STATUS_BADGE_VARIANT[item.status as keyof typeof ITEM_STATUS_BADGE_VARIANT] || 'default'
-                    const completedIdeas = item.ideas.filter((idea) => 
-                      idea.contentDrafts[0]?.status === 'APPROVED'
+                    const completedIdeas = item.Idea.filter((idea) => 
+                      idea.ContentDraft[0]?.status === 'APPROVED'
                     ).length
                     const itemProgress = item.quantity > 0 ? (completedIdeas / item.quantity) * 100 : 0
                     return (

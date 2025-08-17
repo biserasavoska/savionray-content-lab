@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const orgContext = await requireOrganizationContext()
+    const orgContext = await requireOrganizationContext(undefined, request)
 
     // Try to find the content item
     const contentItem = await prisma.contentItem.findUnique({
@@ -24,7 +24,7 @@ export async function GET(
         organizationId: orgContext.organizationId
       },
       include: {
-        createdBy: {
+        User_ContentItem_createdByIdToUser: {
           select: {
             id: true,
             name: true,
@@ -32,7 +32,7 @@ export async function GET(
             role: true,
           },
         },
-        assignedTo: {
+        User_ContentItem_assignedToIdToUser: {
           select: {
             id: true,
             name: true,
@@ -41,7 +41,7 @@ export async function GET(
         },
         feedbacks: {
           include: {
-            createdBy: {
+            User: {
               select: {
                 id: true,
                 name: true,
@@ -130,7 +130,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const orgContext = await requireOrganizationContext()
+    const orgContext = await requireOrganizationContext(undefined, request)
     const body = await req.json()
 
     // Check if content item exists and user has permission
@@ -203,7 +203,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const orgContext = await requireOrganizationContext()
+    const orgContext = await requireOrganizationContext(undefined, req)
 
     // Check if content item exists and user has permission
     const existingItem = await prisma.contentItem.findUnique({

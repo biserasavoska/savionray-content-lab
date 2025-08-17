@@ -60,7 +60,7 @@ export default async function ContentReviewPage() {
         organizationId: orgContext.organizationId,
         // Additional filters based on user role
         ...(isCreativeUser ? { createdById: session.user.id } : {}),
-        idea: {
+        Idea: {
           status: IDEA_STATUS.APPROVED
         },
         status: {
@@ -74,14 +74,14 @@ export default async function ContentReviewPage() {
         }
       },
       include: {
-        idea: {
+        Idea: {
           include: {
-            createdBy: {
+            User: {
               select: { id: true, name: true, email: true, role: true, image: true }
             }
           }
         },
-        createdBy: {
+        User: {
           select: { id: true, name: true, email: true, role: true, image: true }
         }
       },

@@ -195,7 +195,7 @@ export default function IdeaDetailPage() {
               <div className="flex items-center gap-2 mt-2">
                 {getStatusBadge(idea.status)}
                 <span className="text-sm text-gray-500">
-                  Created by {idea.createdBy.name}
+                  Created by {idea.User?.name || idea.User?.email || 'Unknown'}
                 </span>
               </div>
             </div>

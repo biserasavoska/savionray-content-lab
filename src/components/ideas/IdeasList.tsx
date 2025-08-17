@@ -16,7 +16,7 @@ interface Idea {
   contentType: string
   mediaType: string
   createdAt: string
-  createdBy: {
+  User: {
     name: string
     email: string
   }
@@ -172,7 +172,7 @@ export default function IdeasList() {
                 <div className="space-y-2 text-xs text-gray-500 mb-4">
                   <div className="flex justify-between">
                     <span>Created by:</span>
-                    <span className="font-medium">{idea.createdBy.name || idea.createdBy.email}</span>
+                    <span className="font-medium">{idea.User?.name || idea.User?.email || 'Unknown'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Created:</span>

@@ -33,13 +33,13 @@ export default async function ScheduledPostsPage() {
     include: {
       contentDraft: {
         include: {
-          createdBy: {
+          User: {
             select: {
               name: true,
               email: true,
             },
           },
-          idea: {
+          Idea: {
             select: {
               title: true,
             },

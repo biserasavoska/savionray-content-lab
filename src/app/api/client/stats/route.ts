@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       // Feedback provided count (last 30 days)
       prisma.feedback.count({
         where: {
-          contentDraft: {
+          ContentDraft: {
             organizationId: orgContext.organizationId
           },
           createdAt: {

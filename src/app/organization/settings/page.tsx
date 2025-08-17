@@ -26,10 +26,10 @@ export default async function OrganizationSettingsPage() {
   const organization = await prisma.organization.findUnique({
     where: { id: orgContext.organizationId },
     include: {
-      users: {
+      OrganizationUser: {
         where: { isActive: true },
         include: {
-          user: {
+          User_OrganizationUser_userIdToUser: {
             select: {
               id: true,
               name: true,

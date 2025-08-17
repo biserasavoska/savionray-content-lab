@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext();
+    const orgContext = await requireOrganizationContext(undefined, req);
 
     const draft = await prisma.contentDraft.create({
       data: {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         metadata: metadata || {},
       },
       include: {
-        createdBy: {
+        User: {
           select: {
             name: true,
             email: true,
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Get organization context for multi-tenant isolation
-    const orgContext = await requireOrganizationContext();
+    const orgContext = await requireOrganizationContext(undefined, req);
     
     const where = {
       ...(ideaId ? { ideaId } : {}),
@@ -89,13 +89,13 @@ export async function GET(req: NextRequest) {
       prisma.contentDraft.findMany({
         where,
         include: {
-          createdBy: {
+          User: {
             select: {
               name: true,
               email: true,
             },
           },
-          idea: {
+          Idea: {
             select: {
               title: true,
               status: true,

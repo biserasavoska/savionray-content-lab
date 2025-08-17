@@ -24,7 +24,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const orgContext = await requireOrganizationContext()
+    const orgContext = await requireOrganizationContext(undefined, request)
     if (!orgContext) {
       return NextResponse.json(
         { error: 'Organization context required' },
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const orgContext = await requireOrganizationContext()
+    const orgContext = await requireOrganizationContext(undefined, request)
     if (!orgContext) {
       return NextResponse.json(
         { error: 'Organization context required' },

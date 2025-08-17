@@ -12,8 +12,8 @@ interface Creator {
 interface ContentDraft {
   id: string
   body: string
-  createdBy: Creator
-  idea: {
+  User: Creator
+  Idea: {
     title: string
   }
 }
@@ -78,7 +78,7 @@ export default function ScheduledPostsList({ posts }: ScheduledPostsListProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-3">
                   <h3 className="text-sm font-medium text-gray-900 truncate">
-                    {post.contentDraft.idea.title}
+                    {post.contentDraft.Idea.title}
                   </h3>
                   <span
                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -92,7 +92,7 @@ export default function ScheduledPostsList({ posts }: ScheduledPostsListProps) {
                 </div>
                 <div className="mt-1">
                   <p className="text-sm text-gray-500">
-                    Created by {post.contentDraft.createdBy.name || post.contentDraft.createdBy.email}
+                    Created by {post.contentDraft.User.name || post.contentDraft.User.email}
                   </p>
                 </div>
               </div>
