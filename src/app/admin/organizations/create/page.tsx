@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 
 import CreateOrganizationForm from './CreateOrganizationForm'
 
-import { authOptions , isAdmin } from '@/lib/auth'
+import { authOptions, isAdmin } from '@/lib/auth'
 
 export default async function CreateOrganizationPage() {
   const session = await getServerSession(authOptions)

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 
 import OrganizationManagementList from './OrganizationManagementList'
 
-import { authOptions , isAdmin } from '@/lib/auth'
+import { authOptions, isAdmin } from '@/lib/auth'
 
 export default async function AdminOrganizationsPage() {
   const session = await getServerSession(authOptions)
