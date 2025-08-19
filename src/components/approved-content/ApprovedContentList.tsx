@@ -17,6 +17,8 @@ interface ApprovedContentListProps {
 export default function ApprovedContentList({ content, isAdminUser, isCreativeUser, isClientUser }: ApprovedContentListProps) {
   const { data: session } = useSession()
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
+  const [expandedContent, setExpandedContent] = useState<Set<string>>(new Set())
+  const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
 
   console.log('ApprovedContentList: Rendering with', {
     contentCount: content.length,
@@ -71,6 +73,25 @@ export default function ApprovedContentList({ content, isAdminUser, isCreativeUs
     }
   }
 
+  const toggleFeedbackForm = (itemId: string) => {
+    setShowFeedbackForm(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }))
+  }
+
+  const toggleContentExpansion = (itemId: string) => {
+    setExpandedContent(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId)
+      } else {
+        newSet.add(itemId)
+      }
+      return newSet
+    })
+  }
+
   if (content.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -105,12 +126,62 @@ export default function ApprovedContentList({ content, isAdminUser, isCreativeUs
               </div>
 
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {item.idea?.title || 'Untitled Content'}
+                {(() => {
+                  // Try to get title from idea first
+                  if (item.idea?.title) return item.idea.title
+                  
+                  // Try to extract title from AI content body
+                  if (item.body) {
+                    const lines = item.body.split('\n')
+                    for (const line of lines) {
+                      const trimmed = line.trim()
+                      // Look for markdown headers (# Title) or first meaningful line
+                      if (trimmed.startsWith('# ')) {
+                        return trimmed.substring(2).trim()
+                      }
+                      if (trimmed.startsWith('## ')) {
+                        return trimmed.substring(3).trim()
+                      }
+                      // If no headers, use first non-empty line
+                      if (trimmed.length > 0 && !trimmed.startsWith('#')) {
+                        return trimmed.length > 50 ? trimmed.substring(0, 50) + '...' : trimmed
+                      }
+                    }
+                  }
+                  
+                  return 'Untitled Content'
+                })()}
               </h3>
 
-              <p className="text-gray-600 mb-4 line-clamp-3">
-                {item.body || item.idea?.description || 'No content available'}
-              </p>
+              {/* AI Generated Content Section */}
+              {item.body && (
+                <div className="bg-green-50 rounded-md p-4 mb-4">
+                  <h4 className="text-sm font-semibold text-green-700 mb-2">AI Generated Content:</h4>
+                  <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                    {expandedContent.has(item.id) 
+                      ? item.body 
+                      : item.body.length > 200 
+                        ? item.body.substring(0, 200) + '...' 
+                        : item.body
+                    }
+                  </div>
+                  {item.body.length > 200 && (
+                    <button
+                      onClick={() => toggleContentExpansion(item.id)}
+                      className="mt-2 text-sm text-green-600 hover:text-green-800 font-medium"
+                    >
+                      {expandedContent.has(item.id) ? 'Show Less' : 'Read More'}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Fallback description if no AI content */}
+              {!item.body && (
+                <p className="text-gray-600 mb-4 line-clamp-3">
+                  {item.idea?.description || 'No content available'}
+                </p>
+              )}
 
               <div className="flex items-center space-x-6 text-sm text-gray-500 mb-4">
                 <div className="flex items-center">

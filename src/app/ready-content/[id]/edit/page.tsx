@@ -192,7 +192,31 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Edit Content</h1>
             <p className="text-gray-600 mt-2">
-              {content.idea?.title || 'Untitled Idea'}
+              {(() => {
+                // Try to get title from idea first
+                if (content.idea?.title) return content.idea.title
+                
+                // Try to extract title from AI content body
+                if (content.body) {
+                  const lines = content.body.split('\n')
+                  for (const line of lines) {
+                    const trimmed = line.trim()
+                    // Look for markdown headers (# Title) or first meaningful line
+                    if (trimmed.startsWith('# ')) {
+                      return trimmed.substring(2).trim()
+                    }
+                    if (trimmed.startsWith('## ')) {
+                      return trimmed.substring(3).trim()
+                    }
+                    // If no headers, use first non-empty line
+                    if (trimmed.length > 0 && !trimmed.startsWith('#')) {
+                      return trimmed.length > 50 ? trimmed.substring(0, 50) + '...' : trimmed
+                    }
+                  }
+                }
+                
+                return 'Untitled Content'
+              })()}
             </p>
           </div>
           <div className="flex items-center space-x-3">
@@ -229,7 +253,19 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
       {/* Content Editor */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Content</h2>
+        <h2 className="text-lg font-medium text-gray-900 mb-2">AI Generated Content</h2>
+        <p className="text-gray-600 mb-4">
+          Edit the AI-generated content below. You can modify the text, formatting, and structure as needed.
+        </p>
+        
+        {/* Current Content Preview */}
+        <div className="bg-green-50 rounded-md p-4 mb-4">
+          <h4 className="text-sm font-semibold text-green-700 mb-2">Current Content Preview:</h4>
+          <div className="text-sm text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto">
+            {content.body || 'No content available'}
+          </div>
+        </div>
+        
         <RichTextEditor
           content={body}
           onContentChange={setBody}
