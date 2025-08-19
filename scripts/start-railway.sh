@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Railway startup script - Updated: $(date)
 # Log everything to see what's happening
 echo "--- Running start-railway.sh ---"
 echo "--- Checking environment variables ---"
