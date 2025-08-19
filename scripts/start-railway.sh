@@ -46,7 +46,15 @@ if [ -n "$RAILWAY_ENVIRONMENT" ]; then
   
   # Check if database is empty after all operations
   echo "--- Checking if database needs seeding ---"
-  USER_COUNT=$(npx prisma db execute --stdin <<< "SELECT COUNT(*) as count FROM \"User\";" 2>/dev/null | grep -o '[0-9]*' | tail -1 || echo "0")
+  
+  # More robust user count extraction
+  USER_COUNT=$(npx prisma db execute --stdin <<< "SELECT COUNT(*) as count FROM \"User\";" 2>/dev/null | grep -E '[0-9]+' | tail -1 | tr -d ' ' || echo "0")
+  
+  # Ensure USER_COUNT is a valid number
+  if [[ ! "$USER_COUNT" =~ ^[0-9]+$ ]]; then
+    echo "--- Invalid user count detected: '$USER_COUNT', defaulting to 0 ---"
+    USER_COUNT=0
+  fi
   
   if [ "$USER_COUNT" -eq 0 ]; then
     echo "--- Database is empty, running seed command ---"
