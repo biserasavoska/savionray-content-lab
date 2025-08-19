@@ -47,7 +47,9 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
   const fetchContent = async () => {
     try {
-      const response = await fetch(`/api/drafts/${params.id}`)
+      const response = await fetch(`/api/drafts/${params.id}`, {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         setContent(data)
@@ -74,6 +76,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           body,
         }),
@@ -104,6 +107,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           status: newStatus,
         }),

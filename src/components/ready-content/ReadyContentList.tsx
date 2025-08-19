@@ -86,6 +86,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
       })
 

@@ -16,12 +16,20 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get organization context
-    const orgContext = await getOrganizationContext(request)
+    // Debug: Log cookies and headers
+    console.log('API Route Debug - Cookies:', request.cookies.getAll())
+    console.log('API Route Debug - Headers:', Object.fromEntries(request.headers.entries()))
+    console.log('API Route Debug - User:', session.user.email)
+
+    // Get organization context - pass the actual request object
+    const orgContext = await getOrganizationContext(undefined, request)
     
     if (!orgContext) {
+      console.error('Organization context failed for user:', session.user.email)
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
+
+    console.log('API Route Debug - Organization context:', orgContext.organizationId)
 
     // Fetch the content draft
     const contentDraft = await prisma.contentDraft.findUnique({
@@ -97,7 +105,7 @@ export async function PUT(
     }
 
     // Get organization context
-    const orgContext = await getOrganizationContext(request)
+    const orgContext = await getOrganizationContext(undefined, request)
     
     if (!orgContext) {
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
@@ -146,7 +154,7 @@ export async function DELETE(
     }
 
     // Only the creator or admin can delete the draft
-    if (!isAdmin(session) && draft.createdById !== session.user.id) {
+    if (draft.createdById !== session.user.id) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
     }
 
