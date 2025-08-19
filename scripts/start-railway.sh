@@ -44,6 +44,17 @@ if [ -n "$RAILWAY_ENVIRONMENT" ]; then
     npx prisma db seed || echo "--- Seeding failed, continuing anyway ---"
   fi
   
+  # Check if database is empty after all operations
+  echo "--- Checking if database needs seeding ---"
+  USER_COUNT=$(npx prisma db execute --stdin <<< "SELECT COUNT(*) as count FROM \"User\";" 2>/dev/null | grep -o '[0-9]*' | tail -1 || echo "0")
+  
+  if [ "$USER_COUNT" -eq 0 ]; then
+    echo "--- Database is empty, running seed command ---"
+    npx prisma db seed || echo "--- Seeding failed, continuing anyway ---"
+  else
+    echo "--- Database has data (${USER_COUNT} users), skipping seeding ---"
+  fi
+  
   echo "--- Starting Next.js on port $PORT ---"
   exec npx next start -p $PORT
 else
