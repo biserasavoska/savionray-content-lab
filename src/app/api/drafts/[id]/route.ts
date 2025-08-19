@@ -1,148 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { authOptions , isCreative, isAdmin } from '@/lib/auth'
+import { getOrganizationContext } from '@/lib/utils/organization-context'
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  try {
-    const { body, contentType, status, metadata } = await req.json()
-
-    if (!body && !status && !metadata) {
-      return NextResponse.json(
-        { error: 'At least one field to update is required' },
-        { status: 400 }
-      )
-    }
-
-    const draft = await prisma.contentDraft.findUnique({
-      where: { id: params.id },
-    })
-
-    if (!draft) {
-      return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
-    }
-
-    // Only the creator or admin can update the draft
-    if (!isAdmin(session) && draft.createdById !== session.user.id) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
-    }
-
-    const updateData: any = {}
-    
-    if (body !== undefined) {
-      updateData.body = body
-    }
-    
-    if (status !== undefined) {
-      updateData.status = status
-    }
-    
-    if (metadata !== undefined) {
-      const currentMetadata = draft.metadata && typeof draft.metadata === 'object' ? draft.metadata as Record<string, any> : {}
-      updateData.metadata = {
-        ...currentMetadata,
-        ...metadata,
-        contentType: contentType || currentMetadata.contentType || 'social-media',
-      }
-    } else if (contentType !== undefined) {
-      const currentMetadata = draft.metadata && typeof draft.metadata === 'object' ? draft.metadata as Record<string, any> : {}
-      updateData.metadata = {
-        ...currentMetadata,
-        contentType: contentType || 'social-media',
-      }
-    }
-
-    const updatedDraft = await prisma.contentDraft.update({
-      where: { id: params.id },
-      data: updateData,
-      include: {
-        User: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    })
-
-    return NextResponse.json(updatedDraft)
-  } catch (error) {
-    console.error('Failed to update draft:', error)
-    return NextResponse.json(
-      { error: 'Failed to update draft' },
-      { status: 500 }
-    )
-  }
-}
-
+// GET /api/drafts/[id] - Fetch a specific content draft
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   try {
-    const draft = await prisma.contentDraft.findUnique({
-      where: { id: params.id },
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get organization context
+    const orgContext = await getOrganizationContext(request)
+    
+    if (!orgContext) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
+
+    // Fetch the content draft
+    const contentDraft = await prisma.contentDraft.findUnique({
+      where: {
+        id: params.id,
+        organizationId: orgContext.organizationId
+      },
       include: {
+        Idea: {
+          include: {
+            User: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                image: true
+              }
+            }
+          }
+        },
         User: {
           select: {
+            id: true,
             name: true,
             email: true,
-          },
-        },
-        Idea: {
-          select: {
-            title: true,
-            status: true,
-          },
+            role: true,
+            image: true
+          }
         },
         Feedback: {
           include: {
             User: {
               select: {
                 name: true,
-                email: true,
-              },
-            },
+                email: true
+              }
+            }
           },
           orderBy: {
-            createdAt: 'desc',
-          },
+            createdAt: 'desc'
+          }
         },
-      },
+        Media: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
+      }
     })
 
-    if (!draft) {
-      return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+    if (!contentDraft) {
+      return NextResponse.json({ error: 'Content draft not found' }, { status: 404 })
     }
 
-    // Only the creator, admin, or client can view the draft
-    if (!isAdmin(session) && draft.createdById !== session.user.id) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
-    }
-
-    return NextResponse.json(draft)
+    return NextResponse.json(contentDraft)
   } catch (error) {
-    console.error('Failed to fetch draft:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch draft' },
-      { status: 500 }
-    )
+    console.error('Error fetching content draft:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// PUT /api/drafts/[id] - Update a content draft
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get organization context
+    const orgContext = await getOrganizationContext(request)
+    
+    if (!orgContext) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { status, body: contentBody } = body
+
+    // Update the content draft
+    const updatedDraft = await prisma.contentDraft.update({
+      where: {
+        id: params.id,
+        organizationId: orgContext.organizationId
+      },
+      data: {
+        ...(status && { status }),
+        ...(contentBody && { body: contentBody }),
+        updatedAt: new Date()
+      }
+    })
+
+    return NextResponse.json(updatedDraft)
+  } catch (error) {
+    console.error('Error updating content draft:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

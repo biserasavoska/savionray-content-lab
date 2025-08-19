@@ -34,6 +34,8 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
   const [selectedType, setSelectedType] = useState<ContentType | 'ALL'>('ALL')
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [updatedItems, setUpdatedItems] = useState<Set<string>>(new Set())
 
   const filteredContent = content.filter(item => {
     if (selectedType !== 'ALL' && item.contentType !== selectedType) {
@@ -84,12 +86,24 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
         headers: {
           'Content-Type': 'application/json',
         },
-        body: method === 'POST' ? JSON.stringify({}) : JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus }),
       })
 
       if (response.ok) {
-        // Refresh the page to show updated data
-        window.location.reload()
+        // Show success message
+        const statusText = newStatus === 'APPROVED' ? 'approved' : 'revision requested'
+        setSuccessMessage(`Content ${statusText} successfully!`)
+        
+        // Mark item as updated
+        setUpdatedItems(prev => new Set(prev).add(draftId))
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(null), 3000)
+        
+        // Refresh the page after a short delay to show updated data
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
       } else {
         console.error('Failed to update status')
         alert('Failed to update status. Please try again.')
@@ -161,9 +175,25 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
   }
 
   return (
-    <div className="space-y-6">
-      {/* Filter Bar */}
-      <div className="flex items-center justify-between">
+    <div>
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-green-800">{successMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <select
             value={selectedType}
@@ -349,17 +379,59 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.APPROVED)}
-                      disabled={isSubmitting === item.id}
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isSubmitting === item.id || updatedItems.has(item.id)}
+                      className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                        updatedItems.has(item.id) 
+                          ? 'bg-green-500 cursor-default' 
+                          : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                      }`}
                     >
-                      {isSubmitting === item.id ? 'Updating...' : 'Approve'}
+                      {isSubmitting === item.id ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Updating...
+                        </>
+                      ) : updatedItems.has(item.id) ? (
+                        <>
+                          <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Approved ✓
+                        </>
+                      ) : (
+                        'Approve'
+                      )}
                     </button>
                     <button
                       onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.AWAITING_REVISION)}
-                      disabled={isSubmitting === item.id}
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isSubmitting === item.id || updatedItems.has(item.id)}
+                      className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                        updatedItems.has(item.id) 
+                          ? 'bg-orange-500 cursor-default' 
+                          : 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-500'
+                      }`}
                     >
-                      {isSubmitting === item.id ? 'Updating...' : 'Request Revision'}
+                      {isSubmitting === item.id ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Updating...
+                        </>
+                      ) : updatedItems.has(item.id) ? (
+                        <>
+                          <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Revision Requested ✓
+                        </>
+                      ) : (
+                        'Request Revision'
+                      )}
                     </button>
                   </div>
                 )}
