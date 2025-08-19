@@ -64,12 +64,27 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
 
     setIsSubmitting(draftId)
     try {
-      const response = await fetch(`/api/drafts/${draftId}`, {
-        method: 'PUT',
+      let endpoint: string
+      let method: string
+      
+      if (newStatus === 'APPROVED') {
+        endpoint = `/api/drafts/${draftId}/approve`
+        method = 'POST'
+      } else if (newStatus === 'REJECTED') {
+        endpoint = `/api/drafts/${draftId}/reject`
+        method = 'POST'
+      } else {
+        // For other status updates, use the general endpoint if it exists
+        endpoint = `/api/drafts/${draftId}`
+        method = 'PUT'
+      }
+
+      const response = await fetch(endpoint, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: method === 'POST' ? JSON.stringify({}) : JSON.stringify({ status: newStatus }),
       })
 
       if (response.ok) {
