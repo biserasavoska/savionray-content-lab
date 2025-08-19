@@ -16,19 +16,15 @@ if [ -n "$RAILWAY_ENVIRONMENT" ]; then
   
   echo "--- PORT from env is: [$PORT] ---"
   
-  # Check if database already has data
-  echo "--- Checking database state ---"
-  DB_HAS_DATA=$(npx prisma db execute --stdin <<< "SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = 'public';" 2>/dev/null | grep -o '[0-9]*' | tail -1 || echo "0")
-  
-  if [ "$DB_HAS_DATA" -gt 0 ]; then
-    echo "--- Database has existing data, using db push instead of migrations ---"
+  # Check if database already has data by trying to run migrations first
+  echo "--- Attempting database migrations ---"
+  if npx prisma migrate deploy 2>&1 | grep -q "P3005"; then
+    echo "--- Database has existing data (P3005 error detected), using db push instead ---"
     npx prisma db push --accept-data-loss || echo "--- Database push failed, continuing anyway ---"
     
     echo "--- Skipping seeding (database already has data) ---"
   else
-    echo "--- Database is empty, running migrations and seeding ---"
-    npx prisma migrate deploy || echo "--- Migration failed, continuing anyway ---"
-    
+    echo "--- Database is empty or migrations succeeded, attempting seeding ---"
     echo "--- Attempting database seeding ---"
     npx prisma db seed || echo "--- Seeding failed, continuing anyway ---"
   fi
