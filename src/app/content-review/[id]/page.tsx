@@ -396,8 +396,35 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           ← Back to Content Review
         </button>
         
-        <h1 className="text-2xl font-bold mb-4">{contentItem.title}</h1>
-        <p className="text-gray-600 mb-6">{contentItem.description}</p>
+        <h1 className="text-2xl font-bold mb-4">Content Review</h1>
+        
+        {/* Original Idea Context - This is what the AI will use */}
+        {contentItem.idea && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <h2 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
+              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              Original Idea Context
+            </h2>
+            <div className="space-y-3">
+              <div>
+                <span className="font-medium text-blue-800">Idea Title:</span>
+                <p className="text-blue-900 font-semibold mt-1">{contentItem.idea.title}</p>
+              </div>
+              <div>
+                <span className="font-medium text-blue-800">Idea Description:</span>
+                <p className="text-blue-900 mt-1">{contentItem.idea.description}</p>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-blue-100 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> The AI will use this idea context to generate relevant content. 
+                You can add additional requirements in the "Additional Context" field below.
+              </p>
+            </div>
+          </div>
+        )}
         
         {/* Content Item Details */}
         <div className="bg-gray-50 p-4 rounded-lg mb-6">
@@ -428,12 +455,61 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
             </div>
           </div>
         </div>
+        
+        {/* Debug Information - Remove this in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug Info (Development Only):</h3>
+            <div className="text-xs text-yellow-700 space-y-1">
+              <div><strong>Content Item ID:</strong> {contentItem.id}</div>
+              <div><strong>Has Idea Data:</strong> {contentItem.idea ? 'Yes' : 'No'}</div>
+              {contentItem.idea && (
+                <>
+                  <div><strong>Idea ID:</strong> {contentItem.idea.id}</div>
+                  <div><strong>Idea Title:</strong> {contentItem.idea.title}</div>
+                  <div><strong>Idea Description:</strong> {contentItem.idea.description}</div>
+                </>
+              )}
+              <div><strong>Content Type:</strong> {contentItem.contentType}</div>
+              <div><strong>Status:</strong> {contentItem.status}</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
         {/* Content Generation Section */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-4">AI Content Generation</h2>
+          
+          {/* AI Context Preview */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">AI Context Preview:</h3>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Title:</span>
+                <span className="ml-2 text-gray-800">{contentItem.idea?.title || 'No title available'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Description:</span>
+                <span className="ml-2 text-gray-800">{contentItem.idea?.description || 'No description available'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Content Type:</span>
+                <span className="ml-2 text-gray-800">{contentItem.contentType}</span>
+              </div>
+              {additionalContext && (
+                <div>
+                  <span className="font-medium text-gray-600">Additional Context:</span>
+                  <span className="ml-2 text-gray-800">{additionalContext}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+              <strong>Tip:</strong> The AI will generate content based on the idea context above. 
+              Use the "Additional Context" field to add specific requirements or tone preferences.
+            </div>
+          </div>
           
           <div className="mb-6">
             <ModelSelector
@@ -460,15 +536,27 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Context
+              Additional Context & Requirements
             </label>
             <textarea
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-              rows={3}
+              rows={4}
               value={additionalContext}
               onChange={(e) => setAdditionalContext(e.target.value)}
-              placeholder="Add any specific requirements, tone preferences, or additional context for the content..."
+              placeholder={`Add specific requirements for the AI content generation...
+
+Examples:
+• Tone: "Professional but conversational, targeting business leaders"
+• Length: "Keep it under 200 words for social media"
+• Focus: "Emphasize the benefits of effective naming conventions"
+• Style: "Include actionable tips and examples"
+• Keywords: "Must include: project management, efficiency, governance"
+
+The AI will combine this with the idea context above to generate relevant content.`}
             />
+            <p className="mt-2 text-sm text-gray-600">
+              This additional context will be combined with the original idea to guide the AI content generation.
+            </p>
           </div>
 
           <button

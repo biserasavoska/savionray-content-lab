@@ -17,8 +17,15 @@ export async function GET(request: NextRequest) {
       organizationId: context.organizationId,
     };
     
+    // Filter out approved ideas by default - they move to Content Management
     if (status) {
       where.status = status;
+    } else {
+      // Default filter: exclude approved ideas
+      // Users can still see approved ideas by explicitly filtering: ?status=APPROVED
+      where.status = {
+        not: 'APPROVED'
+      };
     }
     
     const [ideas, total] = await Promise.all([
