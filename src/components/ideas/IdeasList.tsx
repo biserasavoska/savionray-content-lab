@@ -125,14 +125,14 @@ export default function IdeasList() {
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-blue-800">Approved Ideas Move to Content Management</h3>
+            <h3 className="text-sm font-medium text-blue-800">Approved Ideas Move to Content Review</h3>
             <p className="text-sm text-blue-700 mt-1">
-              When you approve an idea, it automatically creates a content draft and moves to the Content Management section. 
+              When you approve an idea, it automatically creates a content draft and moves to the Content Review section. 
               You can find your approved ideas there for content creation and review.
             </p>
             <div className="mt-2 flex items-center space-x-4">
-              <Link href="/content-management" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                Go to Content Management →
+              <Link href="/content-review" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                Go to Content Review →
               </Link>
               <span className="text-sm text-blue-600">
                 (Your approved ideas are safely stored there)
