@@ -108,13 +108,13 @@ export async function PATCH(
               body: '', // Empty body to be filled by creative team
               metadata: {
                 ideaId: params.id,
-                contentType: updatedIdea.contentType,
+                contentType: updatedIdea.contentType || 'SOCIAL_MEDIA_POST',
                 mediaType: updatedIdea.mediaType,
                 publishingDateTime: updatedIdea.publishingDateTime,
                 source: 'approved_idea'
               },
               ideaId: params.id,
-              contentType: updatedIdea.contentType,
+              contentType: updatedIdea.contentType || 'SOCIAL_MEDIA_POST',
               createdById: context.userId,
               organizationId: context.organizationId,
             },
