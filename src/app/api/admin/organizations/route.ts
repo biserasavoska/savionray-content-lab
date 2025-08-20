@@ -169,6 +169,9 @@ export async function POST(request: NextRequest) {
       clientUsers = []
     } = body
 
+    // Convert maxUsers to integer if it's a string
+    const maxUsersInt = typeof maxUsers === 'string' ? parseInt(maxUsers, 10) : maxUsers
+
     if (!name || !slug) {
       return NextResponse.json(
         { error: 'Name and slug are required' },
@@ -224,7 +227,7 @@ export async function POST(request: NextRequest) {
         primaryColor,
         subscriptionPlan,
         subscriptionStatus: 'ACTIVE',
-        maxUsers,
+        maxUsers: maxUsersInt,
         settings: {
           welcomeMessage: welcomeMessage || `Welcome to ${name}!`,
           defaultContentTypes: ['SOCIAL_MEDIA_POST', 'BLOG_POST'],
