@@ -91,13 +91,42 @@ export async function PATCH(
         include: {
           User: {
             select: {
-              id: true,
               name: true,
               email: true,
             },
           },
         },
       })
+
+      // If the idea is being approved, automatically create a content draft
+      if (status === 'APPROVED') {
+        try {
+          // Create a content draft from the approved idea
+          await prisma.contentDraft.create({
+            data: {
+              status: 'DRAFT',
+              body: '', // Empty body to be filled by creative team
+              metadata: {
+                ideaId: params.id,
+                contentType: updatedIdea.contentType,
+                mediaType: updatedIdea.mediaType,
+                publishingDateTime: updatedIdea.publishingDateTime,
+                source: 'approved_idea'
+              },
+              ideaId: params.id,
+              contentType: updatedIdea.contentType,
+              createdById: context.userId,
+              organizationId: context.organizationId,
+            },
+          })
+          
+          console.log(`Content draft created for approved idea: ${params.id}`)
+        } catch (draftError) {
+          console.error('Failed to create content draft for approved idea:', draftError)
+          // Don't fail the approval if draft creation fails
+          // The idea is still approved, just without automatic draft creation
+        }
+      }
 
       return NextResponse.json(updatedIdea)
     } else {
