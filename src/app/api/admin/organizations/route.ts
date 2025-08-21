@@ -200,6 +200,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if domain already exists (only if domain is provided)
+    if (domain && domain.trim()) {
+      const existingDomainOrg = await prisma.organization.findUnique({
+        where: { domain: domain.trim() }
+      })
+
+      if (existingDomainOrg) {
+        return NextResponse.json(
+          { error: 'Organization domain already exists' },
+          { status: 409 }
+        )
+      }
+    }
+
     // Validate client users
     if (!Array.isArray(clientUsers) || clientUsers.length === 0) {
       return NextResponse.json(
@@ -223,7 +237,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         slug,
-        domain,
+        domain: domain && domain.trim() ? domain.trim() : null,
         primaryColor,
         subscriptionPlan,
         subscriptionStatus: 'ACTIVE',
