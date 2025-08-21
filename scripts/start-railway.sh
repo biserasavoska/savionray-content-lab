@@ -22,8 +22,8 @@ if [ -n "$RAILWAY_ENVIRONMENT" ]; then
   if npx prisma migrate deploy 2>&1 | grep -q "P3005"; then
     echo "--- Database has existing data (P3005 error detected), using db push instead ---"
     
-    # Try to clean up orphaned data first
-    echo "--- Attempting to clean up orphaned data ---"
+    # Try to clean up orphaned data first (non-destructive)
+    echo "--- Attempting to clean up orphaned data (non-destructive) ---"
     npx prisma db execute --stdin <<< "
       -- Delete ContentDeliveryPlan records with invalid organizationId
       DELETE FROM \"ContentDeliveryPlan\" 
@@ -34,9 +34,9 @@ if [ -n "$RAILWAY_ENVIRONMENT" ]; then
       WHERE \"planId\" NOT IN (SELECT id FROM \"ContentDeliveryPlan\");
     " 2>/dev/null || echo "--- Data cleanup failed, continuing anyway ---"
     
-    # Now try the database push with force flag
-    echo "--- Attempting database push with force flag ---"
-    npx prisma db push --force-reset || echo "--- Database push failed, continuing anyway ---"
+    # Now try the database push WITHOUT force-reset to preserve existing data
+    echo "--- Attempting database push (preserving existing data) ---"
+    npx prisma db push || echo "--- Database push failed, continuing anyway ---"
     
     echo "--- Skipping seeding (database already has data) ---"
   else
