@@ -26,6 +26,14 @@ export default function ClientUserManagement({ organizationId, organizationName 
   const [selectedUser, setSelectedUser] = useState<ClientUser | null>(null)
   const [isEditingRole, setIsEditingRole] = useState(false)
   const [newRole, setNewRole] = useState('')
+  const [showAddUserModal, setShowAddUserModal] = useState(false)
+  const [isAddingUser, setIsAddingUser] = useState(false)
+  const [addUserForm, setAddUserForm] = useState({
+    name: '',
+    email: '',
+    systemRole: 'CLIENT',
+    organizationRole: 'MEMBER'
+  })
 
   useEffect(() => {
     fetchUsers()
@@ -45,6 +53,47 @@ export default function ClientUserManagement({ organizationId, organizationName 
       setError(err instanceof Error ? err.message : 'Failed to fetch users')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleAddUser = async () => {
+    if (!addUserForm.name || !addUserForm.email) {
+      setError('Name and email are required')
+      return
+    }
+
+    setIsAddingUser(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/admin/organizations/${organizationId}/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(addUserForm),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to add user')
+      }
+
+      // Refresh users list
+      await fetchUsers()
+      
+      // Reset form and close modal
+      setAddUserForm({
+        name: '',
+        email: '',
+        systemRole: 'CLIENT',
+        organizationRole: 'MEMBER'
+      })
+      setShowAddUserModal(false)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add user')
+    } finally {
+      setIsAddingUser(false)
     }
   }
 
@@ -172,8 +221,19 @@ export default function ClientUserManagement({ organizationId, organizationName 
             Manage users for {organizationName}
           </p>
         </div>
-        <div className="text-sm text-gray-500">
-          {users.length} user{users.length !== 1 ? 's' : ''}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">
+            {users.length} user{users.length !== 1 ? 's' : ''}
+          </div>
+          <button
+            onClick={() => setShowAddUserModal(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add User
+          </button>
         </div>
       </div>
 
@@ -322,6 +382,104 @@ export default function ClientUserManagement({ organizationId, organizationName 
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
           <p className="text-gray-500">No users have been added to this organization yet.</p>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Add New User</h3>
+              
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={(e) => { e.preventDefault(); handleAddUser(); }} className="space-y-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={addUserForm.name}
+                    onChange={(e) => setAddUserForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={addUserForm.email}
+                    onChange={(e) => setAddUserForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="systemRole" className="block text-sm font-medium text-gray-700 mb-1">
+                    System Role
+                  </label>
+                  <select
+                    id="systemRole"
+                    value={addUserForm.systemRole}
+                    onChange={(e) => setAddUserForm(prev => ({ ...prev, systemRole: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="CLIENT">Client</option>
+                    <option value="CREATIVE">Creative</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="organizationRole" className="block text-sm font-medium text-gray-700 mb-1">
+                    Organization Role
+                  </label>
+                  <select
+                    id="organizationRole"
+                    value={addUserForm.organizationRole}
+                    onChange={(e) => setAddUserForm(prev => ({ ...prev, organizationRole: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="MEMBER">Member</option>
+                    <option value="VIEWER">Viewer</option>
+                    <option value="MANAGER">Manager</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="OWNER">Owner</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddUserModal(false)}
+                    className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isAddingUser}
+                    className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isAddingUser ? 'Adding...' : 'Add User'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>
