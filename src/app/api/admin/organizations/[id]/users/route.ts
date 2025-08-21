@@ -196,10 +196,11 @@ export async function POST(
       joinedAt: new Date()
     }
 
-    // Only set invitedBy if session user exists and has a valid ID
-    if (session.user?.id) {
-      organizationUserData.invitedBy = session.user.id
-    }
+    // TEMPORARILY DISABLE invitedBy to prevent foreign key constraint issues
+    // TODO: Re-enable once database schema is properly aligned
+    // if (session.user?.id) {
+    //   organizationUserData.invitedBy = session.user.id
+    // }
 
     await prisma.organizationUser.create({
       data: organizationUserData
@@ -212,7 +213,7 @@ export async function POST(
       userId: user.id,
       userEmail: user.email,
       organizationRole: organizationRole || 'MEMBER',
-      invitedBy: organizationUserData.invitedBy || 'not_set'
+      invitedBy: 'temporarily_disabled_due_to_constraint_issues'
     })
 
     return NextResponse.json({
