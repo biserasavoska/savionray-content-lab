@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       organizationId: context.organizationId,
     };
     
-    // Filter out approved ideas by default - they move to Content Management
+    // Filter out approved ideas by default - they move to Content Status
     if (status) {
       where.status = status;
     } else {

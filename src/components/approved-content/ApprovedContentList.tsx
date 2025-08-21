@@ -45,25 +45,42 @@ export default function ApprovedContentList({ content, isAdminUser, isCreativeUs
     }
   }
 
-  const handlePublish = async (contentItemId: string) => {
+  const handlePublish = async (contentDraftId: string) => {
     if (!session) return
 
-    setIsSubmitting(contentItemId)
+    // For now, we'll publish to LinkedIn by default
+    // In the future, you could add a modal to select platforms
+    const platforms = ['linkedin']
+
+    setIsSubmitting(contentDraftId)
     try {
-      const response = await fetch(`/api/content-items/${contentItemId}`, {
-        method: 'PUT',
+      // Use the new social media publish endpoint
+      const response = await fetch(`/api/drafts/${contentDraftId}/publish-social`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: DRAFT_STATUS.PUBLISHED }),
+        credentials: 'include',
+        body: JSON.stringify({ platforms })
       })
 
       if (response.ok) {
+        const result = await response.json()
+        
+        // Show detailed success message with platform results
+        const successMessage = result.results
+          .filter((r: any) => r.success)
+          .map((r: any) => `✅ ${r.platform.toUpperCase()}: ${r.url}`)
+          .join('\n')
+        
+        alert(`Content published successfully!\n\n${successMessage}`)
+        
         // Refresh the page to show updated data
         window.location.reload()
       } else {
-        console.error('Failed to publish content')
-        alert('Failed to publish content. Please try again.')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to publish content:', errorData)
+        alert(`Failed to publish content: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error publishing content:', error)
@@ -231,13 +248,18 @@ export default function ApprovedContentList({ content, isAdminUser, isCreativeUs
 
               {/* Publish button for admins */}
               {isAdminUser && (
-                <button
-                  onClick={() => handlePublish(item.id)}
-                  disabled={isSubmitting === item.id}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting === item.id ? 'Publishing...' : 'Publish'}
-                </button>
+                <div className="text-center">
+                  <button
+                    onClick={() => handlePublish(item.id)}
+                    disabled={isSubmitting === item.id}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting === item.id ? 'Publishing...' : 'Publish to LinkedIn'}
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Publishes content directly to LinkedIn
+                  </p>
+                </div>
               )}
             </div>
           </div>

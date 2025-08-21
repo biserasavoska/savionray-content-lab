@@ -268,8 +268,8 @@ export default function ClientDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {organization ? `${organization.name} Content Hub` : 'Content Review Dashboard'}
-        </h1>
+              {organization ? `${organization.name} Content Lab` : 'Content Review Dashboard'}
+            </h1>
             <p className="text-gray-600 mt-2">
           {organization 
             ? `Review and approve content for ${organization.name}`

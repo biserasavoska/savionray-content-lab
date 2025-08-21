@@ -35,6 +35,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [body, setBody] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     if (!session) {
@@ -85,7 +86,10 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
       if (response.ok) {
         // Update local state
         setContent(prev => prev ? { ...prev, body } : null)
-        alert('Content saved successfully!')
+        setSuccessMessage('Content saved successfully!')
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(''), 3000)
       } else {
         alert('Failed to save content. Please try again.')
       }
@@ -271,6 +275,13 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
           onContentChange={setBody}
           placeholder="Enter your content here..."
         />
+        
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+            {successMessage}
+          </div>
+        )}
       </div>
 
       {/* Media Upload */}

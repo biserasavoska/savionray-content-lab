@@ -116,31 +116,7 @@ export default function IdeasList() {
         </Link>
       </div>
 
-      {/* Info about approved ideas */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-blue-800">Approved Ideas Move to Content Review</h3>
-            <p className="text-sm text-blue-700 mt-1">
-              When you approve an idea, it automatically creates a content draft and moves to the Content Review section. 
-              You can find your approved ideas there for content creation and review.
-            </p>
-            <div className="mt-2 flex items-center space-x-4">
-              <Link href="/content-review" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                Go to Content Review →
-              </Link>
-              <span className="text-sm text-blue-600">
-                (Your approved ideas are safely stored there)
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {ideas.length === 0 ? (
         <div className="text-center py-12">

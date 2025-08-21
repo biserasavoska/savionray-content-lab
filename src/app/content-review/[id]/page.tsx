@@ -159,6 +159,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   const [loading, setLoading] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0])
   const [additionalContext, setAdditionalContext] = useState('')
 
@@ -279,12 +280,36 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   const saveDraft = async (status: 'IDEA' | 'CONTENT_REVIEW' | 'APPROVED' | 'REJECTED' | 'PUBLISHED') => {
     if (!contentItem) return;
     setSavingDraft(true);
+    
+    // Map ContentItemStatus to DraftStatus
+    let draftStatus: string;
+    switch (status) {
+      case 'IDEA':
+        draftStatus = 'DRAFT';
+        break;
+      case 'CONTENT_REVIEW':
+        draftStatus = 'AWAITING_FEEDBACK';
+        break;
+      case 'APPROVED':
+        draftStatus = 'APPROVED';
+        break;
+      case 'REJECTED':
+        draftStatus = 'REJECTED';
+        break;
+      case 'PUBLISHED':
+        draftStatus = 'PUBLISHED';
+        break;
+      default:
+        draftStatus = 'DRAFT';
+    }
+    
     try {
       const response = await fetch(`/api/drafts/${params.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          status: status,
+          status: draftStatus,
           body: content,
           metadata: {
             model: selectedModel.id,
@@ -295,10 +320,18 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           }
         }),
       });
+      
       if (!response.ok) {
         const error = await response.text();
         throw new Error(error);
       }
+      
+      // Show success message
+      setSuccessMessage(`Content saved successfully as ${status.toLowerCase()}!`);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+      
       // If approved, redirect to the content review page
       if (status === 'APPROVED') {
         router.push('/content-review');
@@ -578,6 +611,12 @@ The AI will combine this with the idea context above to generate relevant conten
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
               {error}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+              {successMessage}
             </div>
           )}
 

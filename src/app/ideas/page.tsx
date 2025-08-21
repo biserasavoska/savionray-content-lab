@@ -15,7 +15,7 @@ export default async function IdeasPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Content Ideas</h1>
         <p className="mt-2 text-gray-600">
-          Review and manage your pending and rejected content ideas. Approved ideas automatically move to Content Management for content creation.
+          Review and manage your pending and rejected content ideas. Approved ideas automatically move to Content Status for content creation.
         </p>
       </div>
       
