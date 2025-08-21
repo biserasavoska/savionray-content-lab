@@ -250,16 +250,22 @@ export async function POST(request: NextRequest) {
 
     // Add client users
     for (const clientUser of clientUsers) {
+      // Skip if no email provided
+      if (!clientUser.email || !clientUser.name) {
+        continue
+      }
+
       let user = await prisma.user.findUnique({
         where: { email: clientUser.email }
       })
 
       if (!user) {
+        // Create new user
         user = await prisma.user.create({
           data: {
             email: clientUser.email,
             name: clientUser.name,
-            role: clientUser.role,
+            role: clientUser.role || 'CLIENT',
             emailVerified: new Date()
           }
         })
@@ -273,12 +279,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Create organization user relationship
       await prisma.organizationUser.create({
         data: {
           organizationId: organization.id,
           userId: user.id,
-          role: clientUser.organizationRole,
-          permissions: getPermissionsForRole(clientUser.organizationRole),
+          role: clientUser.organizationRole || 'ADMIN',
+          permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
           isActive: true,
           invitedBy: session.user.id,
           joinedAt: new Date()
