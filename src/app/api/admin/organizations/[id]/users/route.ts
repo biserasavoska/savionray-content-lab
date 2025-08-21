@@ -187,25 +187,32 @@ export async function POST(
     }
 
     // Add user to organization
+    const organizationUserData: any = {
+      organizationId,
+      userId: user.id,
+      role: organizationRole || 'MEMBER',
+      permissions: getPermissionsForRole(organizationRole || 'MEMBER'),
+      isActive: true,
+      joinedAt: new Date()
+    }
+
+    // Only set invitedBy if session user exists and has a valid ID
+    if (session.user?.id) {
+      organizationUserData.invitedBy = session.user.id
+    }
+
     await prisma.organizationUser.create({
-      data: {
-        organizationId,
-        userId: user.id,
-        role: organizationRole || 'MEMBER',
-        permissions: getPermissionsForRole(organizationRole || 'MEMBER'),
-        isActive: true,
-        invitedBy: session.user.id,
-        joinedAt: new Date()
-      }
+      data: organizationUserData
     })
 
     logger.info('User added to organization by admin', {
-      adminId: session.user.id,
-      adminEmail: session.user.email,
+      adminId: session.user?.id || 'unknown',
+      adminEmail: session.user?.email || 'unknown',
       organizationId,
       userId: user.id,
       userEmail: user.email,
-      organizationRole: organizationRole || 'MEMBER'
+      organizationRole: organizationRole || 'MEMBER',
+      invitedBy: organizationUserData.invitedBy || 'not_set'
     })
 
     return NextResponse.json({
