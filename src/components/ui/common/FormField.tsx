@@ -41,10 +41,10 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, variant = 'default', size = 'md', ...props }, ref) => {
-    const baseClasses = 'w-full rounded-md border bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+    const baseClasses = 'w-full rounded-md border bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200'
     
     const variantClasses = {
-      default: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',
+      default: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500 hover:border-gray-400',
       error: 'border-red-300 focus:border-red-500 focus:ring-red-500',
       success: 'border-green-300 focus:border-green-500 focus:ring-green-500'
     }
@@ -87,10 +87,10 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, options, variant = 'default', size = 'md', onChange, ...props }, ref) => {
-    const baseClasses = 'w-full rounded-md border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+    const baseClasses = 'w-full rounded-md border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200'
     
     const variantClasses = {
-      default: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',
+      default: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500 hover:border-gray-400',
       error: 'border-red-300 focus:border-red-500 focus:ring-red-500',
       success: 'border-green-300 focus:border-green-500 focus:ring-green-500'
     }
@@ -99,12 +99,6 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       sm: 'px-2 py-1 text-xs',
       md: 'px-3 py-2 text-sm',
       lg: 'px-4 py-3 text-base'
-    }
-    
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      if (onChange) {
-        onChange(e.target.value)
-      }
     }
     
     return (
@@ -116,7 +110,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           sizeClasses[size],
           className
         )}
-        onChange={handleChange}
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         {...props}
       >
         {options.map((option) => (
@@ -135,18 +129,17 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 Select.displayName = 'Select'
 
 // Textarea component
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface TextareaProps extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> {
   variant?: 'default' | 'error' | 'success'
   size?: 'sm' | 'md' | 'lg'
-  rows?: number
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, variant = 'default', size = 'md', rows = 3, ...props }, ref) => {
-    const baseClasses = 'w-full rounded-md border bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-vertical'
+  ({ className, variant = 'default', size = 'md', ...props }, ref) => {
+    const baseClasses = 'w-full rounded-md border bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200 resize-vertical'
     
     const variantClasses = {
-      default: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500',
+      default: 'border-gray-300 focus:border-blue-500 focus:ring-blue-500 hover:border-gray-400',
       error: 'border-red-300 focus:border-red-500 focus:ring-red-500',
       success: 'border-green-300 focus:border-green-500 focus:ring-green-500'
     }
@@ -160,7 +153,6 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <textarea
         ref={ref}
-        rows={rows}
         className={cn(
           baseClasses,
           variantClasses[variant],
@@ -183,7 +175,7 @@ interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, variant = 'default', size = 'md', ...props }, ref) => {
-    const baseClasses = 'h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50'
+    const baseClasses = 'h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200'
     
     const variantClasses = {
       default: 'border-gray-300 focus:ring-blue-500',
@@ -228,7 +220,7 @@ interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, '
 
 const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
   ({ className, label, variant = 'default', size = 'md', ...props }, ref) => {
-    const baseClasses = 'h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50'
+    const baseClasses = 'h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200'
     
     const variantClasses = {
       default: 'border-gray-300 focus:ring-blue-500',
@@ -264,11 +256,71 @@ const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
 )
 Radio.displayName = 'Radio'
 
+// Switch component
+interface SwitchProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
+  label?: string
+  variant?: 'default' | 'error' | 'success'
+  size?: 'sm' | 'md' | 'lg'
+}
+
+const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
+  ({ className, label, variant = 'default', size = 'md', ...props }, ref) => {
+    const baseClasses = 'sr-only'
+    
+    const switchSizes = {
+      sm: 'w-8 h-4',
+      md: 'w-11 h-6',
+      lg: 'w-14 h-7'
+    }
+    
+    const switchVariants = {
+      default: 'bg-gray-200 peer-checked:bg-blue-600',
+      error: 'bg-gray-200 peer-checked:bg-red-600',
+      success: 'bg-gray-200 peer-checked:bg-green-600'
+    }
+    
+    const switchDotSizes = {
+      sm: 'w-3 h-3',
+      md: 'w-5 h-5',
+      lg: 'w-6 h-6'
+    }
+    
+    return (
+      <div className="flex items-center space-x-3">
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            ref={ref}
+            type="checkbox"
+            className={cn(baseClasses, className)}
+            {...props}
+          />
+          <div className={cn(
+            'relative bg-gray-200 rounded-full transition-colors duration-200 ease-in-out',
+            switchSizes[size],
+            switchVariants[variant]
+          )}>
+            <div className={cn(
+              'absolute left-0.5 top-0.5 bg-white rounded-full transition-transform duration-200 ease-in-out',
+              switchDotSizes[size],
+              'peer-checked:translate-x-full'
+            )} />
+          </div>
+        </label>
+        {label && (
+          <label className="text-sm text-gray-700">{label}</label>
+        )}
+      </div>
+    )
+  }
+)
+Switch.displayName = 'Switch'
+
 export {
   FormField,
   Input,
   Select,
   Textarea,
   Checkbox,
-  Radio
+  Radio,
+  Switch
 } 

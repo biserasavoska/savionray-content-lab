@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
+import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
 import { PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
@@ -116,8 +117,6 @@ export default function IdeasList() {
         </Link>
       </div>
 
-
-
       {ideas.length === 0 ? (
         <div className="text-center py-12">
           <div className="mx-auto h-12 w-12 text-gray-400">
@@ -144,9 +143,7 @@ export default function IdeasList() {
                   <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
                     {idea.title}
                   </CardTitle>
-                  <Badge variant={getStatusBadgeVariant(idea.status)}>
-                    {idea.status}
-                  </Badge>
+                  <StatusBadge status={idea.status} variant="rounded" size="sm" />
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mt-2">
