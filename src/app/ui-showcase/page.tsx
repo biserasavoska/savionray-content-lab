@@ -63,9 +63,17 @@ export default function UIShowcasePage() {
         description="Demonstrating all the new standardized UI components for consistent design across the app."
         breadcrumbs={<Breadcrumbs items={breadcrumbItems} />}
         actions={
-          <Button variant="primary" size="lg">
-            Get Started
-          </Button>
+          <div className="flex items-center space-x-3">
+            <a 
+              href="/ui-comparison" 
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
+            >
+              View Before/After Comparison →
+            </a>
+            <Button variant="primary" size="lg">
+              Get Started
+            </Button>
+          </div>
         }
       />
 
