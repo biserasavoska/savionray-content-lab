@@ -18,7 +18,7 @@ const nextConfig = {
 
   // Experimental features for performance
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Removed optimizePackageImports as it was causing vendor chunk issues
     turbo: {
       rules: {
         '*.svg': {
@@ -29,24 +29,17 @@ const nextConfig = {
     },
   },
 
-  // Webpack optimizations
+  // Webpack optimizations - Simplified to prevent vendor chunk issues
   webpack: (config, { dev, isServer }) => {
-    // Production optimizations
+    // Production optimizations - Simplified to avoid conflicts
     if (!dev && !isServer) {
+      // Use Next.js default vendor chunk handling
       config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            enforce: true,
-          },
+          default: false,
+          vendors: false,
+          // Let Next.js handle vendor chunks naturally
         },
       }
     }
