@@ -167,7 +167,7 @@ export default function UIComparisonPage() {
                     <div className="max-w-6xl mx-auto px-4 sm:px-6">
                       <div className="mb-6">
                         <nav className="flex items-center space-x-2 text-sm">
-                          <a href="#" className="text-gray-600 hover:text-gray-900">Home</a>
+                          <span className="text-gray-600">Home</span>
                           <span className="text-gray-400">/</span>
                           <span className="text-gray-500">Page</span>
                         </nav>
@@ -205,7 +205,7 @@ export default function UIComparisonPage() {
                         title="Page Title"
                         description="Page description here"
                         breadcrumbs={<Breadcrumbs items={[
-                          { href: '#', children: 'Home' },
+                          { href: '/', children: 'Home' },
                           { children: 'Page', isActive: true }
                         ]} />}
                       />
