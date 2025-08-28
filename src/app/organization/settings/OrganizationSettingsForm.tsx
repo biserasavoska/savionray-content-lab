@@ -2,9 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Button from '@/components/ui/common/Button'
-import StatusBadge from '@/components/ui/common/StatusBadge'
-import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
+import {
+  Button,
+  StatusBadge,
+  PageLayout,
+  PageHeader,
+  PageContent,
+  PageSection,
+  Input,
+  ErrorDisplay
+} from '@/components/ui/common'
 
 interface User {
   id: string
@@ -47,6 +54,7 @@ interface OrganizationSettingsFormProps {
 export default function OrganizationSettingsForm({ organization }: OrganizationSettingsFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -72,12 +80,15 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
 
       if (response.ok) {
         setMessage('Organization settings updated successfully!')
+        setMessageType('success')
       } else {
         const error = await response.json()
         setMessage(`Error: ${error.message}`)
+        setMessageType('error')
       }
     } catch (error) {
       setMessage('An error occurred while updating settings')
+      setMessageType('error')
     } finally {
       setIsLoading(false)
     }
@@ -87,69 +98,44 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
     <PageLayout>
       <PageHeader 
         title="Organization Settings"
-        description="Manage your organization's basic information, subscription, and team members"
+        subtitle="Manage your organization's basic information, subscription, and team members"
       />
       <PageContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <PageSection>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+          <PageSection title="Basic Information">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Organization Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  defaultValue={organization.name}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
-                  Organization Slug
-                </label>
-                <input
-                  type="text"
-                  name="slug"
-                  id="slug"
-                  defaultValue={organization.slug}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="domain" className="block text-sm font-medium text-gray-700">
-                  Custom Domain (Optional)
-                </label>
-                <input
-                  type="text"
-                  name="domain"
-                  id="domain"
-                  defaultValue={organization.domain || ''}
-                  placeholder="example.com"
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
-                />
-              </div>
-              <div>
-                <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700">
-                  Primary Color
-                </label>
-                <input
-                  type="color"
-                  name="primaryColor"
-                  id="primaryColor"
-                  defaultValue={organization.primaryColor || '#3B82F6'}
-                  className="mt-1 block w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
-                />
-              </div>
+              <Input
+                label="Organization Name"
+                type="text"
+                name="name"
+                defaultValue={organization.name}
+                required
+              />
+              <Input
+                label="Organization Slug"
+                type="text"
+                name="slug"
+                defaultValue={organization.slug}
+                required
+              />
+              <Input
+                label="Custom Domain (Optional)"
+                type="text"
+                name="domain"
+                defaultValue={organization.domain || ''}
+                placeholder="example.com"
+              />
+              <Input
+                label="Primary Color"
+                type="color"
+                name="primaryColor"
+                defaultValue={organization.primaryColor || '#3B82F6'}
+                className="h-10"
+              />
             </div>
           </PageSection>
 
-          <PageSection>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Subscription</h3>
+          <PageSection title="Subscription">
             <div className="bg-gray-50 p-4 rounded-md">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
@@ -168,8 +154,7 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
             </div>
           </PageSection>
 
-          <PageSection>
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Team Members</h3>
+          <PageSection title="Team Members">
             <div className="bg-white border border-gray-200 rounded-md">
               <div className="px-4 py-3 border-b border-gray-200">
                 <div className="flex justify-between items-center">
@@ -196,13 +181,11 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
                     </div>
                     <div className="flex items-center space-x-2">
                       <StatusBadge 
-                        status={orgUser.role.toLowerCase()} 
-                        variant="rounded"
+                        status={orgUser.role.toLowerCase() as any}
                         size="sm"
                       />
                       <StatusBadge 
-                        status={orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()} 
-                        variant="rounded"
+                        status={orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase() as any}
                         size="sm"
                       />
                     </div>
@@ -217,9 +200,9 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
             <Button
               type="submit"
               disabled={isLoading}
-              variant="primary"
-              size="md"
               loading={isLoading}
+              variant="default"
+              size="default"
             >
               {isLoading ? 'Saving...' : 'Save Changes'}
             </Button>
@@ -227,8 +210,18 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
 
           {/* Message */}
           {message && (
-            <div className={`p-4 rounded-md ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-              {message}
+            <div className="mt-4">
+              {messageType === 'error' ? (
+                <ErrorDisplay
+                  title="Update Failed"
+                  message={message}
+                  variant="destructive"
+                />
+              ) : (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+                  {message}
+                </div>
+              )}
             </div>
           )}
         </form>

@@ -5,7 +5,13 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { SparklesIcon, LightBulbIcon, ChartBarIcon, CheckCircleIcon, XCircleIcon, UserIcon, DocumentTextIcon, ClockIcon } from '@heroicons/react/24/outline'
 
-import { Feedback } from '@prisma/client'
+// Feedback type defined locally to avoid import issues
+interface Feedback {
+  id: string
+  content: string
+  createdAt: Date
+  User: Pick<User, 'name' | 'email'>
+}
 import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS } from '@/lib/utils/enum-utils'
 // EnhancedFeedbackForm removed - using simple feedback form instead
 import FeedbackList from '@/components/feedback/FeedbackList'
@@ -127,7 +133,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
         </p>
         {isCreativeUser && (
           <Link href="/create-content">
-            <Button variant="danger" size="sm">
+            <Button variant="destructive" size="sm">
               Create Content
             </Button>
           </Link>
@@ -159,7 +165,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                 <h3 className="text-xl font-semibold text-gray-900">
                   {draft.Idea?.title || 'Untitled content item'}
                 </h3>
-                                 <StatusBadge status={draft.status} />
+                                 <StatusBadge status={draft.status as any} />
               </div>
               
                               <p className="text-gray-600 mb-4 text-base leading-relaxed">{draft.Idea?.description || 'No description available'}</p>
@@ -221,7 +227,6 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                  onClick={() => toggleAIReview(draft.id)}
                  variant="outline"
                  size="sm"
-                 fullWidth
                >
                  <SparklesIcon className="h-4 w-4" />
                  <span>{showAIReview[draft.id] ? 'Hide AI Review' : 'AI Review'}</span>
@@ -233,18 +238,16 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                                      <Button
                      onClick={() => handleStatusUpdate(draft.id, DRAFT_STATUS.APPROVED)}
                      disabled={isSubmitting === draft.id}
-                     variant="success"
+                     variant="default"
                      size="sm"
-                     fullWidth
                    >
                      {isSubmitting === draft.id ? 'Updating...' : 'Approve'}
                    </Button>
                    <Button
                      onClick={() => handleStatusUpdate(draft.id, DRAFT_STATUS.AWAITING_REVISION)}
                      disabled={isSubmitting === draft.id}
-                     variant="warning"
+                     variant="secondary"
                      size="sm"
-                     fullWidth
                    >
                      {isSubmitting === draft.id ? 'Updating...' : 'Request Revision'}
                    </Button>

@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { cn } from '@/lib/utils/cn'
 
 export interface StatusBadgeProps {
   status: 'draft' | 'review' | 'approved' | 'published' | 'rejected' | 'archived' | 'pending' | 'active' | 'inactive' | 'completed' | 'in-progress' | 'cancelled'
@@ -43,12 +42,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   
   return (
     <span
-      className={cn(
-        baseClasses,
-        statusClasses[status],
-        sizeClasses[size],
-        className
-      )}
+      className={`${baseClasses} ${statusClasses[status]} ${sizeClasses[size]} ${className || ''}`}
     >
       {displayText}
     </span>

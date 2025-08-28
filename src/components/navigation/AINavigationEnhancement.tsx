@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
 import { 
@@ -157,7 +157,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
       {showAI && (
         <Card className="mb-4">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center justify-between">
+            <h3 className="text-sm flex items-center justify-between">
               <span className="flex items-center">
                 <Zap className="w-4 h-4 mr-2 text-yellow-600" />
                 AI Suggestions
@@ -168,7 +168,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
                   Loading...
                 </div>
               )}
-            </CardTitle>
+            </h3>
           </CardHeader>
           <CardContent className="space-y-3">
             {suggestions.length > 0 ? (
@@ -214,7 +214,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
       {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Quick Actions</CardTitle>
+          <h3 className="text-sm">Quick Actions</h3>
         </CardHeader>
         <CardContent className="space-y-2">
           <Button

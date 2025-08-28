@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Button from '@/components/ui/common/Button'
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
 import { 
@@ -177,7 +177,7 @@ export default function AIEnhancedContentReview({
       {/* Content Preview */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <h3 className="flex items-center justify-between">
             <span>Content Preview</span>
             <div className="flex items-center space-x-2">
               {content.metadata?.aiEnhanced && (
@@ -190,7 +190,7 @@ export default function AIEnhancedContentReview({
                 {content.contentType}
               </Badge>
             </div>
-          </CardTitle>
+          </h3>
         </CardHeader>
         <CardContent>
           <div className="prose max-w-none">
@@ -206,11 +206,11 @@ export default function AIEnhancedContentReview({
         {/* AI Insights */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <h3 className="flex items-center">
               <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
               AI Insights
               {isAnalyzing && <span className="ml-2 text-sm text-muted-foreground">(Analyzing...)</span>}
-            </CardTitle>
+            </h3>
           </CardHeader>
           <CardContent className="space-y-4">
             {insights.length > 0 ? (
@@ -256,10 +256,10 @@ export default function AIEnhancedContentReview({
         {aiAnalysis && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <h3 className="flex items-center">
                 <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
                 AI Metrics
-              </CardTitle>
+              </h3>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
@@ -299,7 +299,7 @@ export default function AIEnhancedContentReview({
       {/* Review Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Review Actions</CardTitle>
+          <h3>Review Actions</h3>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>

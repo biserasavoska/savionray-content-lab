@@ -1,9 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import Button from '@/components/ui/common/Button'
-import StatusBadge from '@/components/ui/common/StatusBadge'
-import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
+import {
+  Button,
+  StatusBadge,
+  PageLayout,
+  PageHeader,
+  PageContent,
+  PageSection,
+  Select,
+  ErrorDisplay
+} from '@/components/ui/common'
 
 interface User {
   id: string
@@ -39,6 +46,7 @@ interface UserManagementListProps {
 export default function UserManagementList({ organization }: UserManagementListProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     setIsLoading(true)
@@ -55,14 +63,17 @@ export default function UserManagementList({ organization }: UserManagementListP
 
       if (response.ok) {
         setMessage('User role updated successfully!')
+        setMessageType('success')
         // Refresh the page to show updated data
         window.location.reload()
       } else {
         const error = await response.json()
         setMessage(`Error: ${error.message}`)
+        setMessageType('error')
       }
     } catch (error) {
       setMessage('An error occurred while updating user role')
+      setMessageType('error')
     } finally {
       setIsLoading(false)
     }
@@ -83,58 +94,35 @@ export default function UserManagementList({ organization }: UserManagementListP
 
       if (response.ok) {
         setMessage('User removed from organization successfully!')
+        setMessageType('success')
         // Refresh the page to show updated data
         window.location.reload()
       } else {
         const error = await response.json()
         setMessage(`Error: ${error.message}`)
+        setMessageType('error')
       }
     } catch (error) {
       setMessage('An error occurred while removing user')
+      setMessageType('error')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'OWNER':
-        return 'purple'
-      case 'ADMIN':
-        return 'danger'
-      case 'MANAGER':
-        return 'info'
-      case 'MEMBER':
-        return 'success'
-      case 'VIEWER':
-        return 'secondary'
-      default:
-        return 'secondary'
-    }
-  }
-
-  const getSystemRoleBadgeVariant = (role: string) => {
-    switch (role.toLowerCase()) {
-      case 'owner':
-        return 'purple'
-      case 'admin':
-        return 'danger'
-      case 'manager':
-        return 'info'
-      case 'member':
-        return 'success'
-      case 'viewer':
-        return 'secondary'
-      default:
-        return 'secondary'
-    }
-  }
+  const roleOptions = [
+    { value: 'OWNER', label: 'Owner' },
+    { value: 'ADMIN', label: 'Admin' },
+    { value: 'MANAGER', label: 'Manager' },
+    { value: 'MEMBER', label: 'Member' },
+    { value: 'VIEWER', label: 'Viewer' }
+  ]
 
   return (
     <PageLayout>
       <PageHeader 
         title={`Team Members (${organization.OrganizationUser.length})`}
-        description="Manage your organization's team members and their roles"
+        subtitle="Manage your organization's team members and their roles"
       />
       <PageContent>
         <PageSection>
@@ -143,7 +131,7 @@ export default function UserManagementList({ organization }: UserManagementListP
               <h3 className="text-lg font-medium text-gray-900">Team Members ({organization.OrganizationUser.length})</h3>
               <p className="text-sm text-gray-600">Manage roles and permissions for your team</p>
             </div>
-            <Button variant="primary" size="sm">
+            <Button variant="default" size="sm">
               Invite Member
             </Button>
           </div>
@@ -187,25 +175,18 @@ export default function UserManagementList({ organization }: UserManagementListP
 
                     {/* Organization Role */}
                     <div className="col-span-3">
-                      <select
+                      <Select
+                        options={roleOptions}
                         value={orgUser.role}
                         onChange={(e) => handleRoleChange(orgUser.userId, e.target.value)}
                         disabled={isLoading || orgUser.role === 'OWNER'}
-                        className="block w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 transition-colors duration-200 hover:border-gray-400"
-                      >
-                        <option value="OWNER">Owner</option>
-                        <option value="ADMIN">Admin</option>
-                        <option value="MANAGER">Manager</option>
-                        <option value="MEMBER">Member</option>
-                        <option value="VIEWER">Viewer</option>
-                      </select>
+                      />
                     </div>
 
                     {/* System Role */}
                     <div className="col-span-3">
                       <StatusBadge 
-                        status={orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()} 
-                        variant="rounded"
+                        status={orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase() as any}
                         size="sm"
                       />
                     </div>
@@ -232,8 +213,18 @@ export default function UserManagementList({ organization }: UserManagementListP
 
           {/* Message */}
           {message && (
-            <div className={`mt-4 p-4 rounded-md ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-              {message}
+            <div className="mt-4">
+              {messageType === 'error' ? (
+                <ErrorDisplay
+                  title="Action Failed"
+                  message={message}
+                  variant="destructive"
+                />
+              ) : (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md text-green-700">
+                  {message}
+                </div>
+              )}
             </div>
           )}
         </PageSection>

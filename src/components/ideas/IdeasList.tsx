@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
 import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
@@ -105,8 +105,8 @@ export default function IdeasList() {
           <h2 className="text-xl font-semibold text-gray-900">
             {ideas.length} {ideas.length === 1 ? 'Idea' : 'Ideas'}
           </h2>
-          <Badge variant="warning">{ideas.filter(i => i.status === 'PENDING').length} Pending</Badge>
-          <Badge variant="danger">{ideas.filter(i => i.status === 'REJECTED').length} Rejected</Badge>
+          <Badge variant="secondary">{ideas.filter(i => i.status === 'PENDING').length} Pending</Badge>
+          <Badge variant="destructive">{ideas.filter(i => i.status === 'REJECTED').length} Rejected</Badge>
         </div>
         
         <Link href="/ideas/new">
@@ -140,10 +140,10 @@ export default function IdeasList() {
             <Card key={idea.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
+                  <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                     {idea.title}
-                  </CardTitle>
-                  <StatusBadge status={idea.status} variant="rounded" size="sm" />
+                  </h3>
+                  <StatusBadge status={idea.status as any} size="sm" />
                 </div>
                 
                 <div className="flex flex-wrap gap-2 mt-2">
