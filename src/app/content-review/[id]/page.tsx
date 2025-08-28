@@ -9,8 +9,18 @@ import { AVAILABLE_MODELS } from '@/lib/models'
 import ModelSelector from '@/components/content/ModelSelector'
 import ReasoningOptions from '@/components/content/ReasoningOptions'
 import ReasoningDisplay from '@/components/content/ReasoningDisplay'
-import Button from '@/components/ui/common/Button'
-import StatusBadge from '@/components/ui/common/StatusBadge'
+import {
+  Button,
+  StatusBadge,
+  PageLayout,
+  PageHeader,
+  PageContent,
+  PageSection,
+  Breadcrumbs,
+  Textarea,
+  Input,
+  ErrorDisplay
+} from '@/components/ui/common'
 
 type ContentItemWithDetails = {
   id: string
@@ -348,88 +358,70 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading session...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session?.user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Sign In</h2>
-          <p className="text-gray-600 mb-6">You need to be signed in to access this page.</p>
-          <Button onClick={() => router.push('/auth/signin')} variant="primary">
-            Sign In
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading content item...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="rounded-md bg-red-50 p-4 max-w-md mx-auto">
-            <p className="text-red-800 mb-4">{error}</p>
-            <Button onClick={() => fetchContentItem()} variant="danger">
-              Try Again
-            </Button>
+      <PageLayout>
+        <PageContent>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
           </div>
-        </div>
-      </div>
+        </PageContent>
+      </PageLayout>
     )
+  }
+
+  if (!session) {
+    router.push('/auth/signin')
+    return null
   }
 
   if (!contentItem) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="rounded-md bg-yellow-50 p-4 max-w-md mx-auto">
-            <p className="text-yellow-800 mb-4">Content item not found</p>
-            <Button onClick={() => router.back()} variant="warning">
-              Go Back
-            </Button>
+      <PageLayout>
+        <PageContent>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="rounded-md bg-yellow-50 p-4 max-w-md mx-auto">
+                <p className="text-yellow-800 mb-4">Content item not found</p>
+                <Button onClick={() => router.back()} variant="outline">
+                  Go Back
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </PageContent>
+      </PageLayout>
     )
   }
 
+  const breadcrumbItems = [
+    { href: '/', children: 'Home' },
+    { href: '/content-review', children: 'Content Review' },
+    { href: `/content-review/${params.id}`, children: 'Review Details' }
+  ]
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <Button onClick={() => router.back()} variant="danger">
-          ← Back to Content Review
-        </Button>
-        
-        <h1 className="text-2xl font-bold mb-4">Content Review</h1>
-        
+    <PageLayout>
+      <PageHeader
+        title="Content Review"
+        subtitle={`Reviewing: ${contentItem.idea?.title || contentItem.title || 'Untitled Content'}`}
+        breadcrumbs={<Breadcrumbs items={breadcrumbItems} />}
+        actions={
+          <Button onClick={() => router.back()} variant="outline">
+            ← Back to Content Review
+          </Button>
+        }
+      />
+
+      <PageContent>
         {/* Original Idea Context - This is what the AI will use */}
         {contentItem.idea && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-semibold text-blue-900 mb-3 flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              Original Idea Context
-            </h2>
+          <PageSection 
+            title="Original Idea Context"
+            subtitle="This is what the AI will use to generate content"
+            className="mb-6"
+          >
             <div className="space-y-3">
               <div>
                 <span className="font-medium text-blue-800">Idea Title:</span>
@@ -446,23 +438,23 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
                 You can add additional requirements in the "Additional Context" field below.
               </p>
             </div>
-          </div>
+          </PageSection>
         )}
         
         {/* Content Item Details */}
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+        <PageSection title="Content Details" className="mb-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-gray-700">Status:</span>
-              <StatusBadge status={contentItem.status} />
+              <StatusBadge status={contentItem.status as any} />
             </div>
             <div>
               <span className="font-medium text-gray-700">Stage:</span>
-              <StatusBadge status={contentItem.currentStage} />
+              <StatusBadge status={contentItem.currentStage as any} />
             </div>
             <div>
               <span className="font-medium text-gray-700">Type:</span>
-              <StatusBadge status={contentItem.contentType} />
+              <StatusBadge status={contentItem.contentType as any} />
             </div>
             <div>
               <span className="font-medium text-gray-700">Created:</span>
@@ -471,12 +463,11 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
               </span>
             </div>
           </div>
-        </div>
+        </PageSection>
         
         {/* Debug Information - Remove this in production */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug Info (Development Only):</h3>
+          <PageSection title="Debug Info (Development Only)" className="mb-6">
             <div className="text-xs text-yellow-700 space-y-1">
               <div><strong>Content Item ID:</strong> {contentItem.id}</div>
               <div><strong>Has Idea Data:</strong> {contentItem.idea ? 'Yes' : 'No'}</div>
@@ -490,15 +481,11 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
               <div><strong>Content Type:</strong> {contentItem.contentType}</div>
               <div><strong>Status:</strong> {contentItem.status}</div>
             </div>
-          </div>
+          </PageSection>
         )}
-      </div>
 
-      <div className="space-y-6">
         {/* Content Generation Section */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">AI Content Generation</h2>
-          
+        <PageSection title="AI Content Generation" className="mb-6">
           {/* AI Context Preview */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
             <h3 className="text-sm font-medium text-gray-700 mb-3">AI Context Preview:</h3>
@@ -552,12 +539,8 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Context & Requirements
-            </label>
-            <textarea
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-              rows={4}
+            <Textarea
+              label="Additional Context & Requirements"
               value={additionalContext}
               onChange={(e) => setAdditionalContext(e.target.value)}
               placeholder={`Add specific requirements for the AI content generation...
@@ -570,32 +553,26 @@ Examples:
 • Keywords: "Must include: project management, efficiency, governance"
 
 The AI will combine this with the idea context above to generate relevant content.`}
+              rows={4}
+              helperText="This additional context will be combined with the original idea to guide the AI content generation."
             />
-            <p className="mt-2 text-sm text-gray-600">
-              This additional context will be combined with the original idea to guide the AI content generation.
-            </p>
           </div>
 
           <Button
             onClick={generateContent}
             disabled={loading}
-            variant="primary"
+            loading={loading}
+            variant="default"
           >
-            {loading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Generating...
-              </>
-            ) : 'Generate with AI'}
+            {loading ? 'Generating...' : 'Generate with AI'}
           </Button>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              {error}
-            </div>
+            <ErrorDisplay
+              title="Generation Error"
+              message={error}
+              variant="destructive"
+            />
           )}
 
           {successMessage && (
@@ -605,22 +582,20 @@ The AI will combine this with the idea context above to generate relevant conten
           )}
 
           {generatedContent && (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Post Text</label>
-                <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-                  rows={4}
+                <Textarea
+                  label="Post Text"
                   value={generatedContent.postText}
                   onChange={(e) => setGeneratedContent(prev => prev ? { ...prev, postText: e.target.value } : null)}
+                  rows={4}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Hashtags</label>
-                <input
+                <Input
+                  label="Hashtags"
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                   value={generatedContent.hashtags.map(tag => '#' + tag).join(' ')}
                   onChange={(e) => setGeneratedContent(prev => prev ? { 
                     ...prev, 
@@ -631,12 +606,11 @@ The AI will combine this with the idea context above to generate relevant conten
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Call to Action</label>
-                <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-                  rows={2}
+                <Textarea
+                  label="Call to Action"
                   value={generatedContent.callToAction}
                   onChange={(e) => setGeneratedContent(prev => prev ? { ...prev, callToAction: e.target.value } : null)}
+                  rows={2}
                 />
               </div>
 
@@ -650,37 +624,35 @@ The AI will combine this with the idea context above to generate relevant conten
               )}
             </div>
           )}
-        </div>
+        </PageSection>
 
         {/* Save Actions */}
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Save Actions</h2>
-          
+        <PageSection title="Save Actions">
           <div className="space-y-3">
             <Button
               onClick={() => saveDraft('IDEA')}
               disabled={savingDraft}
-              variant="warning"
+              variant="outline"
             >
               {savingDraft ? 'Saving...' : 'Save as Idea'}
             </Button>
             <Button
               onClick={() => saveDraft('CONTENT_REVIEW')}
               disabled={savingDraft}
-              variant="primary"
+              variant="default"
             >
               {savingDraft ? 'Saving...' : 'Submit for Review'}
             </Button>
             <Button
               onClick={() => saveDraft('APPROVED')}
               disabled={savingDraft}
-              variant="success"
+              variant="secondary"
             >
               {savingDraft ? 'Saving...' : 'Approve'}
             </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   )
 } 
