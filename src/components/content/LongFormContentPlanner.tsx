@@ -17,6 +17,8 @@ import {
   X,
   Lightbulb
 } from 'lucide-react'
+import Button from '@/components/ui/common/Button'
+import StatusBadge from '@/components/ui/common/StatusBadge'
 
 interface ContentSection {
   id: string
@@ -401,10 +403,11 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                   />
                 </div>
 
-                <button
+                <Button
                   onClick={generatePlan}
                   disabled={isGeneratingPlan || !plan.title}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                  variant="primary"
+                  className="w-full flex items-center justify-center"
                 >
                   {isGeneratingPlan ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -412,7 +415,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                     <Lightbulb className="w-4 h-4 mr-2" />
                   )}
                   {isGeneratingPlan ? 'Generating Plan...' : 'Generate AI Plan'}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -420,13 +423,14 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Sections</h2>
-                <button
+                <Button
                   onClick={addSection}
-                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 flex items-center"
+                  variant="success"
+                  className="flex items-center"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Add Section
-                </button>
+                </Button>
               </div>
 
               <div className="space-y-3">
@@ -444,12 +448,12 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                           </span>
                           {section.title}
                         </h3>
-                        <button
+                        <Button
                           onClick={() => removeSection(section.id)}
-                          className="text-red-500 hover:text-red-700"
+                          variant="danger"
                         >
                           <X className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                       
                       <input
@@ -477,6 +481,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                         />
                         <span className="text-xs text-gray-500">words</span>
                       </div>
+                      <StatusBadge status={section.status} />
                     </div>
                   ))
                 )}
@@ -538,13 +543,13 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                     className="w-full border border-gray-300 rounded px-3 py-2 h-32"
                     required
                   />
-                  <button
+                  <Button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center"
+                    variant="primary"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Document
-                  </button>
+                  </Button>
                 </form>
               </div>
 
@@ -564,12 +569,12 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                             {doc.type.replace('_', ' ')} • {doc.size.toLocaleString()} characters
                           </p>
                         </div>
-                        <button
+                        <Button
                           onClick={() => setContextDocuments(prev => prev.filter(d => d.id !== doc.id))}
-                          className="text-red-500 hover:text-red-700"
+                          variant="danger"
                         >
                           <X className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ))
@@ -594,10 +599,10 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                     <option value="gpt-5">GPT-5 (Best Quality)</option>
                     <option value="gpt-5-mini">GPT-5 Mini (Balanced)</option>
                   </select>
-                  <button
+                  <Button
                     onClick={generateAllContent}
                     disabled={isGeneratingContent || plan.sections.length === 0}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 flex items-center"
+                    variant="success"
                   >
                     {isGeneratingContent ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -605,7 +610,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                       <Brain className="w-4 h-4 mr-2" />
                     )}
                     Generate All Content
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -636,12 +641,12 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                             <AlertCircle className="w-5 h-5 text-red-500" />
                           )}
                           {section.status === 'planned' && (
-                            <button
+                            <Button
                               onClick={() => generateSectionContent(section.id)}
-                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                              variant="primary"
                             >
                               Generate
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </div>
@@ -671,14 +676,14 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Content Preview</h2>
-                <button
+                <Button
                   onClick={exportContent}
                   disabled={!plan.sections.some(s => s.content)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                  variant="primary"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Export Content
-                </button>
+                </Button>
               </div>
             </div>
 

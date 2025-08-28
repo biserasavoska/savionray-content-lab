@@ -8,6 +8,7 @@ import { io, Socket } from 'socket.io-client'
 // RICH TEXT EDITOR
 import RichTextEditor from '@/components/editor/RichTextEditor'
 import { formatDate } from '@/lib/utils/date-helpers'
+import StatusBadge from '@/components/ui/common/StatusBadge'
 
 interface Collaborator {
   id: string

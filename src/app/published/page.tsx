@@ -9,7 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { getOrganizationContext } from '@/lib/utils/organization-context'
-
+import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 
 export default async function PublishedPage() {
   const session = await getServerSession(authOptions)
@@ -98,18 +98,19 @@ export default async function PublishedPage() {
   const safePublishedContent = sanitizeContentDraftsData(publishedContent)
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Published Content</h1>
-        <p className="mt-2 text-gray-600">
-          View all published content and scheduled posts
-        </p>
-      </div>
-
-      <PublishedContentList 
-        publishedContent={safePublishedContent} 
-        isCreativeUser={isCreativeUser}
+    <PageLayout>
+      <PageHeader
+        title="Published Content"
+        description="View all published content and scheduled posts"
       />
-    </div>
+      <PageContent>
+        <PageSection>
+          <PublishedContentList 
+            publishedContent={safePublishedContent} 
+            isCreativeUser={isCreativeUser}
+          />
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   )
 } 

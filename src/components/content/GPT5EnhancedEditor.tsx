@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
+import Button from '@/components/ui/common/Button'
 
 export default function GPT5EnhancedEditor() {
   const { data: session } = useSession()
@@ -76,13 +77,9 @@ export default function GPT5EnhancedEditor() {
           </select>
         </div>
         
-        <button
-          onClick={generateContent}
-          disabled={isGenerating}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
+        <Button onClick={generateContent} disabled={isGenerating}>
           {isGenerating ? 'Generating...' : 'Test Content Generation'}
-        </button>
+        </Button>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow mb-6">

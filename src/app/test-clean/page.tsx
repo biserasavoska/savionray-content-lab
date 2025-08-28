@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
+import Button from '@/components/ui/common/Button'
 
 export default function TestCleanPage() {
   const { data: session } = useSession()
@@ -64,13 +65,13 @@ export default function TestCleanPage() {
           className="w-full h-32 border border-gray-300 rounded px-3 py-2 mb-4"
         />
         
-        <button
+        <Button
           onClick={generateContent}
           disabled={isGenerating}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
           {isGenerating ? 'Generating...' : 'Generate Content'}
-        </button>
+        </Button>
       </div>
 
       {results && (

@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Button from '@/components/ui/common/Button'
+import StatusBadge from '@/components/ui/common/StatusBadge'
+import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 
 interface User {
   id: string
@@ -93,121 +96,148 @@ export default function UserManagementList({ organization }: UserManagementListP
     }
   }
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'OWNER':
-        return 'bg-purple-100 text-purple-800'
+        return 'purple'
       case 'ADMIN':
-        return 'bg-red-100 text-red-800'
+        return 'danger'
       case 'MANAGER':
-        return 'bg-blue-100 text-blue-800'
+        return 'info'
       case 'MEMBER':
-        return 'bg-green-100 text-green-800'
+        return 'success'
       case 'VIEWER':
-        return 'bg-gray-100 text-gray-800'
+        return 'secondary'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'secondary'
+    }
+  }
+
+  const getSystemRoleBadgeVariant = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'owner':
+        return 'purple'
+      case 'admin':
+        return 'danger'
+      case 'manager':
+        return 'info'
+      case 'member':
+        return 'success'
+      case 'viewer':
+        return 'secondary'
+      default:
+        return 'secondary'
     }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900">Team Members ({organization.OrganizationUser.length})</h3>
-          <button
-            type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Invite Member
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-        <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
-            <div className="col-span-4">User</div>
-            <div className="col-span-3">Organization Role</div>
-            <div className="col-span-3">System Role</div>
-            <div className="col-span-2">Actions</div>
+    <PageLayout>
+      <PageHeader 
+        title={`Team Members (${organization.OrganizationUser.length})`}
+        description="Manage your organization's team members and their roles"
+      />
+      <PageContent>
+        <PageSection>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Team Members ({organization.OrganizationUser.length})</h3>
+              <p className="text-sm text-gray-600">Manage roles and permissions for your team</p>
+            </div>
+            <Button variant="primary" size="sm">
+              Invite Member
+            </Button>
           </div>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {organization.OrganizationUser.map((orgUser) => (
-            <div key={orgUser.id} className="px-6 py-4">
-              <div className="grid grid-cols-12 gap-4 items-center">
-                {/* User Info */}
-                <div className="col-span-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                          {orgUser.User_OrganizationUser_userIdToUser.image ? (
-                      <img
-                        src={orgUser.User_OrganizationUser_userIdToUser.image}
-                        alt={orgUser.User_OrganizationUser_userIdToUser.name || ''}
-                        className="h-10 w-10 rounded-full"
-                      />
-                    ) : (
-                      <span className="text-sm font-medium text-gray-600">
-                        {orgUser.User_OrganizationUser_userIdToUser.name?.[0] || orgUser.User_OrganizationUser_userIdToUser.email?.[0] || '?'}
-                      </span>
-                    )}
+
+          <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
+                <div className="col-span-4">User</div>
+                <div className="col-span-3">Organization Role</div>
+                <div className="col-span-3">System Role</div>
+                <div className="col-span-2">Actions</div>
+              </div>
+            </div>
+            
+            <div className="divide-y divide-gray-200">
+              {organization.OrganizationUser.map((orgUser) => (
+                <div key={orgUser.id} className="px-6 py-4">
+                  <div className="grid grid-cols-12 gap-4 items-center">
+                    {/* User Info */}
+                    <div className="col-span-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          {orgUser.User_OrganizationUser_userIdToUser.image ? (
+                            <img
+                              src={orgUser.User_OrganizationUser_userIdToUser.image}
+                              alt={orgUser.User_OrganizationUser_userIdToUser.name || ''}
+                              className="h-10 w-10 rounded-full"
+                            />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-600">
+                              {orgUser.User_OrganizationUser_userIdToUser.name?.[0] || orgUser.User_OrganizationUser_userIdToUser.email?.[0] || '?'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{orgUser.User_OrganizationUser_userIdToUser.name}</p>
+                          <p className="text-sm text-gray-500">{orgUser.User_OrganizationUser_userIdToUser.email}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{orgUser.User_OrganizationUser_userIdToUser.name}</p>
-                      <p className="text-sm text-gray-500">{orgUser.User_OrganizationUser_userIdToUser.email}</p>
+
+                    {/* Organization Role */}
+                    <div className="col-span-3">
+                      <select
+                        value={orgUser.role}
+                        onChange={(e) => handleRoleChange(orgUser.userId, e.target.value)}
+                        disabled={isLoading || orgUser.role === 'OWNER'}
+                        className="block w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 transition-colors duration-200 hover:border-gray-400"
+                      >
+                        <option value="OWNER">Owner</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="MANAGER">Manager</option>
+                        <option value="MEMBER">Member</option>
+                        <option value="VIEWER">Viewer</option>
+                      </select>
+                    </div>
+
+                    {/* System Role */}
+                    <div className="col-span-3">
+                      <StatusBadge 
+                        status={orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()} 
+                        variant="rounded"
+                        size="sm"
+                      />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="col-span-2">
+                      {orgUser.role !== 'OWNER' && (
+                        <Button
+                          onClick={() => handleRemoveUser(orgUser.userId)}
+                          disabled={isLoading}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
-
-                {/* Organization Role */}
-                <div className="col-span-3">
-                  <select
-                    value={orgUser.role}
-                    onChange={(e) => handleRoleChange(orgUser.userId, e.target.value)}
-                    disabled={isLoading || orgUser.role === 'OWNER'}
-                    className="block w-full text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-                  >
-                    <option value="OWNER">Owner</option>
-                    <option value="ADMIN">Admin</option>
-                    <option value="MANAGER">Manager</option>
-                    <option value="MEMBER">Member</option>
-                    <option value="VIEWER">Viewer</option>
-                  </select>
-                </div>
-
-                {/* System Role */}
-                <div className="col-span-3">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(orgUser.User_OrganizationUser_userIdToUser.role)}`}>
-                    {orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()}
-                  </span>
-                </div>
-
-                {/* Actions */}
-                <div className="col-span-2">
-                  {orgUser.role !== 'OWNER' && (
-                    <button
-                      onClick={() => handleRemoveUser(orgUser.userId)}
-                      disabled={isLoading}
-                      className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* Message */}
-      {message && (
-        <div className={`mt-4 p-4 rounded-md ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-          {message}
-        </div>
-      )}
-    </div>
+          {/* Message */}
+          {message && (
+            <div className={`mt-4 p-4 rounded-md ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+              {message}
+            </div>
+          )}
+        </PageSection>
+      </PageContent>
+    </PageLayout>
   )
 } 

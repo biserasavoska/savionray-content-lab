@@ -9,6 +9,8 @@ import { AVAILABLE_MODELS } from '@/lib/models'
 import ModelSelector from '@/components/content/ModelSelector'
 import ReasoningOptions from '@/components/content/ReasoningOptions'
 import ReasoningDisplay from '@/components/content/ReasoningDisplay'
+import Button from '@/components/ui/common/Button'
+import StatusBadge from '@/components/ui/common/StatusBadge'
 
 type ContentItemWithDetails = {
   id: string
@@ -361,12 +363,9 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Sign In</h2>
           <p className="text-gray-600 mb-6">You need to be signed in to access this page.</p>
-          <button
-            onClick={() => router.push('/auth/signin')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
+          <Button onClick={() => router.push('/auth/signin')} variant="primary">
             Sign In
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -389,12 +388,9 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         <div className="text-center">
           <div className="rounded-md bg-red-50 p-4 max-w-md mx-auto">
             <p className="text-red-800 mb-4">{error}</p>
-            <button
-              onClick={() => fetchContentItem()}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-            >
+            <Button onClick={() => fetchContentItem()} variant="danger">
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -407,12 +403,9 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         <div className="text-center">
           <div className="rounded-md bg-yellow-50 p-4 max-w-md mx-auto">
             <p className="text-yellow-800 mb-4">Content item not found</p>
-            <button
-              onClick={() => router.back()}
-              className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700"
-            >
+            <Button onClick={() => router.back()} variant="warning">
               Go Back
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -422,12 +415,9 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-red-600 hover:text-red-700 mb-4"
-        >
+        <Button onClick={() => router.back()} variant="danger">
           ← Back to Content Review
-        </button>
+        </Button>
         
         <h1 className="text-2xl font-bold mb-4">Content Review</h1>
         
@@ -464,21 +454,15 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-gray-700">Status:</span>
-              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                {contentItem.status}
-              </span>
+              <StatusBadge status={contentItem.status} />
             </div>
             <div>
               <span className="font-medium text-gray-700">Stage:</span>
-              <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                {contentItem.currentStage}
-              </span>
+              <StatusBadge status={contentItem.currentStage} />
             </div>
             <div>
               <span className="font-medium text-gray-700">Type:</span>
-              <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                {contentItem.contentType}
-              </span>
+              <StatusBadge status={contentItem.contentType} />
             </div>
             <div>
               <span className="font-medium text-gray-700">Created:</span>
@@ -592,10 +576,10 @@ The AI will combine this with the idea context above to generate relevant conten
             </p>
           </div>
 
-          <button
+          <Button
             onClick={generateContent}
             disabled={loading}
-            className="mb-6 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 flex items-center justify-center w-full"
+            variant="primary"
           >
             {loading ? (
               <>
@@ -606,7 +590,7 @@ The AI will combine this with the idea context above to generate relevant conten
                 Generating...
               </>
             ) : 'Generate with AI'}
-          </button>
+          </Button>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -673,27 +657,27 @@ The AI will combine this with the idea context above to generate relevant conten
           <h2 className="text-lg font-semibold mb-4">Save Actions</h2>
           
           <div className="space-y-3">
-            <button
+            <Button
               onClick={() => saveDraft('IDEA')}
               disabled={savingDraft}
-              className="w-full px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
+              variant="warning"
             >
               {savingDraft ? 'Saving...' : 'Save as Idea'}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => saveDraft('CONTENT_REVIEW')}
               disabled={savingDraft}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              variant="primary"
             >
               {savingDraft ? 'Saving...' : 'Submit for Review'}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => saveDraft('APPROVED')}
               disabled={savingDraft}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              variant="success"
             >
               {savingDraft ? 'Saving...' : 'Approve'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Button from '@/components/ui/common/Button'
+import StatusBadge from '@/components/ui/common/StatusBadge'
+import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 
 interface User {
   id: string
@@ -81,152 +84,155 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
   }
 
   return (
-    <div className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Organization Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                defaultValue={organization.name}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
-                Organization Slug
-              </label>
-              <input
-                type="text"
-                name="slug"
-                id="slug"
-                defaultValue={organization.slug}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="domain" className="block text-sm font-medium text-gray-700">
-                Domain (optional)
-              </label>
-              <input
-                type="text"
-                name="domain"
-                id="domain"
-                defaultValue={organization.domain || ''}
-                placeholder="example.com"
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700">
-                Primary Color
-              </label>
-              <input
-                type="color"
-                name="primaryColor"
-                id="primaryColor"
-                defaultValue={organization.primaryColor || '#3B82F6'}
-                className="mt-1 block w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Subscription Information */}
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Subscription</h3>
-          <div className="bg-gray-50 p-4 rounded-md">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <PageLayout>
+      <PageHeader 
+        title="Organization Settings"
+        description="Manage your organization's basic information, subscription, and team members"
+      />
+      <PageContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <PageSection>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <p className="text-sm font-medium text-gray-700">Plan</p>
-                <p className="text-sm text-gray-900 capitalize">{organization.subscriptionPlan?.toLowerCase() || 'Free'}</p>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  Organization Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  id="name"
+                  defaultValue={organization.name}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
+                  required
+                />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Status</p>
-                <p className="text-sm text-gray-900 capitalize">{organization.subscriptionStatus?.toLowerCase() || 'Active'}</p>
+                <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
+                  Organization Slug
+                </label>
+                <input
+                  type="text"
+                  name="slug"
+                  id="slug"
+                  defaultValue={organization.slug}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
+                  required
+                />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Max Users</p>
-                <p className="text-sm text-gray-900">{organization.maxUsers || 'Unlimited'}</p>
+                <label htmlFor="domain" className="block text-sm font-medium text-gray-700">
+                  Custom Domain (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="domain"
+                  id="domain"
+                  defaultValue={organization.domain || ''}
+                  placeholder="example.com"
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
+                />
+              </div>
+              <div>
+                <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700">
+                  Primary Color
+                </label>
+                <input
+                  type="color"
+                  name="primaryColor"
+                  id="primaryColor"
+                  defaultValue={organization.primaryColor || '#3B82F6'}
+                  className="mt-1 block w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 hover:border-gray-400"
+                />
               </div>
             </div>
-          </div>
-        </div>
+          </PageSection>
 
-        {/* Team Members */}
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Team Members</h3>
-          <div className="bg-white border border-gray-200 rounded-md">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Active Members ({organization.OrganizationUser.length})</span>
-                <div className="flex space-x-2">
-                  <Link
-                    href="/organization/users"
-                    className="text-sm text-blue-600 hover:text-blue-500"
-                  >
-                    Manage Team
-                  </Link>
-                  <button
-                    type="button"
-                    className="text-sm text-blue-600 hover:text-blue-500"
-                  >
-                    Invite Member
-                  </button>
+          <PageSection>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Subscription</h3>
+            <div className="bg-gray-50 p-4 rounded-md">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Plan</p>
+                  <p className="text-sm text-gray-900 capitalize">{organization.subscriptionPlan?.toLowerCase() || 'Free'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Status</p>
+                  <p className="text-sm text-gray-900 capitalize">{organization.subscriptionStatus?.toLowerCase() || 'Active'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Max Users</p>
+                  <p className="text-sm text-gray-900">{organization.maxUsers || 'Unlimited'}</p>
                 </div>
               </div>
             </div>
-            <div className="divide-y divide-gray-200">
-              {organization.OrganizationUser.map((orgUser) => (
-                <div key={orgUser.id} className="px-4 py-3 flex justify-between items-center">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{orgUser.User_OrganizationUser_userIdToUser.name}</p>
-                    <p className="text-sm text-gray-500">{orgUser.User_OrganizationUser_userIdToUser.email}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                      {orgUser.role.toLowerCase()}
-                    </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
-                      {orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()}
-                    </span>
+          </PageSection>
+
+          <PageSection>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Team Members</h3>
+            <div className="bg-white border border-gray-200 rounded-md">
+              <div className="px-4 py-3 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Active Members ({organization.OrganizationUser.length})</span>
+                  <div className="flex space-x-2">
+                    <Link
+                      href="/organization/users"
+                      className="text-sm text-blue-600 hover:text-blue-500 transition-colors duration-200"
+                    >
+                      Manage Team
+                    </Link>
+                    <Button variant="ghost" size="sm">
+                      Invite Member
+                    </Button>
                   </div>
                 </div>
-              ))}
+              </div>
+              <div className="divide-y divide-gray-200">
+                {organization.OrganizationUser.map((orgUser) => (
+                  <div key={orgUser.id} className="px-4 py-3 flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{orgUser.User_OrganizationUser_userIdToUser.name}</p>
+                      <p className="text-sm text-gray-500">{orgUser.User_OrganizationUser_userIdToUser.email}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <StatusBadge 
+                        status={orgUser.role.toLowerCase()} 
+                        variant="rounded"
+                        size="sm"
+                      />
+                      <StatusBadge 
+                        status={orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase()} 
+                        variant="rounded"
+                        size="sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          </PageSection>
 
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-
-        {/* Message */}
-        {message && (
-          <div className={`p-4 rounded-md ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-            {message}
+          {/* Submit Button */}
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              variant="primary"
+              size="md"
+              loading={isLoading}
+            >
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
-        )}
-      </form>
-    </div>
+
+          {/* Message */}
+          {message && (
+            <div className={`p-4 rounded-md ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+              {message}
+            </div>
+          )}
+        </form>
+      </PageContent>
+    </PageLayout>
   )
 } 

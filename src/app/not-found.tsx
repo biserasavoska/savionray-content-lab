@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Button from '@/components/ui/common/Button'
 
 export default function NotFound() {
   return (

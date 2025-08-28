@@ -413,7 +413,7 @@ export default function RichTextEditor({
       {/* Collaboration indicator */}
       {isCollaborating && (
         <div className="absolute top-2 right-2 z-10">
-          <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+          <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center gap-1 border border-green-200">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             Live
           </div>

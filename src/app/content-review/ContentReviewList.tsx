@@ -10,6 +10,9 @@ import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS } from '@/lib/utils
 // EnhancedFeedbackForm removed - using simple feedback form instead
 import FeedbackList from '@/components/feedback/FeedbackList'
 import AIEnhancedContentReview from '@/components/content/AIEnhancedContentReview'
+import StatusBadge from '@/components/ui/common/StatusBadge'
+import Button from '@/components/ui/common/Button'
+import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 
 interface ContentDraft {
   id: string
@@ -123,11 +126,10 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
           }
         </p>
         {isCreativeUser && (
-          <Link
-            href="/create-content"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Create Content
+          <Link href="/create-content">
+            <Button variant="danger" size="sm">
+              Create Content
+            </Button>
           </Link>
         )}
       </div>
@@ -157,9 +159,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                 <h3 className="text-xl font-semibold text-gray-900">
                   {draft.Idea?.title || 'Untitled content item'}
                 </h3>
-                <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${getStatusBadgeClasses(draft.status)}`}>
-                  {getStatusLabel(draft.status)}
-                </span>
+                                 <StatusBadge status={draft.status} />
               </div>
               
                               <p className="text-gray-600 mb-4 text-base leading-relaxed">{draft.Idea?.description || 'No description available'}</p>
@@ -216,32 +216,38 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                 View Details
               </Link>
 
-              {/* Enhanced AI Review Button */}
-              <button
-                onClick={() => toggleAIReview(draft.id)}
-                className="inline-flex items-center justify-center px-4 py-2 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full space-x-2"
-              >
-                <SparklesIcon className="h-4 w-4" />
-                <span>{showAIReview[draft.id] ? 'Hide AI Review' : 'AI Review'}</span>
-              </button>
+                             {/* Enhanced AI Review Button */}
+               <Button
+                 onClick={() => toggleAIReview(draft.id)}
+                 variant="outline"
+                 size="sm"
+                 fullWidth
+               >
+                 <SparklesIcon className="h-4 w-4" />
+                 <span>{showAIReview[draft.id] ? 'Hide AI Review' : 'AI Review'}</span>
+               </Button>
 
               {/* Status update buttons for appropriate users */}
               {isClientUser && draft.status === DRAFT_STATUS.AWAITING_FEEDBACK && (
                 <div className="flex flex-col space-y-2">
-                  <button
-                    onClick={() => handleStatusUpdate(draft.id, DRAFT_STATUS.APPROVED)}
-                    disabled={isSubmitting === draft.id}
-                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                  >
-                    {isSubmitting === draft.id ? 'Updating...' : 'Approve'}
-                  </button>
-                  <button
-                    onClick={() => handleStatusUpdate(draft.id, DRAFT_STATUS.AWAITING_REVISION)}
-                    disabled={isSubmitting === draft.id}
-                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed w-full"
-                  >
-                    {isSubmitting === draft.id ? 'Updating...' : 'Request Revision'}
-                  </button>
+                                     <Button
+                     onClick={() => handleStatusUpdate(draft.id, DRAFT_STATUS.APPROVED)}
+                     disabled={isSubmitting === draft.id}
+                     variant="success"
+                     size="sm"
+                     fullWidth
+                   >
+                     {isSubmitting === draft.id ? 'Updating...' : 'Approve'}
+                   </Button>
+                   <Button
+                     onClick={() => handleStatusUpdate(draft.id, DRAFT_STATUS.AWAITING_REVISION)}
+                     disabled={isSubmitting === draft.id}
+                     variant="warning"
+                     size="sm"
+                     fullWidth
+                   >
+                     {isSubmitting === draft.id ? 'Updating...' : 'Request Revision'}
+                   </Button>
                 </div>
               )}
             </div>
@@ -275,12 +281,13 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
             <div className="mt-6 border-t pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-medium text-gray-900">Feedback</h4>
-                <button
-                  onClick={() => toggleFeedbackForm(draft.id)}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  {showFeedbackForm[draft.id] ? 'Hide Feedback Form' : 'Give Feedback'}
-                </button>
+                                 <Button
+                   onClick={() => toggleFeedbackForm(draft.id)}
+                   variant="outline"
+                   size="sm"
+                 >
+                   {showFeedbackForm[draft.id] ? 'Hide Feedback Form' : 'Give Feedback'}
+                 </Button>
               </div>
 
               {/* Feedback Form */}
