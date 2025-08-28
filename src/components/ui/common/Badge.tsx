@@ -1,35 +1,30 @@
-import React from 'react'
+'use client'
 
+import React from 'react'
 import { cn } from '@/lib/utils/cn'
 
-interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info'
-  size?: 'sm' | 'md' | 'lg'
-  rounded?: boolean
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline'
+  size?: 'default' | 'sm' | 'lg'
+  children: React.ReactNode
 }
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className, variant = 'default', size = 'md', rounded = false, children, ...props }, ref) => {
-    const baseClasses = 'inline-flex items-center font-medium'
+  ({ className, variant = 'default', size = 'default', ...props }, ref) => {
+    const baseClasses = 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
     
     const variantClasses = {
-      default: 'bg-gray-100 text-gray-800',
-      primary: 'bg-blue-100 text-blue-800',
-      secondary: 'bg-gray-100 text-gray-800',
-      success: 'bg-green-100 text-green-800',
-      warning: 'bg-yellow-100 text-yellow-800',
-      danger: 'bg-red-100 text-red-800',
-      error: 'bg-red-100 text-red-800',
-      info: 'bg-blue-100 text-blue-800'
+      default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
+      secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
+      destructive: 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
+      outline: 'text-foreground'
     }
     
     const sizeClasses = {
+      default: 'px-2.5 py-0.5 text-xs',
       sm: 'px-2 py-0.5 text-xs',
-      md: 'px-2.5 py-0.5 text-sm',
       lg: 'px-3 py-1 text-sm'
     }
-    
-    const roundedClasses = rounded ? 'rounded-full' : 'rounded-md'
     
     return (
       <span
@@ -38,16 +33,14 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
           baseClasses,
           variantClasses[variant],
           sizeClasses[size],
-          roundedClasses,
           className
         )}
         {...props}
-      >
-        {children}
-      </span>
+      />
     )
   }
 )
+
 Badge.displayName = 'Badge'
 
 export default Badge 

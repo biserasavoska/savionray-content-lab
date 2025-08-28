@@ -1,307 +1,270 @@
 'use client'
 
 import React, { useState } from 'react'
-import { 
-  PageLayout, 
-  PageHeader, 
-  PageContent, 
+import {
+  Button,
+  Input,
+  Select,
+  Textarea,
+  Checkbox,
+  Radio,
+  Switch,
+  StatusBadge,
+  PageLayout,
+  PageHeader,
+  PageContent,
   PageSection,
   Breadcrumbs,
-  BreadcrumbItem
-} from '@/components/ui/layout/PageLayout'
-import Button from '@/components/ui/common/Button'
-import Badge from '@/components/ui/common/Badge'
-import StatusBadge from '@/components/ui/common/StatusBadge'
-import { 
-  FormField, 
-  Input, 
-  Select, 
-  Textarea, 
-  Checkbox, 
-  Radio, 
-  Switch 
-} from '@/components/ui/common/FormField'
-import { 
-  Card, 
-  CardHeader, 
-  CardContent, 
-  CardFooter, 
-  CardTitle 
-} from '@/components/ui/common/Card'
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+  Badge,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  LoadingSpinner,
+  ErrorDisplay
+} from '@/components/ui/common'
 
 export default function UIShowcasePage() {
+  const [activeTab, setActiveTab] = useState('buttons')
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    category: '',
-    message: '',
-    newsletter: false,
-    notifications: 'email',
-    darkMode: false
+    input: '',
+    select: '',
+    textarea: '',
+    checkbox: false,
+    radio: '',
+    switch: false
   })
-
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
-
-  const selectOptions = [
-    { value: 'general', label: 'General Inquiry' },
-    { value: 'support', label: 'Technical Support' },
-    { value: 'feedback', label: 'Feedback' },
-    { value: 'other', label: 'Other' }
-  ]
 
   const breadcrumbItems = [
     { href: '/', children: 'Home' },
-    { href: '/ui-showcase', children: 'UI Showcase', isActive: true }
+    { href: '/ui-showcase', children: 'UI Showcase' }
+  ]
+
+  const selectOptions = [
+    { value: 'option1', label: 'Option 1' },
+    { value: 'option2', label: 'Option 2' },
+    { value: 'option3', label: 'Option 3' }
+  ]
+
+  const radioOptions = [
+    { value: 'radio1', label: 'Radio 1' },
+    { value: 'radio2', label: 'Radio 2' },
+    { value: 'radio3', label: 'Radio 3' }
   ]
 
   return (
-    <PageLayout size="large">
+    <PageLayout>
       <PageHeader
         title="UI Component Showcase"
-        description="Demonstrating all the new standardized UI components for consistent design across the app."
+        subtitle="Demonstrating all standardized UI components"
         breadcrumbs={<Breadcrumbs items={breadcrumbItems} />}
-        actions={
-          <div className="flex items-center space-x-3">
-            <a 
-              href="/ui-comparison" 
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium underline"
-            >
-              View Before/After Comparison →
-            </a>
-            <Button variant="primary" size="lg">
-              Get Started
-            </Button>
-          </div>
-        }
       />
 
       <PageContent>
-        {/* Button Showcase */}
-        <PageSection title="Button Components" description="All available button variants and sizes">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Button Variants</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button variant="primary">Primary</Button>
-                <Button variant="secondary">Secondary</Button>
-                <Button variant="outline">Outline</Button>
-                <Button variant="ghost">Ghost</Button>
-                <Button variant="danger">Danger</Button>
-                <Button variant="success">Success</Button>
-                <Button variant="warning">Warning</Button>
-                <Button variant="info">Info</Button>
-              </div>
-            </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="buttons">Buttons</TabsTrigger>
+            <TabsTrigger value="forms">Form Fields</TabsTrigger>
+            <TabsTrigger value="status">Status & Badges</TabsTrigger>
+            <TabsTrigger value="layout">Page Layout</TabsTrigger>
+            <TabsTrigger value="cards">Cards</TabsTrigger>
+            <TabsTrigger value="tabs">Tabs</TabsTrigger>
+            <TabsTrigger value="utilities">Utilities</TabsTrigger>
+          </TabsList>
 
-            <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Button Sizes</h3>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button size="xs">Extra Small</Button>
-                <Button size="sm">Small</Button>
-                <Button size="md">Medium</Button>
-                <Button size="lg">Large</Button>
-                <Button size="xl">Extra Large</Button>
+          <TabsContent value="buttons" className="space-y-6">
+            <PageSection title="Button Variants">
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="default">Default</Button>
+                  <Button variant="secondary">Secondary</Button>
+                  <Button variant="outline">Outline</Button>
+                  <Button variant="ghost">Ghost</Button>
+                  <Button variant="link">Link</Button>
+                  <Button variant="destructive">Destructive</Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm">Small</Button>
+                  <Button size="default">Default</Button>
+                  <Button size="lg">Large</Button>
+                  <Button size="icon">🚀</Button>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <Button loading>Loading</Button>
+                  <Button disabled>Disabled</Button>
+                </div>
               </div>
-            </div>
+            </PageSection>
+          </TabsContent>
 
-            <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Button States</h3>
-              <div className="flex flex-wrap gap-3">
-                <Button loading>Loading</Button>
-                <Button disabled>Disabled</Button>
-                <Button fullWidth>Full Width</Button>
-              </div>
-            </div>
-          </div>
-        </PageSection>
-
-        {/* Badge Showcase */}
-        <PageSection title="Badge Components" description="Status badges and informational badges">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Status Badges</h3>
-              <div className="flex flex-wrap gap-3">
-                <StatusBadge status="approved" />
-                <StatusBadge status="pending" />
-                <StatusBadge status="rejected" />
-                <StatusBadge status="in_progress" />
-                <StatusBadge status="scheduled" />
-                <StatusBadge status="archived" />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Status Badge Variants</h3>
-              <div className="flex flex-wrap gap-3">
-                <StatusBadge status="approved" variant="rounded" />
-                <StatusBadge status="pending" variant="outlined" />
-                <StatusBadge status="rejected" variant="default" />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Regular Badges</h3>
-              <div className="flex flex-wrap gap-3">
-                <Badge variant="primary">Primary</Badge>
-                <Badge variant="success">Success</Badge>
-                <Badge variant="warning">Warning</Badge>
-                <Badge variant="danger">Danger</Badge>
-                <Badge variant="info">Info</Badge>
-              </div>
-            </div>
-          </div>
-        </PageSection>
-
-        {/* Form Components Showcase */}
-        <PageSection title="Form Components" description="All form field components with consistent styling">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField label="Name" required>
+          <TabsContent value="forms" className="space-y-6">
+            <PageSection title="Form Fields">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="Enter your name"
+                  label="Text Input"
+                  placeholder="Enter text here"
+                  helperText="This is helper text"
                 />
-              </FormField>
-
-              <FormField label="Email" required>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Enter your email"
+                
+                                 <Select
+                   label="Select Option"
+                   options={selectOptions}
+                 />
+                
+                <Textarea
+                  label="Textarea"
+                  placeholder="Enter longer text here"
+                  rows={4}
                 />
-              </FormField>
-
-              <FormField label="Category">
-                <Select
-                  options={selectOptions}
-                  value={formData.category}
-                  onChange={(value) => handleInputChange('category', value)}
-                />
-              </FormField>
-
-              <FormField label="Dark Mode">
-                <Switch
-                  checked={formData.darkMode}
-                  onChange={(e) => handleInputChange('darkMode', e.target.checked)}
-                />
-              </FormField>
-            </div>
-
-            <FormField label="Message" helperText="Tell us more about your inquiry">
-              <Textarea
-                value={formData.message}
-                onChange={(e) => handleInputChange('message', e.target.value)}
-                placeholder="Enter your message here..."
-                rows={4}
-              />
-            </FormField>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField label="Preferences">
-                <div className="space-y-3">
+                
+                <div className="space-y-4">
                   <Checkbox
-                    label="Subscribe to newsletter"
-                    checked={formData.newsletter}
-                    onChange={(e) => handleInputChange('newsletter', e.target.checked)}
+                    label="Checkbox option"
+                    helperText="This is a checkbox"
+                  />
+                  
+                  <Radio
+                    label="Radio Group"
+                    options={radioOptions}
+                    helperText="Choose one option"
+                  />
+                  
+                  <Switch
+                    label="Toggle switch"
+                    helperText="This is a switch component"
                   />
                 </div>
-              </FormField>
+              </div>
+            </PageSection>
+          </TabsContent>
 
-              <FormField label="Notification Method">
-                <div className="space-y-2">
-                  <Radio
-                    label="Email"
-                    name="notifications"
-                    value="email"
-                    checked={formData.notifications === 'email'}
-                    onChange={(e) => handleInputChange('notifications', e.target.value)}
-                  />
-                  <Radio
-                    label="SMS"
-                    name="notifications"
-                    value="sms"
-                    checked={formData.notifications === 'sms'}
-                    onChange={(e) => handleInputChange('notifications', e.target.value)}
+          <TabsContent value="status" className="space-y-6">
+            <PageSection title="Status Badges">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Status Badges</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <StatusBadge status="draft" />
+                    <StatusBadge status="review" />
+                    <StatusBadge status="approved" />
+                    <StatusBadge status="published" />
+                    <StatusBadge status="rejected" />
+                    <StatusBadge status="archived" />
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">Badge Variants</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="default">Default</Badge>
+                    <Badge variant="secondary">Secondary</Badge>
+                    <Badge variant="destructive">Destructive</Badge>
+                    <Badge variant="outline">Outline</Badge>
+                  </div>
+                </div>
+              </div>
+            </PageSection>
+          </TabsContent>
+
+          <TabsContent value="layout" className="space-y-6">
+            <PageSection 
+              title="Page Layout Components"
+              subtitle="These components provide consistent page structure"
+            >
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  This page demonstrates the PageLayout system. The PageLayout component wraps the entire page,
+                  PageHeader provides the title and breadcrumbs, PageContent wraps the main content,
+                  and PageSection provides consistent section containers.
+                </p>
+                
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Layout Structure:</h4>
+                  <code className="text-sm text-gray-700">
+                    PageLayout → PageHeader → PageContent → PageSection
+                  </code>
+                </div>
+              </div>
+            </PageSection>
+          </TabsContent>
+
+          <TabsContent value="cards" className="space-y-6">
+            <PageSection title="Card Components">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold">Card Title</h3>
+                    <p className="text-gray-600">Card subtitle or description</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p>This is the main content of the card.</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button size="sm">Action</Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold mb-2">Simple Card</h3>
+                    <p className="text-gray-600">A card with just content and no header/footer.</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </PageSection>
+          </TabsContent>
+
+          <TabsContent value="tabs" className="space-y-6">
+            <PageSection title="Tabs Component">
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  This page itself uses the Tabs component to organize different component showcases.
+                </p>
+                
+                <div className="border rounded-lg p-4">
+                  <Tabs value="demo" onValueChange={() => {}}>
+                    <TabsList>
+                      <TabsTrigger value="demo">Demo Tab</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="demo">
+                      <p>This is a demo tab content area.</p>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+            </PageSection>
+          </TabsContent>
+
+          <TabsContent value="utilities" className="space-y-6">
+            <PageSection title="Utility Components">
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-medium mb-2">Loading Spinner</h4>
+                  <div className="flex items-center gap-4">
+                    <LoadingSpinner size="sm" />
+                    <LoadingSpinner size="md" />
+                    <LoadingSpinner size="lg" />
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-2">Error Display</h4>
+                  <ErrorDisplay
+                    title="Sample Error"
+                    message="This is a sample error message to demonstrate the ErrorDisplay component."
+                    onRetry={() => alert('Retry clicked!')}
                   />
                 </div>
-              </FormField>
-            </div>
-          </div>
-        </PageSection>
-
-        {/* Card Showcase */}
-        <PageSection title="Card Components" description="Different card layouts and configurations">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Basic Card</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">This is a basic card with header, content, and footer.</p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" size="sm">Action</Button>
-              </CardFooter>
-            </Card>
-
-            <Card variant="elevated" hover>
-              <CardHeader>
-                <CardTitle>Elevated Card</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">This card has elevation and hover effects.</p>
-              </CardContent>
-            </Card>
-
-            <Card variant="outlined">
-              <CardHeader>
-                <CardTitle>Outlined Card</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">This card has an outlined style.</p>
-              </CardContent>
-            </Card>
-          </div>
-        </PageSection>
-
-        {/* Layout Showcase */}
-        <PageSection title="Layout Components" description="Page layout and structure components">
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-md font-medium text-blue-900 mb-2">Layout Information</h3>
-              <p className="text-blue-800 text-sm">
-                This page demonstrates the new PageLayout, PageHeader, PageContent, and PageSection components.
-                These components provide consistent spacing, typography, and structure across all pages.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-2">PageLayout Sizes</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• small: max-w-3xl</li>
-                  <li>• medium: max-w-4xl</li>
-                  <li>• large: max-w-6xl</li>
-                  <li>• full: max-w-7xl</li>
-                </ul>
               </div>
-
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h4 className="font-medium text-gray-900 mb-2">Component Benefits</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Consistent spacing</li>
-                  <li>• Standardized typography</li>
-                  <li>• Reusable patterns</li>
-                  <li>• Easy maintenance</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </PageSection>
+            </PageSection>
+          </TabsContent>
+        </Tabs>
       </PageContent>
     </PageLayout>
   )

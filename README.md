@@ -70,6 +70,32 @@ npx prisma migrate dev
 npm run dev
 ```
 
+## 🚨 **Troubleshooting & Common Issues**
+
+### **Quick Fix for Most Issues:**
+```bash
+# Emergency cleanup and restart
+pkill -f "next dev"
+rm -rf .next
+rm -rf node_modules
+npm install
+npm run dev
+```
+
+### **Common Problems:**
+- **Vendor chunk errors** (`Cannot find module './vendor-chunks/jose.js'`)
+- **Static asset MIME type errors** (CSS/JS returning as `text/html`)
+- **404 errors for JavaScript chunks**
+- **Authentication endpoints crashing**
+
+### **Documentation:**
+- 📚 **[Webpack Configuration Guide](./WEBPACK_CONFIGURATION_GUIDE.md)** - Comprehensive troubleshooting
+- 🚨 **[Quick Troubleshooting Reference](./TROUBLESHOOTING_QUICK_REFERENCE.md)** - Emergency fixes
+- 🔧 **[Testing Checklist](./TESTING_CHECKLIST.md)** - Pre-deployment testing
+
+### **Root Cause:**
+Most issues stem from **aggressive webpack optimizations** that interfere with NextAuth's vendor chunk generation. The solution is to use **minimal, safe webpack configuration**.
+
 ## 🧪 Testing Requirements
 
 **⚠️ CRITICAL: Before pushing any changes to main, you MUST complete the testing checklist**
