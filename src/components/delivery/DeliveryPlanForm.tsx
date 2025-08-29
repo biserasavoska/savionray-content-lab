@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { FormField, Input, Textarea, Select } from '@/components/ui/common/FormField'
+import { Input, Textarea, Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
-import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import { useFormData } from '@/components/ui/common/hooks'
 
 const ContentType = {

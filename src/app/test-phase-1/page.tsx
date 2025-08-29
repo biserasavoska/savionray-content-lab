@@ -3,10 +3,10 @@
 import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/common/Tabs'
 import AIEnhancedEditor from '@/components/editor/AIEnhancedEditor'
 import AIEnhancedContentReview from '@/components/content/AIEnhancedContentReview'
 import AINavigationEnhancement from '@/components/navigation/AINavigationEnhancement'
@@ -97,7 +97,7 @@ export default function TestPhase1Page() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Badge variant="primary">Phase 1</Badge>
+          <Badge variant="default">Phase 1</Badge>
           <Badge variant="secondary">AI Integration</Badge>
           <Badge variant="secondary">Testing</Badge>
         </div>
@@ -106,7 +106,7 @@ export default function TestPhase1Page() {
       {/* Content Type Selection */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Content Type for Testing</CardTitle>
+          <h3 className="font-semibold">Content Type for Testing</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -150,10 +150,10 @@ export default function TestPhase1Page() {
         <TabsContent value="editor" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <h3 className="flex items-center font-semibold">
                 <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
                 AI-Enhanced Content Editor
-              </CardTitle>
+              </h3>
             </CardHeader>
             <CardContent>
               <div className="mb-4 p-4 bg-blue-50 rounded-lg">
@@ -179,10 +179,10 @@ export default function TestPhase1Page() {
         <TabsContent value="review" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <h3 className="flex items-center font-semibold">
                 <Target className="w-5 h-5 mr-2 text-blue-600" />
                 AI-Enhanced Content Review
-              </CardTitle>
+              </h3>
             </CardHeader>
             <CardContent>
               <div className="mb-4 p-4 bg-green-50 rounded-lg">
@@ -210,10 +210,10 @@ export default function TestPhase1Page() {
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
+                  <h3 className="flex items-center font-semibold">
                     <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
                     AI Navigation Enhancement
-                  </CardTitle>
+                  </h3>
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4 p-4 bg-yellow-50 rounded-lg">
@@ -244,10 +244,10 @@ export default function TestPhase1Page() {
         <TabsContent value="overview" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <h3 className="flex items-center font-semibold">
                 <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
                 Phase 1 Implementation Overview
-              </CardTitle>
+              </h3>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

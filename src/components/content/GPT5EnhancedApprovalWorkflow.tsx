@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/common/Tabs'
 
 interface ContentItem {
   id: string
@@ -223,23 +223,23 @@ export function GPT5EnhancedApprovalWorkflow({ contentItem }: { contentItem?: Co
       {/* Content Overview */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <h3 className="flex items-center justify-between font-semibold">
             <span>{currentItem.title}</span>
             <div className="flex gap-2">
               <Badge variant={currentItem.status === 'In Review' ? 'secondary' : 'default'}>
                 {currentItem.status}
               </Badge>
-              <Badge variant={currentItem.priority === 'HIGH' ? 'danger' : 'default'}>
+              <Badge variant={currentItem.priority === 'HIGH' ? 'destructive' : 'default'}>
                 {currentItem.priority} Priority
               </Badge>
               {currentItem.isOverdue && (
-                <Badge variant="danger">Overdue</Badge>
+                <Badge variant="destructive">Overdue</Badge>
               )}
               {currentItem.isAIGenerated && (
-                <Badge variant="info">AI Generated</Badge>
+                <Badge variant="secondary">AI Generated</Badge>
               )}
             </div>
-          </CardTitle>
+          </h3>
         </CardHeader>
         <CardContent>
           <p className="text-gray-700 mb-4">{currentItem.description}</p>
@@ -271,7 +271,7 @@ export function GPT5EnhancedApprovalWorkflow({ contentItem }: { contentItem?: Co
       {/* AI Configuration */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>GPT-5 AI Configuration</CardTitle>
+          <h3 className="font-semibold">GPT-5 AI Configuration</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

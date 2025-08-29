@@ -8,7 +8,7 @@ import { debounce } from 'lodash'
 import RichTextEditor from '../editor/RichTextEditor'
 
 import type { ContentDraft, Idea } from '@/types/content'
-import { FormField, Select } from '@/components/ui/common/FormField'
+import { Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
 import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'

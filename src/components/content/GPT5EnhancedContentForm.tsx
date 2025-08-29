@@ -25,8 +25,8 @@ import {
 import { useInterface } from '@/hooks/useInterface'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
-import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/layout/Card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/common/Tabs'
 
 interface GPT5EnhancedContentFormProps {
   onSubmit?: (data: EnhancedContentFormData) => void

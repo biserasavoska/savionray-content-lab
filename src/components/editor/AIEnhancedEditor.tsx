@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useCallback, useEffect } from 'react'
-import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/common/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
-import { Textarea } from '@/components/ui/Textarea'
+import { Textarea } from '@/components/ui/common/FormField'
 import Badge from '@/components/ui/common/Badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/common/Tabs'
 import { 
   Wand2, 
   Sparkles, 
@@ -195,10 +195,10 @@ export default function AIEnhancedEditor({
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
+              <h3 className="text-lg flex items-center font-semibold">
                 <Sparkles className="w-5 h-5 mr-2 text-purple-600" />
                 Content Editor
-              </CardTitle>
+              </h3>
             </CardHeader>
             <CardContent>
               <Textarea
@@ -217,10 +217,10 @@ export default function AIEnhancedEditor({
             {/* AI Suggestions */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center">
+                <h3 className="text-sm flex items-center font-semibold">
                   <Lightbulb className="w-4 h-4 mr-2 text-yellow-600" />
                   AI Suggestions
-                </CardTitle>
+                </h3>
               </CardHeader>
               <CardContent className="space-y-3">
                 {suggestions.slice(0, 5).map((suggestion) => (
@@ -278,10 +278,10 @@ export default function AIEnhancedEditor({
             {analysis && (
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center">
+                  <h3 className="text-sm flex items-center font-semibold">
                     <TrendingUp className="w-4 h-4 mr-2 text-blue-600" />
                     Content Analysis
-                  </CardTitle>
+                  </h3>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Scores */}

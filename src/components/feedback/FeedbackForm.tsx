@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 
-import { FormField, Textarea } from '@/components/ui/common/FormField'
+import { Textarea } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
 import { useFormData } from '@/components/ui/common/hooks'
 

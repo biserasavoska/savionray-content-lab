@@ -26,7 +26,7 @@ export default async function AdminOrganizationsPage() {
         description="Manage all client organizations and their settings"
         actions={
           <Link href="/admin/organizations/create">
-            <Button variant="primary" size="md">
+            <Button variant="default" size="lg">
               Create Organization
             </Button>
           </Link>
