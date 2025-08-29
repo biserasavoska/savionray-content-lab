@@ -12,8 +12,10 @@ export interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('w-full', className)} {...props} />
+  ({ className, defaultValue, value, onValueChange, children, ...props }, ref) => (
+    <div ref={ref} className={cn('w-full', className)} {...props}>
+      {children}
+    </div>
   )
 )
 Tabs.displayName = 'Tabs'
@@ -24,7 +26,7 @@ export interface TabsListProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, children, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
@@ -32,7 +34,9 @@ const TabsList = React.forwardRef<HTMLDivElement, TabsListProps>(
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </div>
   )
 )
 TabsList.displayName = 'TabsList'
@@ -44,7 +48,7 @@ export interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonE
 }
 
 const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, value, children, ...props }, ref) => (
     <button
       ref={ref}
       className={cn(
@@ -52,7 +56,9 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </button>
   )
 )
 TabsTrigger.displayName = 'TabsTrigger'
@@ -64,7 +70,7 @@ export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, value, children, ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
@@ -72,7 +78,9 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
         className
       )}
       {...props}
-    />
+    >
+      {children}
+    </div>
   )
 )
 TabsContent.displayName = 'TabsContent'
