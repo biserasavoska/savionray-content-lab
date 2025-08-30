@@ -7,9 +7,21 @@ import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if database is accessible
+    try {
+      await prisma.$queryRaw`SELECT 1`
+    } catch (dbError) {
+      logger.error('Database connection failed', dbError instanceof Error ? dbError : new Error(String(dbError)))
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 503 }
+      )
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session) {
+      logger.warn('Admin organizations access attempted without session')
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -19,6 +31,10 @@ export async function GET(request: NextRequest) {
     // Only super admins can view all organizations
     // For now, we'll use ADMIN role as super admin
     if (!isAdmin(session)) {
+      logger.warn('Non-admin user attempted to access admin organizations', {
+        userId: session.user.id,
+        userRole: session.user.role
+      })
       return NextResponse.json(
         { error: 'Super admin access required' },
         { status: 403 }
@@ -128,7 +144,9 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('Error fetching organizations', error instanceof Error ? error : new Error(String(error)))
+    logger.error('Error fetching organizations', error instanceof Error ? error : new Error(String(error)), {
+      timestamp: new Date().toISOString()
+    })
     
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -139,9 +157,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if database is accessible
+    try {
+      await prisma.$queryRaw`SELECT 1`
+    } catch (dbError) {
+      logger.error('Database connection failed during organization creation', dbError instanceof Error ? dbError : new Error(String(dbError)))
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 503 }
+      )
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session) {
+      logger.warn('Organization creation attempted without session')
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -151,6 +181,10 @@ export async function POST(request: NextRequest) {
     // Only super admins can create organizations
     // For now, we'll use ADMIN role as super admin
     if (!isAdmin(session)) {
+      logger.warn('Non-admin user attempted to create organization', {
+        userId: session.user.id,
+        userRole: session.user.role
+      })
       return NextResponse.json(
         { error: 'Super admin access required' },
         { status: 403 }
@@ -328,7 +362,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('Error creating organization', error instanceof Error ? error : new Error(String(error)))
+    logger.error('Error creating organization', error instanceof Error ? error : new Error(String(error)), {
+      timestamp: new Date().toISOString()
+    })
     
     return NextResponse.json(
       { error: 'Internal server error' },
