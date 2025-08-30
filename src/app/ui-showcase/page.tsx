@@ -65,6 +65,19 @@ export default function UIShowcasePage() {
       />
 
       <PageContent>
+        {/* Navigation to Advanced Components */}
+        <PageSection title="Advanced Component Systems" className="mb-8">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">Content Card System</h3>
+            <p className="text-blue-800 mb-4">
+              A comprehensive content management system with cards, grids, bulk actions, and advanced filtering.
+            </p>
+            <Button asChild>
+              <a href="/content-card-showcase">View Content Card Showcase →</a>
+            </Button>
+          </div>
+        </PageSection>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="buttons">Buttons</TabsTrigger>
