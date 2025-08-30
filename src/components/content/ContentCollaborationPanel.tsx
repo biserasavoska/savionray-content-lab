@@ -231,9 +231,9 @@ export default function ContentCollaborationPanel({
   const getPriorityColor = (priority: Feedback['priority']) => {
     switch (priority) {
       case 'low': return 'default'
-      case 'medium': return 'warning'
-      case 'high': return 'error'
-      case 'critical': return 'error'
+      case 'medium': return 'secondary'
+      case 'high': return 'destructive'
+      case 'critical': return 'destructive'
       default: return 'default'
     }
   }
@@ -241,9 +241,9 @@ export default function ContentCollaborationPanel({
   const getFeedbackTypeColor = (type: Feedback['type']) => {
     switch (type) {
       case 'general': return 'default'
-      case 'specific': return 'primary'
-      case 'approval': return 'success'
-      case 'rejection': return 'error'
+      case 'specific': return 'default'
+      case 'approval': return 'default'
+      case 'rejection': return 'destructive'
       default: return 'default'
     }
   }
@@ -314,7 +314,7 @@ export default function ContentCollaborationPanel({
                           {comment.author.role}
                         </Badge>
                         {comment.isResolved && (
-                          <Badge variant="success" size="sm">
+                          <Badge variant="default" size="sm">
                             Resolved
                           </Badge>
                         )}
@@ -356,7 +356,7 @@ export default function ContentCollaborationPanel({
               <div className="mt-3 flex space-x-2">
                 <Button
                   size="sm"
-                  variant="primary"
+                  variant="default"
                   onClick={handleAddComment}
                   disabled={isLoading || !newComment.trim()}
                 >
@@ -390,7 +390,7 @@ export default function ContentCollaborationPanel({
                         {item.priority}
                       </Badge>
                       <Badge 
-                        variant={item.status === 'resolved' ? 'success' : 'warning'} 
+                        variant={item.status === 'resolved' ? 'default' : 'secondary'} 
                         size="sm"
                       >
                         {item.status}
@@ -463,7 +463,7 @@ export default function ContentCollaborationPanel({
                 <div className="flex space-x-2">
                   <Button
                     size="sm"
-                    variant="primary"
+                    variant="default"
                     onClick={handleAddFeedback}
                     disabled={isLoading || !newFeedback.trim()}
                   >
@@ -492,7 +492,7 @@ export default function ContentCollaborationPanel({
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-900">{version.version}</span>
                     {version.isCurrent && (
-                      <Badge variant="success" size="sm">Current</Badge>
+                      <Badge variant="default" size="sm">Current</Badge>
                     )}
                   </div>
                   <span className="text-xs text-gray-500">

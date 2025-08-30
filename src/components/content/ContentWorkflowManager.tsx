@@ -174,10 +174,10 @@ export default function ContentWorkflowManager({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DRAFT': return 'default'
-      case 'IN_REVIEW': return 'warning'
-      case 'IN_REVISION': return 'info'
-      case 'PENDING_APPROVAL': return 'primary'
-      case 'PUBLISHED': return 'success'
+      case 'IN_REVIEW': return 'secondary'
+      case 'IN_REVISION': return 'secondary'
+      case 'PENDING_APPROVAL': return 'default'
+      case 'PUBLISHED': return 'default'
       default: return 'default'
     }
   }
@@ -236,7 +236,7 @@ export default function ContentWorkflowManager({
                 </div>
               </div>
               <Badge 
-                variant={step.completed ? 'success' : 'default'} 
+                variant={step.completed ? 'default' : 'secondary'} 
                 size="sm"
               >
                 {step.status.replace('_', ' ')}
@@ -260,14 +260,14 @@ export default function ContentWorkflowManager({
                     <h5 className="text-sm font-medium text-gray-900">{action.name}</h5>
                     <p className="text-xs text-gray-500 mt-1">{action.description}</p>
                     {action.requiresApproval && (
-                      <Badge variant="warning" size="sm" className="mt-2">
+                      <Badge variant="secondary" size="sm" className="mt-2">
                         Requires Approval
                       </Badge>
                     )}
                   </div>
                   <Button
                     size="sm"
-                    variant="primary"
+                    variant="default"
                     onClick={() => setSelectedAction(selectedAction === action.id ? '' : action.id)}
                     disabled={isLoading}
                   >
@@ -287,7 +287,7 @@ export default function ContentWorkflowManager({
                     <div className="mt-3 flex space-x-2">
                       <Button
                         size="sm"
-                        variant="primary"
+                        variant="default"
                         onClick={() => handleAction(action.id)}
                         disabled={isLoading}
                       >

@@ -123,11 +123,11 @@ export default function ContentApprovalWorkflow({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DRAFT': return 'default'
-      case 'IN_REVIEW': return 'warning'
-      case 'PENDING_APPROVAL': return 'info'
-      case 'APPROVED': return 'success'
-      case 'REJECTED': return 'error'
-      case 'PUBLISHED': return 'primary'
+      case 'IN_REVIEW': return 'secondary'
+      case 'PENDING_APPROVAL': return 'secondary'
+      case 'APPROVED': return 'default'
+      case 'REJECTED': return 'destructive'
+      case 'PUBLISHED': return 'default'
       default: return 'default'
     }
   }
@@ -147,9 +147,9 @@ export default function ContentApprovalWorkflow({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'LOW': return 'default'
-      case 'MEDIUM': return 'primary'
-      case 'HIGH': return 'info'
-      case 'URGENT': return 'error'
+      case 'MEDIUM': return 'default'
+      case 'HIGH': return 'secondary'
+      case 'URGENT': return 'destructive'
       default: return 'default'
     }
   }
@@ -187,7 +187,7 @@ export default function ContentApprovalWorkflow({
               {content.priority} Priority
             </Badge>
             {isOverdue && (
-              <Badge variant="error">
+              <Badge variant="destructive">
                 Overdue
               </Badge>
             )}
@@ -346,14 +346,14 @@ export default function ContentApprovalWorkflow({
         <div className="flex justify-end gap-4">
           <Button
             type="button"
-            variant="danger"
+            variant="destructive"
             onClick={() => setShowRejectionForm(true)}
           >
             Reject Content
           </Button>
           <Button
             type="button"
-            variant="success"
+            variant="default"
             onClick={handleApprove}
           >
             Approve Content
@@ -408,7 +408,7 @@ export default function ContentApprovalWorkflow({
             </Button>
             <Button
               type="button"
-              variant="danger"
+              variant="destructive"
               onClick={handleReject}
               disabled={!rejectionReason || !rejectionFeedback}
             >

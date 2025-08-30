@@ -204,7 +204,7 @@ export default function TestBillingPage() {
               {(['CREATIVE', 'CLIENT', 'ADMIN', 'OWNER'] as UserRole[]).map((role) => (
                 <Button
                   key={role}
-                  variant={currentRole === role ? 'primary' : 'outline'}
+                  variant={currentRole === role ? 'default' : 'outline'}
                   onClick={() => setCurrentRole(role)}
                   className="capitalize"
                 >
@@ -293,7 +293,7 @@ export default function TestBillingPage() {
                         <h2 className="text-xl font-semibold text-gray-900">Current Plan</h2>
                         <p className="text-gray-600">You're currently on the Professional plan</p>
                       </div>
-                      <Badge variant="success">Active</Badge>
+                      <Badge variant="default">Active</Badge>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>

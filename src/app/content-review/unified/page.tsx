@@ -175,10 +175,10 @@ export default function UnifiedContentReviewPage() {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'IDEA': return 'default'
-      case 'CONTENT_REVIEW': return 'info'
-      case 'APPROVED': return 'success'
-      case 'REJECTED': return 'error'
-      case 'PUBLISHED': return 'success'
+      case 'CONTENT_REVIEW': return 'secondary'
+      case 'APPROVED': return 'default'
+      case 'REJECTED': return 'destructive'
+      case 'PUBLISHED': return 'default'
       default: return 'default'
     }
   }
@@ -186,10 +186,10 @@ export default function UnifiedContentReviewPage() {
   const getStageBadgeVariant = (stage: string) => {
     switch (stage) {
       case 'IDEA': return 'default'
-      case 'CONTENT_REVIEW': return 'info'
-      case 'APPROVED': return 'success'
-      case 'REJECTED': return 'error'
-      case 'PUBLISHED': return 'success'
+      case 'CONTENT_REVIEW': return 'secondary'
+      case 'APPROVED': return 'default'
+      case 'REJECTED': return 'destructive'
+      case 'PUBLISHED': return 'default'
       default: return 'default'
     }
   }
@@ -236,7 +236,7 @@ export default function UnifiedContentReviewPage() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge variant="info" size="lg">
+              <Badge variant="secondary" size="lg">
                 {contentItems?.length || 0} drafts
               </Badge>
             </div>
@@ -416,7 +416,7 @@ export default function UnifiedContentReviewPage() {
                         <Button
                           onClick={() => handleAIReview(contentItem)}
                           size="sm"
-                          variant="primary"
+                          variant="default"
                           className="w-full flex items-center justify-center space-x-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -2,12 +2,11 @@
 
 import React, { useState, useMemo } from 'react'
 import { Card, CardHeader, CardContent } from '@/components/ui/common/Card'
-import { Button } from '@/components/ui/common/Button'
-import { Select } from '@/components/ui/common/Select'
-import { Input } from '@/components/ui/common/Input'
-import { Badge } from '@/components/ui/common/Badge'
-import { LoadingSpinner } from '@/components/ui/common/LoadingSpinner'
-import { ErrorDisplay } from '@/components/ui/common/ErrorDisplay'
+import Button from '@/components/ui/common/Button'
+import { Select, Input } from '@/components/ui/common/FormField'
+import Badge from '@/components/ui/common/Badge'
+import LoadingSpinner from '@/components/ui/common/LoadingSpinner'
+import ErrorDisplay from '@/components/ui/common/ErrorDisplay'
 import ContentCard, { ContentCardProps } from './ContentCard'
 
 export interface ContentCardGridProps {
@@ -59,7 +58,7 @@ const ContentCardGrid: React.FC<ContentCardGridProps> = ({
 
   // Filter and sort content
   const filteredAndSortedContent = useMemo(() => {
-    let filtered = content.filter(item => {
+    const filtered = content.filter(item => {
       const matchesSearch = searchTerm === '' || 
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -164,55 +163,57 @@ const ContentCardGrid: React.FC<ContentCardGridProps> = ({
             {/* Status Filter */}
             <Select
               value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value as FilterOption)}
-            >
-              <option value="all">All Statuses</option>
-              <option value="draft">Draft</option>
-              <option value="review">Review</option>
-              <option value="approved">Approved</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </Select>
+              onChange={(e) => setStatusFilter(e.target.value as FilterOption)}
+              options={[
+                { value: 'all', label: 'All Statuses' },
+                { value: 'draft', label: 'Draft' },
+                { value: 'review', label: 'Review' },
+                { value: 'approved', label: 'Approved' },
+                { value: 'published', label: 'Published' },
+                { value: 'archived', label: 'Archived' }
+              ]}
+            />
             
             {/* Sort */}
             <Select
               value={sortBy}
-              onValueChange={(value) => setSortBy(value as SortOption)}
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="title">Title A-Z</option>
-              <option value="priority">Priority</option>
-              <option value="status">Status</option>
-            </Select>
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              options={[
+                { value: 'newest', label: 'Newest First' },
+                { value: 'oldest', label: 'Oldest First' },
+                { value: 'title', label: 'Title A-Z' },
+                { value: 'priority', label: 'Priority' },
+                { value: 'status', label: 'Status' }
+              ]}
+            />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             {/* Content Type Filter */}
             <Select
               value={contentTypeFilter}
-              onValueChange={setContentTypeFilter}
-            >
-              <option value="all">All Types</option>
-              {contentTypes.map(type => (
-                <option key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </option>
-              ))}
-            </Select>
+              onChange={(e) => setContentTypeFilter(e.target.value)}
+              options={[
+                { value: 'all', label: 'All Types' },
+                ...contentTypes.map(type => ({
+                  value: type,
+                  label: type.charAt(0).toUpperCase() + type.slice(1)
+                }))
+              ]}
+            />
             
             {/* Priority Filter */}
             <Select
               value={priorityFilter}
-              onValueChange={setPriorityFilter}
-            >
-              <option value="all">All Priorities</option>
-              {priorities.map(priority => (
-                <option key={priority} value={priority}>
-                  {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                </option>
-              ))}
-            </Select>
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              options={[
+                { value: 'all', label: 'All Priorities' },
+                ...priorities.map(priority => ({
+                  value: priority || '',
+                  label: (priority || '').charAt(0).toUpperCase() + (priority || '').slice(1)
+                }))
+              ]}
+            />
             
             {/* Clear Filters */}
             <div className="lg:col-span-2 flex justify-end">

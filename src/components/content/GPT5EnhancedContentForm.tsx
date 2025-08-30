@@ -219,7 +219,7 @@ export default function GPT5EnhancedContentForm({
             </h2>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>Role:</span>
-              <Badge variant={isCreativeUser ? 'primary' : isClientUser ? 'success' : 'secondary'}>
+              <Badge variant={isCreativeUser ? 'default' : isClientUser ? 'default' : 'secondary'}>
                 {isCreativeUser ? 'Creative' : isClientUser ? 'Client' : 'Admin'}
               </Badge>
               <span>•</span>

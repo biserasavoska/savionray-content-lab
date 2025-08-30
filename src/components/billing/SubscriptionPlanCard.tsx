@@ -63,7 +63,7 @@ export function SubscriptionPlanCard({
           )}
           {onCancel && (
             <Button
-              variant="danger"
+              variant="destructive"
               size="sm"
               onClick={() => onCancel(plan.id)}
               disabled={loading}
@@ -78,7 +78,7 @@ export function SubscriptionPlanCard({
     if (onSelect) {
       return (
         <Button
-          variant={plan.isPopular ? "primary" : "outline"}
+          variant={plan.isPopular ? "default" : "outline"}
           onClick={() => onSelect(plan.id)}
           disabled={loading}
           className="w-full"
@@ -106,7 +106,7 @@ export function SubscriptionPlanCard({
 
   return (
     <Card
-      variant={plan.isPopular ? "elevated" : "default"}
+
       className={`relative ${plan.isPopular ? 'border-primary shadow-lg' : ''}`}
     >
       {plan.isPopular && (

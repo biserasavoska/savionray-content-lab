@@ -181,7 +181,7 @@ export default function AIEnhancedContentReview({
             <span>Content Preview</span>
             <div className="flex items-center space-x-2">
               {content.metadata?.aiEnhanced && (
-                <Badge variant="primary" className="text-xs">
+                <Badge variant="default" className="text-xs">
                   <Sparkles className="w-3 h-3 mr-1" />
                   AI Enhanced
                 </Badge>
@@ -316,9 +316,9 @@ export default function AIEnhancedContentReview({
           <div className="flex items-center justify-between">
             <div className="flex space-x-2">
               <Button
-                variant="success"
+                variant="default"
                 onClick={() => onApprove(content.id)}
-                icon={<ThumbsUp className="w-4 h-4" />}
+
               >
                 Approve
               </Button>
@@ -326,14 +326,14 @@ export default function AIEnhancedContentReview({
                 variant="secondary"
                 onClick={() => onRequestChanges(content.id, feedback)}
                 disabled={!feedback.trim()}
-                icon={<MessageSquare className="w-4 h-4" />}
+
               >
                 Request Changes
               </Button>
               <Button
-                variant="danger"
+                variant="destructive"
                 onClick={() => onReject(content.id, feedback || 'Content rejected')}
-                icon={<ThumbsDown className="w-4 h-4" />}
+
               >
                 Reject
               </Button>
@@ -343,7 +343,7 @@ export default function AIEnhancedContentReview({
               variant="secondary"
               onClick={analyzeContent}
               disabled={isAnalyzing}
-              icon={<Sparkles className="w-4 h-4" />}
+              
             >
               {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
             </Button>

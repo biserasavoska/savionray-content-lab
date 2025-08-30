@@ -197,14 +197,14 @@ export default function ClientDashboard() {
     switch (status) {
       case 'PENDING_APPROVAL':
         return (
-          <Badge variant="warning" size="sm">
+          <Badge variant="secondary" size="sm">
             <ClockIcon className="w-3 h-3 mr-1" />
             Pending Review
           </Badge>
         )
       case 'APPROVED':
         return (
-          <Badge variant="success" size="sm">
+          <Badge variant="default" size="sm">
             <CheckCircleIcon className="w-3 h-3 mr-1" />
             Approved
           </Badge>
@@ -221,9 +221,9 @@ export default function ClientDashboard() {
   const getPriorityBadge = (priority?: string) => {
     switch (priority) {
       case 'HIGH':
-        return <Badge variant="danger" size="sm">High Priority</Badge>
+        return <Badge variant="destructive" size="sm">High Priority</Badge>
       case 'MEDIUM':
-        return <Badge variant="warning" size="sm">Medium Priority</Badge>
+        return <Badge variant="secondary" size="sm">Medium Priority</Badge>
       case 'LOW':
         return <Badge variant="default" size="sm">Low Priority</Badge>
       default:
@@ -278,11 +278,11 @@ export default function ClientDashboard() {
         </p>
         {organization && (
               <div className="mt-3 flex items-center space-x-3">
-                <Badge variant="primary">
+                <Badge variant="default">
                   <LightBulbIcon className="w-3 h-3 mr-1" />
               Organization: {organization.name}
                 </Badge>
-                <Badge variant="success">
+                <Badge variant="default">
                   <CheckCircleIcon className="w-3 h-3 mr-1" />
                   Client Access
                 </Badge>
@@ -386,13 +386,13 @@ export default function ClientDashboard() {
         <div className="px-6 py-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/ideas">
-              <Button variant="success" className="w-full justify-center">
+              <Button variant="default" className="w-full justify-center">
               <CheckCircleIcon className="h-5 w-5 mr-2" />
               Approve Ideas
               </Button>
             </Link>
             <Link href="/ready-content">
-              <Button variant="primary" className="w-full justify-center">
+              <Button variant="default" className="w-full justify-center">
               <EyeIcon className="h-5 w-5 mr-2" />
               Review Content
               </Button>
@@ -421,7 +421,7 @@ export default function ClientDashboard() {
             <EyeIcon className="h-5 w-5 mr-2 text-blue-600" />
             Content Pending Review
               {stats.pendingReview > 0 && (
-                <Badge variant="warning" size="sm" className="ml-2">
+                <Badge variant="secondary" size="sm" className="ml-2">
                   {stats.pendingReview}
                 </Badge>
               )}
@@ -440,7 +440,7 @@ export default function ClientDashboard() {
               <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No content pending review</h3>
               <p className="text-gray-500 mb-4">All content has been reviewed and approved.</p>
-              <Button variant="primary">
+              <Button variant="default">
                 <PlusIcon className="h-4 w-4 mr-2" />
                 Request New Content
               </Button>
@@ -454,7 +454,7 @@ export default function ClientDashboard() {
                       <h3 className="text-sm font-semibold text-gray-900">{item.title}</h3>
                       {getPriorityBadge(item.priority)}
                                              {isOverdue(item.dueDate) && (
-                         <Badge variant="danger" size="sm">Overdue</Badge>
+                         <Badge variant="destructive" size="sm">Overdue</Badge>
                        )}
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
@@ -475,7 +475,7 @@ export default function ClientDashboard() {
                   <div className="flex items-center space-x-3">
                     {getStatusBadge(item.status)}
                     <Link href={`/ready-content/${item.id}`}>
-                      <Button variant="primary" size="sm">
+                      <Button variant="default" size="sm">
                       Review
                         <ArrowRightIcon className="h-4 w-4 ml-1" />
                       </Button>

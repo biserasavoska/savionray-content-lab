@@ -47,18 +47,18 @@ interface DeliveryPlansListProps {
 
 const STATUS_BADGE_VARIANT = {
   DRAFT: 'default',
-  ACTIVE: 'success',
-  COMPLETED: 'info',
-  CANCELLED: 'error',
-  ARCHIVED: 'warning',
+  ACTIVE: 'default',
+  COMPLETED: 'secondary',
+  CANCELLED: 'destructive',
+  ARCHIVED: 'secondary',
 } as const
 
 const ITEM_STATUS_BADGE_VARIANT = {
   PENDING: 'default',
-  IN_PROGRESS: 'warning',
-  REVIEW: 'info',
-  APPROVED: 'success',
-  DELIVERED: 'info',
+  IN_PROGRESS: 'secondary',
+  REVIEW: 'secondary',
+  APPROVED: 'default',
+  DELIVERED: 'secondary',
 } as const
 
 export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {

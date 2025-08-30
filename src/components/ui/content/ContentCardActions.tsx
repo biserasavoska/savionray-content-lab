@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react'
 import { Card, CardHeader, CardContent } from '@/components/ui/common/Card'
-import { Button } from '@/components/ui/common/Button'
-import { Select } from '@/components/ui/common/Select'
-import { Badge } from '@/components/ui/common/Badge'
+import Button from '@/components/ui/common/Button'
+import { Select } from '@/components/ui/common/FormField'
+import Badge from '@/components/ui/common/Badge'
 import { ContentCardProps } from './ContentCard'
 
 export interface ContentCardActionsProps {
@@ -124,15 +124,10 @@ const ContentCardActions: React.FC<ContentCardActionsProps> = ({
             <div className="sm:col-span-2">
               <Select
                 value={bulkAction}
-                onValueChange={setBulkAction}
+                onChange={(e) => setBulkAction(e.target.value)}
+                options={getBulkActionOptions()}
                 className="w-full"
-              >
-                {getBulkActionOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
+              />
             </div>
             
             {/* Apply Action Button */}

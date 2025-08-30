@@ -160,14 +160,14 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
         </p>
         {isCreativeUser && (
           <Link href="/create-content">
-            <Button variant="danger" size="sm">
+            <Button variant="destructive" size="sm">
               Create Content
             </Button>
           </Link>
         )}
         {isClientUser && (
           <Link href="/ideas">
-            <Button variant="primary" size="sm">
+            <Button variant="default" size="sm">
               Review Ideas
             </Button>
           </Link>
@@ -228,7 +228,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                       <h3 className="text-lg font-medium text-gray-900">
                         {item.Idea?.title || 'Untitled Idea'}
                       </h3>
-                      <StatusBadge status={item.status} />
+                      <StatusBadge status={item.status as any} />
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                         {getContentTypeLabel(item.contentType)}
                       </span>
@@ -382,7 +382,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                         <Button
                           onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.APPROVED)}
                           disabled={isSubmitting === item.id || updatedItems.has(item.id)}
-                          variant="success"
+                          variant="default"
                           size="sm"
                         >
                           {isSubmitting === item.id ? (
@@ -407,7 +407,7 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
                         <Button
                           onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.AWAITING_REVISION)}
                           disabled={isSubmitting === item.id || updatedItems.has(item.id)}
-                          variant="warning"
+                          variant="secondary"
                           size="sm"
                         >
                           {isSubmitting === item.id ? (

@@ -158,7 +158,7 @@ export default function EnhancedOrganizationSwitcher({
                               {org.name}
                             </span>
                             {org.id === currentOrganization.id && (
-                              <Badge variant="primary" size="sm">Current</Badge>
+                              <Badge variant="default" size="sm">Current</Badge>
                             )}
                           </div>
                           
@@ -167,7 +167,7 @@ export default function EnhancedOrganizationSwitcher({
                               {org.subscriptionPlan || 'Standard'}
                             </Badge>
                             <Badge 
-                              variant={org.subscriptionStatus === 'active' ? 'success' : 'warning'} 
+                              variant={org.subscriptionStatus === 'active' ? 'default' : 'secondary'} 
                               size="sm"
                             >
                               {org.subscriptionStatus || 'Unknown'}

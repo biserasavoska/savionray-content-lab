@@ -127,7 +127,6 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
     <div className="space-y-6">
       {/* Upload Area */}
       <Card 
-        variant={dragActive ? 'elevated' : 'outlined'}
         className={`transition-all duration-200 ${
           dragActive ? 'border-red-400 bg-red-50' : 'hover:border-gray-400'
         }`}
@@ -180,7 +179,7 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
 
       {/* Upload Progress */}
       {uploading && (
-        <Card variant="outlined" className="p-4">
+        <Card className="p-4">
           <div className="flex items-center space-x-3">
             <div className="animate-spin h-5 w-5 text-blue-500">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -198,11 +197,11 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">Attached Files</h3>
-            <Badge variant="info">{media.length} file{media.length !== 1 ? 's' : ''}</Badge>
+            <Badge variant="secondary">{media.length} file{media.length !== 1 ? 's' : ''}</Badge>
           </div>
           <div className="space-y-3">
             {media.map((file) => (
-              <Card key={file.id} variant="outlined" className="p-4">
+              <Card key={file.id} className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     {getFileTypeIcon(file.contentType)}
@@ -217,7 +216,7 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
                     </div>
                   </div>
                   <Button
-                    variant="danger"
+                    variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteMedia(file.id)}
                   >

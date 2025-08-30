@@ -9,7 +9,7 @@ export default function TestSimplePage() {
       <p>This is a basic test page to verify routing works.</p>
       <Button 
         onClick={() => alert('Button clicked!')}
-        variant="primary"
+        variant="default"
         className="mt-4"
       >
         Test Button

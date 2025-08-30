@@ -73,9 +73,9 @@ export default function UIComparisonPage() {
                     ✅ After: Standardized Components
                   </h3>
                   <div className="space-y-3">
-                    <Button variant="primary">Submit Form</Button>
-                    <Button variant="success">Save Changes</Button>
-                    <Button variant="danger">Delete Item</Button>
+                    <Button variant="default">Submit Form</Button>
+                    <Button variant="default">Save Changes</Button>
+                    <Button variant="destructive">Delete Item</Button>
                     <Button variant="secondary">Cancel Action</Button>
                   </div>
                   <div className="bg-green-50 border border-green-200 rounded p-3">
@@ -135,7 +135,7 @@ export default function UIComparisonPage() {
                     <StatusBadge status="approved" size="sm" />
                     <StatusBadge status="pending" size="sm" />
                     <StatusBadge status="rejected" size="sm" />
-                    <StatusBadge status="in_progress" size="sm" />
+                    <StatusBadge status="in-progress" size="sm" />
                   </div>
                   <div className="bg-green-50 border border-green-200 rounded p-3">
                     <p className="text-sm text-green-800">
@@ -292,7 +292,7 @@ export default function UIComparisonPage() {
                   <div className="bg-gray-900 text-green-400 p-4 rounded text-sm overflow-x-auto">
                     <pre>{`// Clean, consistent button usage
 <Button 
-  variant="primary"
+  variant="default"
   onClick={handleSubmit}
 >
   Submit

@@ -106,11 +106,11 @@ export default function TestWorkflowCollaborationPage() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">User:</span>
-                <Badge variant="primary">{session.user?.name || session.user?.email}</Badge>
+                <Badge variant="default">{session.user?.name || session.user?.email}</Badge>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">Role:</span>
-                <Badge variant="success">{session.user?.role || 'client'}</Badge>
+                <Badge variant="default">{session.user?.role || 'client'}</Badge>
               </div>
             </div>
           </div>
@@ -304,7 +304,7 @@ export default function TestWorkflowCollaborationPage() {
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Content Status
                   </label>
-                  <Badge variant="primary" size="lg">
+                  <Badge variant="default" size="lg">
                     {contentStatus.replace('_', ' ')}
                   </Badge>
                 </div>
@@ -333,29 +333,29 @@ export default function TestWorkflowCollaborationPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">Content Creation</span>
-                  <Badge variant={isCreativeUser || isAdminUser ? 'success' : 'default'} size="sm">
+                  <Badge variant={isCreativeUser || isAdminUser ? 'default' : 'secondary'} size="sm">
                     {isCreativeUser || isAdminUser ? 'Allowed' : 'Restricted'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">Content Review</span>
-                  <Badge variant={isClientUser || isAdminUser ? 'success' : 'default'} size="sm">
+                  <Badge variant={isClientUser || isAdminUser ? 'default' : 'secondary'} size="sm">
                     {isClientUser || isAdminUser ? 'Allowed' : 'Restricted'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">Content Approval</span>
-                  <Badge variant={isAdminUser ? 'success' : 'default'} size="sm">
+                  <Badge variant={isAdminUser ? 'default' : 'secondary'} size="sm">
                     {isAdminUser ? 'Allowed' : 'Restricted'}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">Workflow Management</span>
-                  <Badge variant="success" size="sm">Allowed</Badge>
+                  <Badge variant="default" size="sm">Allowed</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-700">Collaboration</span>
-                  <Badge variant="success" size="sm">Allowed</Badge>
+                  <Badge variant="default" size="sm">Allowed</Badge>
                 </div>
               </div>
             </div>
@@ -366,7 +366,7 @@ export default function TestWorkflowCollaborationPage() {
               <div className="space-y-3">
                 <Button
                   size="sm"
-                  variant="primary"
+                  variant="default"
                   onClick={() => setActiveInterface('workflow')}
                   className="w-full"
                 >

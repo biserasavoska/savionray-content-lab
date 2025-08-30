@@ -153,7 +153,7 @@ export default function OrganizationContentCreator({
           <Badge variant="secondary">
             {currentOrganization.subscriptionPlan || 'Standard'}
           </Badge>
-          <Badge variant={currentOrganization.subscriptionStatus === 'active' ? 'success' : 'warning'}>
+          <Badge variant={currentOrganization.subscriptionStatus === 'active' ? 'default' : 'secondary'}>
             {currentOrganization.subscriptionStatus || 'Unknown'}
           </Badge>
         </div>
@@ -180,7 +180,7 @@ export default function OrganizationContentCreator({
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-medium text-gray-900">{template.name}</h4>
                     {template.isDefault && (
-                      <Badge variant="primary" size="sm">Default</Badge>
+                      <Badge variant="default" size="sm">Default</Badge>
                     )}
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{template.description}</p>
@@ -279,7 +279,7 @@ export default function OrganizationContentCreator({
             {selectedTemplate && (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
                 <div className="flex items-center space-x-2 mb-2">
-                  <Badge variant="primary" size="sm">Using Template</Badge>
+                  <Badge variant="default" size="sm">Using Template</Badge>
                   <span className="font-medium text-blue-900">{selectedTemplate.name}</span>
                 </div>
                 <p className="text-sm text-blue-700">{selectedTemplate.description}</p>

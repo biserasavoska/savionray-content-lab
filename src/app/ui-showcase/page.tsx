@@ -72,9 +72,9 @@ export default function UIShowcasePage() {
             <p className="text-blue-800 mb-4">
               A comprehensive content management system with cards, grids, bulk actions, and advanced filtering.
             </p>
-            <Button asChild>
-              <a href="/content-card-showcase">View Content Card Showcase →</a>
-            </Button>
+            <a href="/content-card-showcase" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+              View Content Card Showcase →
+            </a>
           </div>
         </PageSection>
 

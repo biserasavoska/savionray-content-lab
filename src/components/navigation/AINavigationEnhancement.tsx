@@ -147,10 +147,10 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
         size="sm"
         onClick={() => setShowAI(!showAI)}
         className="w-full mb-4"
-        icon={<Sparkles className="w-4 h-4" />}
+        
       >
         AI Assistant
-        {showAI && <Badge variant="primary" className="ml-2">Active</Badge>}
+        {showAI && <Badge variant="default" className="ml-2">Active</Badge>}
       </Button>
 
       {/* AI Suggestions Panel */}
@@ -196,7 +196,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
                     size="sm"
                     variant="secondary"
                     className="w-full text-xs"
-                    icon={<Plus className="w-3 h-3" />}
+                    
                   >
                     {suggestion.action}
                   </Button>
@@ -222,7 +222,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
             size="sm"
             className="w-full justify-start"
             onClick={() => router.push('/create-content/ai-enhanced')}
-            icon={<Plus className="w-4 h-4" />}
+            
           >
             AI Content Creation
           </Button>
@@ -231,7 +231,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
             size="sm"
             className="w-full justify-start"
             onClick={() => router.push('/ideas/new')}
-            icon={<Lightbulb className="w-4 h-4" />}
+            
           >
             New Idea
           </Button>
@@ -240,7 +240,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
             size="sm"
             className="w-full justify-start"
             onClick={() => router.push('/content-review')}
-            icon={<Target className="w-4 h-4" />}
+            
           >
             Review Content
           </Button>
@@ -249,7 +249,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
             size="sm"
             className="w-full justify-start"
             onClick={() => router.push('/analytics')}
-            icon={<TrendingUp className="w-4 h-4" />}
+            
           >
             Analytics Dashboard
           </Button>

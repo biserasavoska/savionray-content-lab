@@ -108,10 +108,10 @@ export default function ContentReviewPanel({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DRAFT': return 'default'
-      case 'IN_REVIEW': return 'warning'
-      case 'APPROVED': return 'success'
-      case 'REJECTED': return 'error'
-      case 'PUBLISHED': return 'primary'
+      case 'IN_REVIEW': return 'secondary'
+      case 'APPROVED': return 'default'
+      case 'REJECTED': return 'destructive'
+      case 'PUBLISHED': return 'default'
       default: return 'default'
     }
   }
@@ -325,14 +325,14 @@ export default function ContentReviewPanel({
           </Button>
           <Button
             type="button"
-            variant="success"
+            variant="default"
             onClick={handleApprove}
           >
             Approve Content
           </Button>
           <Button
             type="button"
-            variant="primary"
+            variant="default"
             onClick={handleSubmitFeedback}
           >
             Submit Feedback

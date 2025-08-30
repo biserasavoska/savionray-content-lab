@@ -238,12 +238,12 @@ export default function DeliveryPlanForm() {
 
           <div className="space-y-4">
             {items.map((item, index) => (
-              <Card key={index} variant="outlined" className="p-4 space-y-4">
+              <Card key={index} className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
                   <Button
                     type="button"
-                    variant="danger"
+                    variant="destructive"
                     size="sm"
                     onClick={() => removeItem(index)}
                   >
@@ -258,7 +258,7 @@ export default function DeliveryPlanForm() {
                     <Select
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
-                      onChange={(value) => updateItem(index, 'contentType', value as ContentType)}
+                      onChange={(value) => updateItem(index, 'contentType', value as unknown as ContentType)}
                     />
                   </div>
                   <div>

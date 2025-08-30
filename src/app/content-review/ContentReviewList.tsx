@@ -308,7 +308,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
                               {draft.Feedback && draft.Feedback.length > 0 && (
                   <div>
                     <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({draft.Feedback.length})</h5>
-                    <FeedbackList feedbacks={draft.Feedback} />
+                    <FeedbackList feedbacks={draft.Feedback as any} />
                   </div>
                 )}
             </div>

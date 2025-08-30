@@ -94,11 +94,11 @@ export default function TestComponentsPage() {
                 <p className="text-gray-600">This is a default card with some content.</p>
               </CardContent>
               <CardFooter>
-                <Button variant="primary" size="sm">Action</Button>
+                <Button variant="default" size="sm">Action</Button>
               </CardFooter>
             </Card>
 
-            <Card variant="elevated">
+            <Card >
               <CardHeader>
                 <CardTitle>Elevated Card</CardTitle>
               </CardHeader>
@@ -129,10 +129,10 @@ export default function TestComponentsPage() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Badge Components</h2>
           <div className="flex flex-wrap gap-4">
             <Badge variant="default">Default</Badge>
-            <Badge variant="success">Success</Badge>
-            <Badge variant="warning">Warning</Badge>
-            <Badge variant="error">Error</Badge>
-            <Badge variant="info">Info</Badge>
+            <Badge variant="default">Success</Badge>
+            <Badge variant="secondary">Warning</Badge>
+            <Badge variant="destructive">Error</Badge>
+            <Badge variant="outline">Info</Badge>
           </div>
         </section>
 
@@ -140,16 +140,16 @@ export default function TestComponentsPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Button Components</h2>
           <div className="flex flex-wrap gap-4">
-            <Button variant="primary">Primary</Button>
+            <Button variant="default">Primary</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="outline">Outline</Button>
             <Button variant="ghost">Ghost</Button>
-            <Button variant="danger">Danger</Button>
+            <Button variant="destructive">Danger</Button>
           </div>
           <div className="flex flex-wrap gap-4 mt-4">
-            <Button variant="primary" size="sm">Small</Button>
-            <Button variant="primary" size="md">Medium</Button>
-            <Button variant="primary" size="lg">Large</Button>
+            <Button variant="default" size="sm">Small</Button>
+            <Button variant="default" size="default">Medium</Button>
+            <Button variant="default" size="lg">Large</Button>
           </div>
         </section>
 
@@ -230,7 +230,7 @@ export default function TestComponentsPage() {
                 <div className="flex gap-4">
                   <Button
                     type="submit"
-                    variant="primary"
+                    variant="default"
                     disabled={form.isSubmitting}
                   >
                     {form.isSubmitting ? 'Submitting...' : 'Submit'}

@@ -10,7 +10,7 @@ import RichTextEditor from '../editor/RichTextEditor'
 import type { ContentDraft, Idea } from '@/types/content'
 import { Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
-import Card, { CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
 import { useFormData } from '@/components/ui/common/hooks'
 
@@ -149,11 +149,11 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
   const getSaveStatusBadge = () => {
     switch (saveStatus) {
       case 'saving':
-        return <Badge variant="warning">Saving...</Badge>
+        return <Badge variant="secondary">Saving...</Badge>
       case 'saved':
-        return <Badge variant="success">All changes saved</Badge>
+        return <Badge variant="default">All changes saved</Badge>
       case 'error':
-        return <Badge variant="error">Failed to save changes</Badge>
+        return <Badge variant="destructive">Failed to save changes</Badge>
       default:
         return null
     }
@@ -188,7 +188,7 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
               id="contentType"
               options={contentTypeOptions}
               value={formData.contentType}
-              onChange={(value) => updateFormData('contentType', value as ContentType)}
+              onChange={(value) => updateFormData('contentType', value as unknown as ContentType)}
             />
             {errors.contentType && (
               <p className="mt-1 text-sm text-red-600">{errors.contentType}</p>

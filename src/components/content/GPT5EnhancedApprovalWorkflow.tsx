@@ -349,13 +349,13 @@ export function GPT5EnhancedApprovalWorkflow({ contentItem }: { contentItem?: Co
                 </div>
                                  <div className="flex justify-between">
                    <span className="font-medium">Priority:</span>
-                   <Badge variant={currentItem.priority === 'HIGH' ? 'danger' : 'default'}>
+                                       <Badge variant={currentItem.priority === 'HIGH' ? 'destructive' : 'default'}>
                      {currentItem.priority}
                    </Badge>
                  </div>
                  <div className="flex justify-between">
                    <span className="font-medium">AI Generated:</span>
-                   <Badge variant={currentItem.isAIGenerated ? 'info' : 'default'}>
+                                       <Badge variant={currentItem.isAIGenerated ? 'secondary' : 'default'}>
                      {currentItem.isAIGenerated ? 'Yes' : 'No'}
                    </Badge>
                  </div>
@@ -443,7 +443,7 @@ export function GPT5EnhancedApprovalWorkflow({ contentItem }: { contentItem?: Co
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                                            <h5 className="font-medium mb-2">Sentiment</h5>
-                     <Badge variant="info">{aiAnalysis.sentiment}</Badge>
+                     <Badge variant="secondary">{aiAnalysis.sentiment}</Badge>
                     </div>
                     <div>
                       <h5 className="font-medium mb-2">Topics</h5>
@@ -466,11 +466,11 @@ export function GPT5EnhancedApprovalWorkflow({ contentItem }: { contentItem?: Co
                     <h4 className="font-medium mb-2">AI Approval Recommendation</h4>
                     <div className="flex items-center gap-3 mb-3">
                                              <Badge 
-                         variant={
-                           aiAnalysis.approvalRecommendation === 'approve' ? 'default' :
-                           aiAnalysis.approvalRecommendation === 'revision' ? 'secondary' :
-                           'danger'
-                         }
+                                                   variant={
+                            aiAnalysis.approvalRecommendation === 'approve' ? 'default' :
+                            aiAnalysis.approvalRecommendation === 'revision' ? 'secondary' :
+                            'destructive'
+                          }
                        >
                         {aiAnalysis.approvalRecommendation.toUpperCase()}
                       </Badge>
@@ -533,7 +533,7 @@ export function GPT5EnhancedApprovalWorkflow({ contentItem }: { contentItem?: Co
                     </Button>
                                          <Button 
                        onClick={() => handleApproval('reject')}
-                       variant="danger"
+                       variant="destructive"
                        className="w-full"
                      >
                        ❌ Reject Content

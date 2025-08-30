@@ -406,7 +406,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                 <Button
                   onClick={generatePlan}
                   disabled={isGeneratingPlan || !plan.title}
-                  variant="primary"
+                  variant="default"
                   className="w-full flex items-center justify-center"
                 >
                   {isGeneratingPlan ? (
@@ -425,7 +425,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                 <h2 className="text-xl font-semibold">Sections</h2>
                 <Button
                   onClick={addSection}
-                  variant="success"
+                  variant="default"
                   className="flex items-center"
                 >
                   <Plus className="w-4 h-4 mr-1" />
@@ -450,7 +450,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                         </h3>
                         <Button
                           onClick={() => removeSection(section.id)}
-                          variant="danger"
+                          variant="destructive"
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -481,7 +481,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                         />
                         <span className="text-xs text-gray-500">words</span>
                       </div>
-                      <StatusBadge status={section.status} />
+                      <StatusBadge status={section.status as any} />
                     </div>
                   ))
                 )}
@@ -545,7 +545,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                   />
                   <Button
                     type="submit"
-                    variant="primary"
+                    variant="default"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Document
@@ -571,7 +571,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                         </div>
                         <Button
                           onClick={() => setContextDocuments(prev => prev.filter(d => d.id !== doc.id))}
-                          variant="danger"
+                          variant="destructive"
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -602,7 +602,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                   <Button
                     onClick={generateAllContent}
                     disabled={isGeneratingContent || plan.sections.length === 0}
-                    variant="success"
+                    variant="default"
                   >
                     {isGeneratingContent ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -643,7 +643,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                           {section.status === 'planned' && (
                             <Button
                               onClick={() => generateSectionContent(section.id)}
-                              variant="primary"
+                              variant="default"
                             >
                               Generate
                             </Button>
@@ -679,7 +679,7 @@ Please generate ${section.targetWordCount} words of engaging, professional conte
                 <Button
                   onClick={exportContent}
                   disabled={!plan.sections.some(s => s.content)}
-                  variant="primary"
+                  variant="default"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Export Content

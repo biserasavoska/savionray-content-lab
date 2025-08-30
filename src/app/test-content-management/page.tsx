@@ -178,7 +178,7 @@ export default function TestContentManagementPage() {
           <div className="flex items-center gap-4 mb-6">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">User Role:</span>
-              <Badge variant={isCreativeUser ? 'primary' : isClientUser ? 'success' : 'secondary'}>
+              <Badge variant={isCreativeUser ? 'default' : isClientUser ? 'default' : 'secondary'}>
                 {isCreativeUser ? 'Creative' : isClientUser ? 'Client' : 'Admin'}
               </Badge>
             </div>
@@ -191,20 +191,20 @@ export default function TestContentManagementPage() {
           {/* Navigation */}
           <div className="flex gap-2 mb-6">
             <Button
-              variant={currentView === 'creation' ? 'primary' : 'secondary'}
+              variant={currentView === 'creation' ? 'default' : 'secondary'}
               onClick={() => setCurrentView('creation')}
             >
               Content Creation
             </Button>
             <Button
-              variant={currentView === 'review' ? 'primary' : 'secondary'}
+              variant={currentView === 'review' ? 'default' : 'secondary'}
               onClick={() => setCurrentView('review')}
               disabled={!isClientUser}
             >
               Content Review
             </Button>
             <Button
-              variant={currentView === 'approval' ? 'primary' : 'secondary'}
+              variant={currentView === 'approval' ? 'default' : 'secondary'}
               onClick={() => setCurrentView('approval')}
               disabled={!isAdminUser}
             >

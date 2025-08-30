@@ -84,7 +84,7 @@ export default function ContentCreationForm({
         </h2>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span>Role:</span>
-          <Badge variant={isCreativeUser ? 'primary' : isClientUser ? 'success' : 'secondary'}>
+          <Badge variant={isCreativeUser ? 'default' : isClientUser ? 'default' : 'secondary'}>
             {isCreativeUser ? 'Creative' : isClientUser ? 'Client' : 'Admin'}
           </Badge>
         </div>
@@ -313,7 +313,7 @@ export default function ContentCreationForm({
           <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary">
+          <Button type="submit" variant="default">
             {isCreativeUser ? 'Create Content' : isClientUser ? 'Submit Request' : 'Create Content Request'}
           </Button>
         </div>

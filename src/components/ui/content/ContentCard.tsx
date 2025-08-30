@@ -2,9 +2,9 @@
 
 import React from 'react'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
-import { Button } from '@/components/ui/common/Button'
-import { StatusBadge } from '@/components/ui/common/StatusBadge'
-import { Badge } from '@/components/ui/common/Badge'
+import Button from '@/components/ui/common/Button'
+import StatusBadge from '@/components/ui/common/StatusBadge'
+import Badge from '@/components/ui/common/Badge'
 
 export interface ContentCardProps {
   id: string

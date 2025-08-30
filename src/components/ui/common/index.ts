@@ -23,14 +23,11 @@ export { default as PageHeader } from './PageHeader'
 export { default as PageContent } from './PageContent'
 export { default as PageSection } from './PageSection'
 export { default as Breadcrumbs } from './Breadcrumbs'
-export type { 
-  PageLayoutProps, 
-  PageHeaderProps, 
-  PageContentProps, 
-  PageSectionProps,
-  BreadcrumbsProps,
-  BreadcrumbItem
-} from './PageHeader'
+export type { PageLayoutProps } from './PageLayout'
+export type { PageHeaderProps } from './PageHeader'
+export type { PageContentProps } from './PageContent'
+export type { PageSectionProps } from './PageSection'
+export type { BreadcrumbsProps, BreadcrumbItem } from './Breadcrumbs'
 
 // Card Components
 export { Card, CardHeader, CardContent, CardFooter } from './Card'
@@ -45,4 +42,5 @@ export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'
 // Utility Components
 export { default as LoadingSpinner } from './LoadingSpinner'
 export { default as ErrorDisplay } from './ErrorDisplay'
-export type { LoadingSpinnerProps, ErrorDisplayProps } from './LoadingSpinner'
+export type { LoadingSpinnerProps } from './LoadingSpinner'
+export type { ErrorDisplayProps } from './ErrorDisplay'

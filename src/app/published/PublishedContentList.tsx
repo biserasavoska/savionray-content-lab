@@ -46,8 +46,7 @@ export default function PublishedContentList({ publishedContent, isCreativeUser 
                 {content.Idea.title}
               </h3>
               <StatusBadge 
-                status="PUBLISHED" 
-                variant="rounded"
+                status="published" 
                 size="sm"
               />
             </div>
@@ -80,8 +79,7 @@ export default function PublishedContentList({ publishedContent, isCreativeUser 
                         {new Date(post.scheduledDate).toLocaleTimeString()}
                       </span>
                       <StatusBadge 
-                        status={post.status}
-                        variant="rounded"
+                        status={post.status as any}
                         size="sm"
                       />
                     </div>

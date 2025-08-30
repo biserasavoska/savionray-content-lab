@@ -104,7 +104,7 @@ export default function TestPhase2Page() {
               </div>
               <div>
                 <span className="text-sm font-medium text-gray-500">User Role:</span>
-                <Badge variant={interfaceContext.isClient ? 'success' : interfaceContext.isCreative ? 'primary' : 'secondary'}>
+                <Badge variant={interfaceContext.isClient ? 'default' : interfaceContext.isCreative ? 'default' : 'secondary'}>
                   {interfaceContext.userRole}
                 </Badge>
               </div>
@@ -118,16 +118,16 @@ export default function TestPhase2Page() {
             <div className="mt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Role Permissions:</h3>
               <div className="flex flex-wrap gap-2">
-                <Badge variant={interfaceContext.canCreateContent ? 'success' : 'default'}>
+                <Badge variant={interfaceContext.canCreateContent ? 'default' : 'secondary'}>
                   Create Content: {interfaceContext.canCreateContent ? 'Yes' : 'No'}
                 </Badge>
-                <Badge variant={interfaceContext.canApproveContent ? 'success' : 'default'}>
+                <Badge variant={interfaceContext.canApproveContent ? 'default' : 'secondary'}>
                   Approve Content: {interfaceContext.canApproveContent ? 'Yes' : 'No'}
                 </Badge>
-                <Badge variant={interfaceContext.canManageTeam ? 'success' : 'default'}>
+                <Badge variant={interfaceContext.canManageTeam ? 'default' : 'secondary'}>
                   Manage Team: {interfaceContext.canManageTeam ? 'Yes' : 'No'}
                 </Badge>
-                <Badge variant={interfaceContext.canViewAnalytics ? 'success' : 'default'}>
+                <Badge variant={interfaceContext.canViewAnalytics ? 'default' : 'secondary'}>
                   View Analytics: {interfaceContext.canViewAnalytics ? 'Yes' : 'No'}
                 </Badge>
               </div>
@@ -140,7 +140,7 @@ export default function TestPhase2Page() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">API Tests</h2>
           <div className="flex items-center space-x-4">
             <Button 
-              variant="primary" 
+              variant="default" 
               onClick={runTests}
               disabled={isTesting}
             >
@@ -167,7 +167,7 @@ export default function TestPhase2Page() {
                   </h3>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
-                      <Badge variant={result.success ? 'success' : 'danger'}>
+                      <Badge variant={result.success ? 'default' : 'destructive'}>
                         {result.success ? 'PASS' : 'FAIL'}
                       </Badge>
                       <span className="text-sm text-gray-600">Status: {result.status}</span>
