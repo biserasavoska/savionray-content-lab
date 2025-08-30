@@ -180,27 +180,34 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
             </div>
           )}
 
-          <FormField 
-            label="Content Type"
-            error={errors.contentType}
-          >
+          <div>
+            <label htmlFor="contentType" className="block text-sm font-medium text-gray-700 mb-2">
+              Content Type
+            </label>
             <Select
+              id="contentType"
               options={contentTypeOptions}
               value={formData.contentType}
               onChange={(value) => updateFormData('contentType', value as ContentType)}
             />
-          </FormField>
+            {errors.contentType && (
+              <p className="mt-1 text-sm text-red-600">{errors.contentType}</p>
+            )}
+          </div>
 
-          <FormField 
-            label="Content"
-            error={errors.body}
-          >
+          <div>
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+              Content
+            </label>
             <RichTextEditor
               content={formData.body}
               onContentChange={(content) => updateFormData('body', content)}
               placeholder="Write your content here..."
             />
-          </FormField>
+            {errors.body && (
+              <p className="mt-1 text-sm text-red-600">{errors.body}</p>
+            )}
+          </div>
         </CardContent>
 
         <CardFooter>

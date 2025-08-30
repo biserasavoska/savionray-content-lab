@@ -127,36 +127,43 @@ export default function DeliveryPlanForm() {
           <h2 className="text-xl font-semibold">Create Delivery Plan</h2>
         </CardHeader>
         <CardContent className="space-y-8">
-          <FormField 
-            label="Plan Name" 
-            error={errors.name}
-            required
-          >
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              Plan Name <span className="text-red-500">*</span>
+            </label>
             <Input
+              id="name"
               value={formData.name}
               onChange={(e) => updateFormData('name', e.target.value)}
               placeholder="Enter plan name"
             />
-          </FormField>
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+            )}
+          </div>
 
-          <FormField 
-            label="Description"
-            error={errors.description}
-          >
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
             <Textarea
+              id="description"
               value={formData.description}
               onChange={(e) => updateFormData('description', e.target.value)}
               rows={3}
               placeholder="Describe the plan"
             />
-          </FormField>
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+            )}
+          </div>
 
-          <FormField 
-            label="Target Month" 
-            error={errors.targetMonth}
-            required
-          >
+          <div>
+            <label htmlFor="targetMonth" className="block text-sm font-medium text-gray-700 mb-2">
+              Target Month <span className="text-red-500">*</span>
+            </label>
             <Input
+              id="targetMonth"
               type="month"
               value={formData.targetMonth}
               onChange={(e) => updateFormData('targetMonth', e.target.value)}
@@ -164,15 +171,18 @@ export default function DeliveryPlanForm() {
             <p className="mt-1 text-sm text-gray-500">
               Select the month this content is intended for
             </p>
-          </FormField>
+            {errors.targetMonth && (
+              <p className="mt-1 text-sm text-red-600">{errors.targetMonth}</p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-6">
-            <FormField 
-              label="Content Delivery Start" 
-              error={errors.startDate}
-              required
-            >
+            <div>
+              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
+                Content Delivery Start <span className="text-red-500">*</span>
+              </label>
               <Input
+                id="startDate"
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => updateFormData('startDate', e.target.value)}
@@ -180,13 +190,16 @@ export default function DeliveryPlanForm() {
               <p className="mt-1 text-sm text-gray-500">
                 Usually 5-10 days before the first item is published
               </p>
-            </FormField>
-            <FormField 
-              label="Content Delivery End" 
-              error={errors.endDate}
-              required
-            >
+              {errors.startDate && (
+                <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
+                Content Delivery End <span className="text-red-500">*</span>
+              </label>
               <Input
+                id="endDate"
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => updateFormData('endDate', e.target.value)}
@@ -194,7 +207,10 @@ export default function DeliveryPlanForm() {
               <p className="mt-1 text-sm text-gray-500">
                 When all content for the month should be delivered
               </p>
-            </FormField>
+              {errors.endDate && (
+                <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>
+              )}
+            </div>
           </div>
         </CardContent>
 
@@ -235,44 +251,59 @@ export default function DeliveryPlanForm() {
                   </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField label="Content Type" required>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Content Type <span className="text-red-500">*</span>
+                    </label>
                     <Select
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
                       onChange={(value) => updateItem(index, 'contentType', value as ContentType)}
                     />
-                  </FormField>
-                  <FormField label="Quantity" required>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
                     <Input
                       type="number"
                       min="1"
                       value={item.quantity}
                       onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value))}
                     />
-                  </FormField>
-                  <FormField label="Due Date" required>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Due Date <span className="text-red-500">*</span>
+                    </label>
                     <Input
                       type="date"
                       value={item.dueDate}
                       onChange={(e) => updateItem(index, 'dueDate', e.target.value)}
                     />
-                  </FormField>
-                  <FormField label="Priority" required>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Priority <span className="text-red-500">*</span>
+                    </label>
                     <Input
                       type="number"
                       min="1"
                       value={item.priority}
                       onChange={(e) => updateItem(index, 'priority', parseInt(e.target.value))}
                     />
-                  </FormField>
+                  </div>
                 </div>
-                <FormField label="Notes">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Notes
+                  </label>
                   <Textarea
                     value={item.notes || ''}
                     onChange={(e) => updateItem(index, 'notes', e.target.value)}
                     rows={2}
                   />
-                </FormField>
+                </div>
               </Card>
             ))}
             {items.length === 0 && (

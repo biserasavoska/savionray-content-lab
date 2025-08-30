@@ -52,18 +52,22 @@ export default function FeedbackForm({ draftId, onSuccess }: FeedbackFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <FormField 
-        label="Add Feedback"
-        error={errors.comment}
-      >
+      <div>
+        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+          Add Feedback
+        </label>
         <Textarea
+          id="comment"
           value={formData.comment}
           onChange={(e) => updateFormData('comment', e.target.value)}
           rows={4}
           placeholder="Enter your feedback here..."
           disabled={loading}
         />
-      </FormField>
+        {errors.comment && (
+          <p className="mt-1 text-sm text-red-600">{errors.comment}</p>
+        )}
+      </div>
 
       <div className="flex justify-end">
         <Button
