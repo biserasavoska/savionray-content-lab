@@ -108,6 +108,12 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
         return
       }
 
+      console.log('Submitting organization creation:', {
+        ...formData,
+        clientUsers: validClientUsers,
+        welcomeMessage: formData.welcomeMessage || `Welcome to ${formData.name}!`
+      })
+
       const response = await fetch('/api/admin/organizations', {
         method: 'POST',
         headers: {
@@ -120,17 +126,24 @@ export default function CreateOrganizationForm({}: CreateOrganizationFormProps) 
         }),
       })
 
+      console.log('API Response status:', response.status)
+      console.log('API Response headers:', Object.fromEntries(response.headers.entries()))
+
       const data = await response.json()
+      console.log('API Response data:', data)
 
       if (response.ok) {
+        console.log('Organization created successfully, setting success message')
         setSuccess('Organization created successfully!')
         setTimeout(() => {
           router.push('/admin/organizations')
         }, 2000)
       } else {
+        console.log('API returned error:', data.error)
         setError(data.error || 'Failed to create organization')
       }
     } catch (error) {
+      console.error('Error during organization creation:', error)
       setError('An error occurred while creating the organization')
     } finally {
       setIsLoading(false)
