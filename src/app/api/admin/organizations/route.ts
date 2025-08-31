@@ -257,6 +257,10 @@ export async function POST(request: NextRequest) {
       clientUserCount: clientUsers.length
     })
 
+    console.log('About to start database transaction...')
+    console.log('Organization data:', { name, slug, domain, primaryColor, subscriptionPlan, maxUsers, welcomeMessage })
+    console.log('Client users data:', clientUsers)
+
     // Wrap everything in a transaction for atomicity
     const result = await prisma.$transaction(async (tx) => {
       // Create the organization
