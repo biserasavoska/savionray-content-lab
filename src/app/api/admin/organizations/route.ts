@@ -281,15 +281,16 @@ export async function POST(request: NextRequest) {
       })
 
       // Create the admin user relationship
+      const adminUserData = {
+        organizationId: organization.id,
+        userId: session.user.id,
+        role: 'OWNER' as const,
+        permissions: ['ALL'],
+        isActive: true,
+        joinedAt: new Date()
+      }
       await tx.organizationUser.create({
-        data: {
-          organizationId: organization.id,
-          userId: session.user.id,
-          role: 'OWNER',
-          permissions: ['ALL'],
-          isActive: true,
-          joinedAt: new Date()
-        }
+        data: adminUserData
       })
 
       logger.info('Admin user relationship created', {
