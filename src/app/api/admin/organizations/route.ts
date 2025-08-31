@@ -257,143 +257,149 @@ export async function POST(request: NextRequest) {
       clientUserCount: clientUsers.length
     })
 
-    // Create the organization
-    const organization = await prisma.organization.create({
-      data: {
-        name,
-        slug,
-        domain: domain || null,
-        primaryColor: primaryColor || '#3B82F6',
-        subscriptionPlan: subscriptionPlan || 'FREE',
-        maxUsers: maxUsers || 5,
-        settings: {
-          welcomeMessage: welcomeMessage || `Welcome to ${name}!`
+    // Wrap everything in a transaction for atomicity
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the organization
+      const organization = await tx.organization.create({
+        data: {
+          name,
+          slug,
+          domain: domain || null,
+          primaryColor: primaryColor || '#3B82F6',
+          subscriptionPlan: subscriptionPlan || 'FREE',
+          maxUsers: maxUsers || 5,
+          settings: {
+            welcomeMessage: welcomeMessage || `Welcome to ${name}!`
+          }
         }
-      }
-    })
+      })
 
-    logger.info('Organization created successfully', {
-      userId: session.user.id,
-      organizationId: organization.id,
-      organizationName: organization.name
-    })
-
-    // Create the admin user relationship
-    await prisma.organizationUser.create({
-      data: {
-        organizationId: organization.id,
+      logger.info('Organization created successfully', {
         userId: session.user.id,
-        role: 'OWNER',
-        permissions: ['ALL'],
-        isActive: true,
-        joinedAt: new Date()
-      }
-    })
+        organizationId: organization.id,
+        organizationName: organization.name
+      })
 
-    logger.info('Admin user relationship created', {
-      userId: session.user.id,
-      organizationId: organization.id
-    })
-
-    // Add client users
-    for (const clientUser of clientUsers) {
-      try {
-        // Skip if no email provided
-        if (!clientUser.email || !clientUser.name) {
-          logger.warn('Skipping client user - missing email or name', {
-            userId: session.user.id,
-            organizationId: organization.id,
-            clientUser
-          })
-          continue
-        }
-
-        logger.info('Processing client user', {
-          userId: session.user.id,
+      // Create the admin user relationship
+      await tx.organizationUser.create({
+        data: {
           organizationId: organization.id,
-          clientUserEmail: clientUser.email,
-          clientUserName: clientUser.name
-        })
+          userId: session.user.id,
+          role: 'OWNER',
+          permissions: ['ALL'],
+          isActive: true,
+          joinedAt: new Date()
+        }
+      })
 
-        let user = await prisma.user.findUnique({
-          where: { email: clientUser.email }
-        })
+      logger.info('Admin user relationship created', {
+        userId: session.user.id,
+        organizationId: organization.id
+      })
 
-        if (!user) {
-          // Create new user
-          logger.info('Creating new user for client', {
-            userId: session.user.id,
-            organizationId: organization.id,
-            clientUserEmail: clientUser.email
-          })
-          user = await prisma.user.create({
-            data: {
-              email: clientUser.email,
-              name: clientUser.name,
-              role: clientUser.role || 'CLIENT',
-              emailVerified: new Date()
-            }
-          })
-          logger.info('New user created successfully', {
-            userId: session.user.id,
-            organizationId: organization.id,
-            newUserId: user.id,
-            clientUserEmail: clientUser.email
-          })
-        } else {
-          // Update existing user's name if provided
-          if (clientUser.name && user.name !== clientUser.name) {
-            logger.info('Updating existing user name', {
+      // Add client users
+      for (const clientUser of clientUsers) {
+        try {
+          // Skip if no email provided
+          if (!clientUser.email || !clientUser.name) {
+            logger.warn('Skipping client user - missing email or name', {
               userId: session.user.id,
               organizationId: organization.id,
-              existingUserId: user.id,
-              oldName: user.name,
-              newName: clientUser.name
+              clientUser
             })
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { name: clientUser.name }
-            })
+            continue
           }
-        }
 
-        // Create organization user relationship
-        logger.info('Creating organization user relationship', {
-          userId: session.user.id,
-          organizationId: organization.id,
-          clientUserId: user.id,
-          clientUserRole: clientUser.organizationRole || 'ADMIN'
-        })
-        await prisma.organizationUser.create({
-          data: {
+          logger.info('Processing client user', {
+            userId: session.user.id,
             organizationId: organization.id,
-            userId: user.id,
-            role: clientUser.organizationRole || 'ADMIN',
-            permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
-            isActive: true,
-            invitedBy: session.user.id,
-            joinedAt: new Date()
+            clientUserEmail: clientUser.email,
+            clientUserName: clientUser.name
+          })
+
+          let user = await tx.user.findUnique({
+            where: { email: clientUser.email }
+          })
+
+          if (!user) {
+            // Create new user
+            logger.info('Creating new user for client', {
+              userId: session.user.id,
+              organizationId: organization.id,
+              clientUserEmail: clientUser.email
+            })
+            user = await tx.user.create({
+              data: {
+                email: clientUser.email,
+                name: clientUser.name,
+                role: clientUser.role || 'CLIENT',
+                emailVerified: new Date()
+              }
+            })
+            logger.info('New user created successfully', {
+              userId: session.user.id,
+              organizationId: organization.id,
+              newUserId: user.id,
+              clientUserEmail: clientUser.email
+            })
+          } else {
+            // Update existing user's name if provided
+            if (clientUser.name && user.name !== clientUser.name) {
+              logger.info('Updating existing user name', {
+                userId: session.user.id,
+                organizationId: organization.id,
+                existingUserId: user.id,
+                oldName: user.name,
+                newName: clientUser.name
+              })
+              await tx.user.update({
+                where: { id: user.id },
+                data: { name: clientUser.name }
+              })
+            }
           }
-        })
-        logger.info('Organization user relationship created successfully', {
-          userId: session.user.id,
-          organizationId: organization.id,
-          clientUserId: user.id
-        })
-      } catch (clientUserError) {
-        logger.error('Error processing client user', clientUserError instanceof Error ? clientUserError : new Error(String(clientUserError)), {
-          userId: session.user.id,
-          organizationId: organization.id,
-          clientUser,
-          error: clientUserError instanceof Error ? clientUserError.message : String(clientUserError)
-        })
-        // Continue with other users instead of failing completely
+
+          // Create organization user relationship
+          logger.info('Creating organization user relationship', {
+            userId: session.user.id,
+            organizationId: organization.id,
+            clientUserId: user.id,
+            clientUserRole: clientUser.organizationRole || 'ADMIN'
+          })
+          await tx.organizationUser.create({
+            data: {
+              organizationId: organization.id,
+              userId: user.id,
+              role: clientUser.organizationRole || 'ADMIN',
+              permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
+              isActive: true,
+              invitedBy: session.user.id,
+              joinedAt: new Date()
+            }
+          })
+          logger.info('Organization user relationship created successfully', {
+            userId: session.user.id,
+            organizationId: organization.id,
+            clientUserId: user.id
+          })
+        } catch (clientUserError) {
+          logger.error('Error processing client user', clientUserError instanceof Error ? clientUserError : new Error(String(clientUserError)), {
+            userId: session.user.id,
+            organizationId: organization.id,
+            clientUser,
+            error: clientUserError instanceof Error ? clientUserError.message : String(clientUserError)
+          })
+          // Re-throw to trigger transaction rollback
+          throw clientUserError
+        }
       }
-    }
+
+      return organization
+    })
 
     logger.info('Organization created by admin', {
-      organizationId: organization.id,
-      organizationName: organization.name,
+      organizationId: result.id,
+      organizationName: result.name,
       createdBy: session.user.id,
       clientCount: clientUsers.length,
       welcomeMessage: welcomeMessage ? 'Custom' : 'Default'
@@ -402,11 +408,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Organization created successfully',
       organization: {
-        id: organization.id,
-        name: organization.name,
-        slug: organization.slug,
-        domain: organization.domain,
-        primaryColor: organization.primaryColor,
+        id: result.id,
+        name: result.name,
+        slug: result.slug,
+        domain: result.domain,
+        primaryColor: result.primaryColor,
         clientUsers: clientUsers.length
       }
     })
