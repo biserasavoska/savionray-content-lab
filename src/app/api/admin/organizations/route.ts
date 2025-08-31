@@ -157,6 +157,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
     // Check if database is accessible
     try {
       await prisma.$queryRaw`SELECT 1`
@@ -167,9 +168,7 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       )
     }
-
-    const session = await getServerSession(authOptions)
-
+    
     if (!session) {
       logger.warn('Organization creation attempted without session')
       return NextResponse.json(
@@ -178,8 +177,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Only super admins can create organizations
-    // For now, we'll use ADMIN role as super admin
     if (!isAdmin(session)) {
       logger.warn('Non-admin user attempted to create organization', {
         userId: session.user.id,
@@ -192,99 +189,84 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { 
-      name, 
-      slug, 
-      domain, 
-      primaryColor = '#3B82F6',
-      subscriptionPlan = 'FREE',
-      maxUsers = 5,
-      welcomeMessage = '',
-      clientUsers = []
+    logger.info('Organization creation request received', {
+      userId: session.user.id,
+      userEmail: session.user.email,
+      requestBody: body
+    })
+
+    const {
+      name,
+      slug,
+      domain,
+      primaryColor,
+      subscriptionPlan,
+      maxUsers,
+      welcomeMessage,
+      clientUsers
     } = body
 
-    // Convert maxUsers to integer if it's a string
-    const maxUsersInt = typeof maxUsers === 'string' ? parseInt(maxUsers, 10) : maxUsers
-
-    if (!name || !slug) {
+    // Validate required fields
+    if (!name || !slug || !clientUsers || !Array.isArray(clientUsers) || clientUsers.length === 0) {
+      logger.warn('Invalid organization creation request - missing required fields', {
+        userId: session.user.id,
+        hasName: !!name,
+        hasSlug: !!slug,
+        hasClientUsers: !!clientUsers,
+        clientUsersLength: clientUsers?.length
+      })
       return NextResponse.json(
-        { error: 'Name and slug are required' },
+        { error: 'Missing required fields: name, slug, and at least one client user are required' },
         { status: 400 }
       )
     }
 
-    // Validate slug format
-    const slugRegex = /^[a-z0-9-]+$/
-    if (!slugRegex.test(slug)) {
-      return NextResponse.json(
-        { error: 'Slug must contain only lowercase letters, numbers, and hyphens' },
-        { status: 400 }
-      )
-    }
-
-    // Check if slug already exists
+    // Check if organization with same slug already exists
     const existingOrg = await prisma.organization.findUnique({
       where: { slug }
     })
 
     if (existingOrg) {
+      logger.warn('Organization creation failed - slug already exists', {
+        userId: session.user.id,
+        requestedSlug: slug,
+        existingOrgId: existingOrg.id
+      })
       return NextResponse.json(
-        { error: 'Organization slug already exists' },
+        { error: 'Organization with this slug already exists' },
         { status: 409 }
       )
     }
 
-    // Check if domain already exists (only if domain is provided)
-    if (domain && domain.trim()) {
-      const existingDomainOrg = await prisma.organization.findUnique({
-        where: { domain: domain.trim() }
-      })
+    logger.info('Starting organization creation process', {
+      userId: session.user.id,
+      organizationName: name,
+      organizationSlug: slug,
+      clientUserCount: clientUsers.length
+    })
 
-      if (existingDomainOrg) {
-        return NextResponse.json(
-          { error: 'Organization domain already exists' },
-          { status: 409 }
-        )
-      }
-    }
-
-    // Validate client users
-    if (!Array.isArray(clientUsers) || clientUsers.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one client user is required' },
-        { status: 400 }
-      )
-    }
-
-    // Check for duplicate emails in client users
-    const emails = clientUsers.map(user => user.email.toLowerCase())
-    const uniqueEmails = new Set(emails)
-    if (emails.length !== uniqueEmails.size) {
-      return NextResponse.json(
-        { error: 'Duplicate email addresses are not allowed' },
-        { status: 400 }
-      )
-    }
-
-    // Create organization
+    // Create the organization
     const organization = await prisma.organization.create({
       data: {
         name,
         slug,
-        domain: domain && domain.trim() ? domain.trim() : null,
-        primaryColor,
-        subscriptionPlan,
-        subscriptionStatus: 'ACTIVE',
-        maxUsers: maxUsersInt,
+        domain: domain || null,
+        primaryColor: primaryColor || '#3B82F6',
+        subscriptionPlan: subscriptionPlan || 'FREE',
+        maxUsers: maxUsers || 5,
         settings: {
-          welcomeMessage: welcomeMessage || `Welcome to ${name}!`,
-          defaultContentTypes: ['SOCIAL_MEDIA_POST', 'BLOG_POST'],
-          approvalWorkflow: 'SIMPLE'
+          welcomeMessage: welcomeMessage || `Welcome to ${name}!`
         }
       }
     })
 
-    // Add creator as super admin
+    logger.info('Organization created successfully', {
+      userId: session.user.id,
+      organizationId: organization.id,
+      organizationName: organization.name
+    })
+
+    // Create the admin user relationship
     await prisma.organizationUser.create({
       data: {
         organizationId: organization.id,
@@ -296,49 +278,105 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    logger.info('Admin user relationship created', {
+      userId: session.user.id,
+      organizationId: organization.id
+    })
+
     // Add client users
     for (const clientUser of clientUsers) {
-      // Skip if no email provided
-      if (!clientUser.email || !clientUser.name) {
-        continue
-      }
+      try {
+        // Skip if no email provided
+        if (!clientUser.email || !clientUser.name) {
+          logger.warn('Skipping client user - missing email or name', {
+            userId: session.user.id,
+            organizationId: organization.id,
+            clientUser
+          })
+          continue
+        }
 
-      let user = await prisma.user.findUnique({
-        where: { email: clientUser.email }
-      })
+        logger.info('Processing client user', {
+          userId: session.user.id,
+          organizationId: organization.id,
+          clientUserEmail: clientUser.email,
+          clientUserName: clientUser.name
+        })
 
-      if (!user) {
-        // Create new user
-        user = await prisma.user.create({
+        let user = await prisma.user.findUnique({
+          where: { email: clientUser.email }
+        })
+
+        if (!user) {
+          // Create new user
+          logger.info('Creating new user for client', {
+            userId: session.user.id,
+            organizationId: organization.id,
+            clientUserEmail: clientUser.email
+          })
+          user = await prisma.user.create({
+            data: {
+              email: clientUser.email,
+              name: clientUser.name,
+              role: clientUser.role || 'CLIENT',
+              emailVerified: new Date()
+            }
+          })
+          logger.info('New user created successfully', {
+            userId: session.user.id,
+            organizationId: organization.id,
+            newUserId: user.id,
+            clientUserEmail: clientUser.email
+          })
+        } else {
+          // Update existing user's name if provided
+          if (clientUser.name && user.name !== clientUser.name) {
+            logger.info('Updating existing user name', {
+              userId: session.user.id,
+              organizationId: organization.id,
+              existingUserId: user.id,
+              oldName: user.name,
+              newName: clientUser.name
+            })
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { name: clientUser.name }
+            })
+          }
+        }
+
+        // Create organization user relationship
+        logger.info('Creating organization user relationship', {
+          userId: session.user.id,
+          organizationId: organization.id,
+          clientUserId: user.id,
+          clientUserRole: clientUser.organizationRole || 'ADMIN'
+        })
+        await prisma.organizationUser.create({
           data: {
-            email: clientUser.email,
-            name: clientUser.name,
-            role: clientUser.role || 'CLIENT',
-            emailVerified: new Date()
+            organizationId: organization.id,
+            userId: user.id,
+            role: clientUser.organizationRole || 'ADMIN',
+            permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
+            isActive: true,
+            invitedBy: session.user.id,
+            joinedAt: new Date()
           }
         })
-      } else {
-        // Update existing user's name if provided
-        if (clientUser.name && user.name !== clientUser.name) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { name: clientUser.name }
-          })
-        }
-      }
-
-      // Create organization user relationship
-      await prisma.organizationUser.create({
-        data: {
+        logger.info('Organization user relationship created successfully', {
+          userId: session.user.id,
           organizationId: organization.id,
-          userId: user.id,
-          role: clientUser.organizationRole || 'ADMIN',
-          permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
-          isActive: true,
-          invitedBy: session.user.id,
-          joinedAt: new Date()
-        }
-      })
+          clientUserId: user.id
+        })
+      } catch (clientUserError) {
+        logger.error('Error processing client user', clientUserError instanceof Error ? clientUserError : new Error(String(clientUserError)), {
+          userId: session.user.id,
+          organizationId: organization.id,
+          clientUser,
+          error: clientUserError instanceof Error ? clientUserError.message : String(clientUserError)
+        })
+        // Continue with other users instead of failing completely
+      }
     }
 
     logger.info('Organization created by admin', {
@@ -363,7 +401,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     logger.error('Error creating organization', error instanceof Error ? error : new Error(String(error)), {
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined
     })
     
     return NextResponse.json(
