@@ -156,12 +156,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('=== ORGANIZATION CREATION START ===')
+  console.log('Request received at:', new Date().toISOString())
+  
   try {
+    console.log('Getting server session...')
     const session = await getServerSession(authOptions)
+    console.log('Session obtained:', !!session)
+    
     // Check if database is accessible
     try {
+      console.log('Testing database connection...')
       await prisma.$queryRaw`SELECT 1`
+      console.log('Database connection successful')
     } catch (dbError) {
+      console.error('Database connection failed:', dbError)
       logger.error('Database connection failed during organization creation', dbError instanceof Error ? dbError : new Error(String(dbError)))
       return NextResponse.json(
         { error: 'Database connection failed' },
@@ -170,6 +179,7 @@ export async function POST(request: NextRequest) {
     }
     
     if (!session) {
+      console.log('No session found - returning 401')
       logger.warn('Organization creation attempted without session')
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -177,7 +187,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('User authenticated:', session.user.email)
+    console.log('User role:', session.user.role)
+
     if (!isAdmin(session)) {
+      console.log('User is not admin - returning 403')
       logger.warn('Non-admin user attempted to create organization', {
         userId: session.user.id,
         userRole: session.user.role
@@ -188,12 +202,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('Parsing request body...')
     const body = await request.json()
-    logger.info('Organization creation request received', {
-      userId: session.user.id,
-      userEmail: session.user.email,
-      requestBody: body
-    })
+    console.log('Request body parsed successfully')
+    console.log('Body keys:', Object.keys(body))
 
     const {
       name,
