@@ -175,6 +175,17 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     console.log('🔍 DEBUG: Session obtained:', !!session, session?.user?.id)
     
+    // CRITICAL: Debug session details
+    if (session) {
+      console.log('🔍 DEBUG: Session details:', {
+        sessionUserId: session.user.id,
+        sessionUserEmail: session.user.email,
+        sessionUserRole: session.user.role,
+        sessionType: typeof session.user.id,
+        sessionLength: session.user.id?.length
+      })
+    }
+    
     // Check if database is accessible
     try {
       console.log('Testing database connection...')
@@ -198,8 +209,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // CRITICAL: Verify session user exists in database and get the REAL user ID
+    console.log('🔍 DEBUG: Verifying session user exists in database...')
+    const sessionUserInDb = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, email: true, role: true }
+    })
+    
+    if (!sessionUserInDb) {
+      console.log('🔍 DEBUG: CRITICAL - Session user email not found in database!')
+      logger.error('CRITICAL: Session user email not found in database', undefined, {
+        sessionUserId: session.user.id,
+        sessionUserEmail: session.user.email,
+        sessionUserRole: session.user.role
+      })
+      return NextResponse.json(
+        { error: 'Session user not found in database' },
+        { status: 401 }
+      )
+    }
+    
+    console.log('🔍 DEBUG: Session user verified in database:', {
+      sessionUserId: session.user.id,
+      databaseUserId: sessionUserInDb.id,
+      sessionUserEmail: session.user.email,
+      databaseUserEmail: sessionUserInDb.email,
+      sessionUserRole: session.user.role,
+      databaseUserRole: sessionUserInDb.role
+    })
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = sessionUserInDb.id
+    
     console.log('User authenticated:', session.user.email)
     console.log('User role:', session.user.role)
+    console.log('🔍 DEBUG: Using REAL user ID from database:', realUserId)
 
     if (!isAdmin(session)) {
       console.log('User is not admin - returning 403')
@@ -261,12 +305,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    logger.info('Starting organization creation process', {
-      userId: session.user.id,
-      organizationName: name,
-      organizationSlug: slug,
-      clientUserCount: clientUsers.length
-    })
+          logger.info('Starting organization creation process', {
+        userId: realUserId,
+        organizationName: name,
+        organizationSlug: slug,
+        clientUserCount: clientUsers.length
+      })
 
     console.log('About to start database transaction...')
     console.log('Organization data:', { name, slug, domain, primaryColor, subscriptionPlan, maxUsers, welcomeMessage })
@@ -290,7 +334,7 @@ export async function POST(request: NextRequest) {
       })
 
       logger.info('Organization created successfully', {
-        userId: session.user.id,
+        userId: realUserId,
         organizationId: organization.id,
         organizationName: organization.name
       })
@@ -298,7 +342,7 @@ export async function POST(request: NextRequest) {
       // Create the admin user relationship
       const adminUserData = {
         organizationId: organization.id,
-        userId: session.user.id,
+        userId: realUserId,
         role: 'OWNER' as const,
         permissions: ['ALL'],
         isActive: true,
@@ -308,7 +352,7 @@ export async function POST(request: NextRequest) {
       // CRITICAL: Verify admin user exists before creating relationship
       console.log('🔍 DEBUG: Verifying admin user exists before creating relationship...')
       const adminUserExists = await tx.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: realUserId },
         select: { id: true, email: true, role: true }
       })
       
@@ -344,16 +388,16 @@ export async function POST(request: NextRequest) {
         try {
           // Skip if no email provided
           if (!clientUser.email || !clientUser.name) {
-            logger.warn('Skipping client user - missing email or name', {
-              userId: session.user.id,
-              organizationId: organization.id,
-              clientUser
-            })
+                      logger.warn('Skipping client user - missing email or name', {
+            userId: realUserId,
+            organizationId: organization.id,
+            clientUser
+          })
             continue
           }
 
           logger.info('Processing client user', {
-            userId: session.user.id,
+            userId: realUserId,
             organizationId: organization.id,
             clientUserEmail: clientUser.email,
             clientUserName: clientUser.name
@@ -367,7 +411,7 @@ export async function POST(request: NextRequest) {
             // Create new user
             console.log('🔍 DEBUG: Creating new user for client:', clientUser.email)
             logger.info('Creating new user for client', {
-              userId: session.user.id,
+              userId: realUserId,
               organizationId: organization.id,
               clientUserEmail: clientUser.email
             })
@@ -394,7 +438,7 @@ export async function POST(request: NextRequest) {
             }
             
             logger.info('New user created successfully', {
-              userId: session.user.id,
+              userId: realUserId,
               organizationId: organization.id,
               newUserId: user.id,
               clientUserEmail: clientUser.email,
@@ -404,7 +448,7 @@ export async function POST(request: NextRequest) {
             // CRITICAL: Log the user object immediately after creation
             console.log('🔍 DEBUG: User object immediately after creation:', JSON.stringify(user, null, 2))
             logger.info('User object immediately after creation:', {
-              userId: session.user.id,
+              userId: realUserId,
               organizationId: organization.id,
               userObject: user,
               userType: typeof user,
@@ -417,7 +461,7 @@ export async function POST(request: NextRequest) {
             if (!user.id || typeof user.id !== 'string' || user.id.length < 10) {
               console.log('🔍 DEBUG: CRITICAL - User created but ID is invalid!')
               logger.error('CRITICAL: User created but ID is invalid!', undefined, {
-                userId: session.user.id,
+                userId: realUserId,
                 organizationId: organization.id,
                 createdUser: user,
                 userIdValue: user?.id,
@@ -433,7 +477,7 @@ export async function POST(request: NextRequest) {
             // Update existing user's name if provided
             if (clientUser.name && user.name !== clientUser.name) {
               logger.info('Updating existing user name', {
-                userId: session.user.id,
+                userId: realUserId,
                 organizationId: organization.id,
                 existingUserId: user.id,
                 oldName: user.name,
@@ -451,7 +495,7 @@ export async function POST(request: NextRequest) {
           if (!user || !user.id) {
             console.log('🔍 DEBUG: User validation failed - user is invalid')
             logger.error('Cannot create organization user relationship - user is invalid', undefined, {
-              userId: session.user.id,
+              userId: realUserId,
               organizationId: organization.id,
               clientUserEmail: clientUser.email,
               userExists: !!user,
