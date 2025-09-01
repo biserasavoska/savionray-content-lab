@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
-import { prisma } from '@/lib/prisma'
 import { authOptions, isAdmin } from '@/lib/auth'
-import { requireOrganizationContext } from '@/lib/utils/organization-context'
+import { prisma } from '@/lib/prisma'
+import { requireOrganizationContext } from '@/lib/middleware/organization-context'
+import { validateAdminSessionUser } from '@/lib/utils/session-validation'
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -83,15 +84,25 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+  const validation = await validateAdminSessionUser()
+  
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: validation.status || 401 }
+    )
   }
-
-  if (!isAdmin(session)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  
+  // Use the REAL user ID from database, not the session ID
+  const realUserId = validation.realUserId
+  
+  console.log('🔍 DEBUG: Session validation successful:', {
+    sessionUserId: validation.sessionUserId,
+    databaseUserId: realUserId,
+    userEmail: validation.userEmail,
+    userRole: validation.userRole
+  })
 
   try {
     const orgContext = await requireOrganizationContext(undefined, request)
@@ -137,14 +148,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User is already a member of this organization' }, { status: 400 })
     }
 
-    // Create the invitation (OrganizationUser with invitedAt but no joinedAt)
+    // Create the invitation (OrganizationUser with invitedAt but no joinedAt) - ✅ Use REAL user ID
     const invitation = await prisma.organizationUser.create({
       data: {
         organizationId: orgContext.organizationId,
         userId: user.id,
         role,
         isActive: true,
-        invitedBy: session.user.id,
+        invitedBy: realUserId,
         invitedAt: new Date(),
         joinedAt: null
       },

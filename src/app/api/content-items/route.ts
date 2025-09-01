@@ -1,51 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { authOptions , isCreative, isAdmin } from '@/lib/auth'
-import { CONTENT_TYPE, CONTENT_ITEM_STATUS, WORKFLOW_STAGE } from '@/lib/utils/enum-constants'
-import { requireOrganizationContextWithOverride } from '@/lib/utils/organization-context'
 import { logger } from '@/lib/utils/logger'
+import { requireOrganizationContext, requireOrganizationContextWithOverride } from '@/lib/middleware/organization-context'
+import { CONTENT_ITEM_STATUS, CONTENT_TYPE, WORKFLOW_STAGE } from '@/lib/constants'
+import { validateSessionUser } from '@/lib/utils/session-validation'
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateSessionUser()
     
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: validation.status || 401 }
+      )
+    }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole
+    })
+
+    // Get organization context
+    const orgContext = await requireOrganizationContext(undefined, request)
+    if (!orgContext) {
+      return NextResponse.json({ error: 'Organization context required' }, { status: 400 })
     }
 
-    if (!isCreative(session) && !isAdmin(session)) {
-      return NextResponse.json({ error: 'Only creatives and admins can create content items' }, { status: 403 })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { 
       title, 
       description, 
-      body: contentBody, 
-      contentType, 
+      contentBody,
+      contentType,
       mediaType,
       metadata,
       assignedToId,
       deliveryItemId,
-      // Manual organization override
-      organizationId: manualOrganizationId
+      manualOrganizationId
     } = body
 
-    // Validate required fields
-    if (!title || !description || !contentType) {
-      return NextResponse.json({ error: 'Title, description, and content type are required' }, { status: 400 })
+    if (!title || !contentType) {
+      return NextResponse.json({ error: 'Title and content type are required' }, { status: 400 })
     }
 
-    if (!Object.values(CONTENT_TYPE).includes(contentType)) {
-      return NextResponse.json({ error: 'Invalid content type' }, { status: 400 })
-    }
-
-    // Get organization context with manual override support
-    const orgContext = await requireOrganizationContextWithOverride(manualOrganizationId)
-
-    // Create the content item
+    // Create content item - ✅ Use REAL user ID
     const contentItem = await prisma.contentItem.create({
       data: {
         title,
@@ -56,7 +64,7 @@ export async function POST(req: NextRequest) {
         metadata: metadata || {},
         status: CONTENT_ITEM_STATUS.IDEA,
         currentStage: WORKFLOW_STAGE.IDEA,
-        createdById: session.user.id,
+        createdById: realUserId,
         assignedToId: assignedToId || null,
         deliveryItemId: deliveryItemId || null,
         organizationId: orgContext.organizationId, // Use the resolved organization ID
@@ -92,7 +100,7 @@ export async function POST(req: NextRequest) {
       title: contentItem.title,
       organizationId: contentItem.organizationId,
       organizationName: contentItem.Organization.name,
-      createdBy: session.user.id,
+      createdBy: realUserId,
       manualOverride: !!manualOrganizationId
     })
 

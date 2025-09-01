@@ -4,25 +4,31 @@ import { getServerSession } from 'next-auth'
 import { authOptions , isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
+import { validateAdminSessionUser } from '@/lib/utils/session-validation'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateAdminSessionUser()
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: validation.error },
+        { status: validation.status || 401 }
       )
     }
-
-    // Only admins can create organizations
-    if (!isAdmin(session)) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    const userEmail = validation.userEmail
+    const userRole = validation.userRole
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail,
+      userRole
+    })
 
     const body = await request.json()
     const { 
@@ -82,11 +88,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Add creator as owner
+    // Add creator as owner - ✅ Use REAL user ID
     await prisma.organizationUser.create({
       data: {
         organizationId: organization.id,
-        userId: session.user.id,
+        userId: realUserId,
         role: 'OWNER',
         permissions: ['ALL'],
         isActive: true,
@@ -112,7 +118,7 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Add client to organization
+      // Add client to organization - ✅ Use REAL user ID for invitedBy
       await prisma.organizationUser.create({
         data: {
           organizationId: organization.id,
@@ -120,7 +126,7 @@ export async function POST(request: NextRequest) {
           role: 'ADMIN', // Give client admin access to their organization
           permissions: ['APPROVE_IDEAS', 'VIEW_ALL_CONTENT', 'MANAGE_PLANS'],
           isActive: true,
-          invitedBy: session.user.id,
+          invitedBy: realUserId,
           joinedAt: new Date()
         }
       })
@@ -129,7 +135,7 @@ export async function POST(request: NextRequest) {
     logger.info('Organization created', {
       organizationId: organization.id,
       organizationName: organization.name,
-      createdBy: session.user.id,
+      createdBy: realUserId,
       clientEmail
     })
 
