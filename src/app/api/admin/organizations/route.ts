@@ -336,19 +336,26 @@ export async function POST(request: NextRequest) {
               organizationId: organization.id,
               clientUserEmail: clientUser.email
             })
+            
+            const userData = {
+              email: clientUser.email,
+              name: clientUser.name,
+              role: clientUser.role || 'CLIENT',
+              emailVerified: new Date()
+            }
+            
+            logger.info('User data to create:', userData)
+            
             user = await tx.user.create({
-              data: {
-                email: clientUser.email,
-                name: clientUser.name,
-                role: clientUser.role || 'CLIENT',
-                emailVerified: new Date()
-              }
+              data: userData
             })
+            
             logger.info('New user created successfully', {
               userId: session.user.id,
               organizationId: organization.id,
               newUserId: user.id,
-              clientUserEmail: clientUser.email
+              clientUserEmail: clientUser.email,
+              createdUser: user
             })
           } else {
             // Update existing user's name if provided
@@ -385,6 +392,14 @@ export async function POST(request: NextRequest) {
             organizationId: organization.id,
             clientUserId: user.id,
             clientUserRole: clientUser.organizationRole || 'ADMIN'
+          })
+          
+          // Double-check user exists and has valid ID
+          logger.info('User validation before creating relationship:', {
+            userExists: !!user,
+            userId: user?.id,
+            userEmail: user?.email,
+            userRole: user?.role
           })
           
           const organizationUserData = {
