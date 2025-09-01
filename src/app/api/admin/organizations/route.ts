@@ -369,7 +369,7 @@ export async function POST(request: NextRequest) {
 
           // Validate user exists before creating relationship
           if (!user || !user.id) {
-            logger.error('Cannot create organization user relationship - user is invalid', {
+            logger.error('Cannot create organization user relationship - user is invalid', undefined, {
               userId: session.user.id,
               organizationId: organization.id,
               clientUserEmail: clientUser.email,
@@ -412,7 +412,8 @@ export async function POST(request: NextRequest) {
             userId: session.user.id,
             organizationId: organization.id,
             clientUser,
-            error: clientUserError instanceof Error ? clientUserError.message : String(clientUserError)
+            error: clientUserError instanceof Error ? clientUserError.message : String(clientUserError),
+            errorStack: clientUserError instanceof Error ? clientUserError.stack : undefined
           })
           // Re-throw to trigger transaction rollback
           throw clientUserError
