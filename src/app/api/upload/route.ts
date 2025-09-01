@@ -5,7 +5,8 @@ import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
-import { requireOrganizationContext } from '@/lib/utils/organization-context'
+import { requireOrganizationContext } from '@/lib/middleware/organization-context'
+import { validateSessionUser } from '@/lib/utils/session-validation'
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION!,
@@ -16,11 +17,25 @@ const s3Client = new S3Client({
 })
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+  const validation = await validateSessionUser()
+  
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: validation.status || 401 }
+    )
   }
+  
+  // Use the REAL user ID from database, not the session ID
+  const realUserId = validation.realUserId
+  
+  console.log('🔍 DEBUG: Session validation successful:', {
+    sessionUserId: validation.sessionUserId,
+    databaseUserId: realUserId,
+    userEmail: validation.userEmail,
+    userRole: validation.userRole
+  })
 
   try {
     // Get organization context for multi-tenant isolation
@@ -81,14 +96,14 @@ export async function POST(req: NextRequest) {
 
     const fileUrl = `${url}/${fileName}`
 
-    // Save media information to database
+    // Save media information to database - ✅ Use REAL user ID
     const media = await prisma.media.create({
       data: {
         url: fileUrl,
         filename: fileName,
         contentType: file.type,
         size: file.size,
-        uploadedById: session.user.id,
+        uploadedById: realUserId,
         contentDraftId,
         organizationId: orgContext.organizationId,
       },

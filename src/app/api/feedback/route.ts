@@ -1,20 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { DraftStatus } from '@prisma/client'
 
-import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { DraftStatus } from '@/lib/constants'
+import { validateSessionUser } from '@/lib/utils/session-validation'
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+  const validation = await validateSessionUser()
+  
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: validation.status || 401 }
+    )
   }
+  
+  // Use the REAL user ID from database, not the session ID
+  const realUserId = validation.realUserId
+  
+  console.log('🔍 DEBUG: Session validation successful:', {
+    sessionUserId: validation.sessionUserId,
+    databaseUserId: realUserId,
+    userEmail: validation.userEmail,
+    userRole: validation.userRole
+  })
 
   try {
-    const { 
-      contentDraftId, 
+    const {
+      contentDraftId,
       comment
     } = await req.json()
 
@@ -43,12 +58,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create enhanced feedback
+    // Create enhanced feedback - ✅ Use REAL user ID
     const feedback = await prisma.feedback.create({
       data: {
         comment,
         contentDraftId,
-        createdById: session.user.id,
+        createdById: realUserId,
       },
       include: {
         User: {
@@ -72,10 +87,14 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+  const validation = await validateSessionUser()
+  
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: validation.status || 401 }
+    )
   }
 
   const url = new URL(req.url)

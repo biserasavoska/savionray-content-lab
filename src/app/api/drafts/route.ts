@@ -1,34 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
+import { authOptions, isCreative } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { authOptions , isCreative, isAdmin } from '@/lib/auth'
-import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
-import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context'
+import { requireOrganizationContext } from '@/lib/middleware/organization-context'
+import { CONTENT_TYPE } from '@/lib/constants'
+import { validateSessionUser } from '@/lib/utils/session-validation'
+
+// Helper function to create organization filter
+function createOrgFilter(organizationId: string) {
+  return {
+    organizationId: organizationId,
+  }
+}
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  if (!isCreative(session) && !isAdmin(session)) {
-    return NextResponse.json({ error: 'Only creatives and admins can create drafts' }, { status: 403 })
-  }
-
   try {
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateSessionUser()
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: validation.status || 401 }
+      )
+    }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole
+    })
+
     const { body, ideaId, contentType, metadata } = await req.json()
 
-    if (!body) {
-      return NextResponse.json({ error: 'Content body is required' }, { status: 400 })
-    }
-
-    if (!ideaId) {
-      return NextResponse.json({ error: 'Idea ID is required' }, { status: 400 })
-    }
-
-    if (!contentType || !Object.values(CONTENT_TYPE).includes(contentType)) {
+    if (!body || !contentType || !Object.values(CONTENT_TYPE).includes(contentType)) {
       return NextResponse.json({ error: 'Valid content type is required' }, { status: 400 })
     }
 
@@ -41,7 +51,7 @@ export async function POST(req: NextRequest) {
         ideaId,
         contentType: contentType as any,
         status: 'DRAFT',
-        createdById: session.user.id,
+        createdById: realUserId,
         organizationId: orgContext.organizationId,
         metadata: metadata || {},
       },
@@ -63,16 +73,23 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+  const validation = await validateSessionUser()
+  
+  if (!validation.success) {
+    return NextResponse.json(
+      { error: validation.error },
+      { status: validation.status || 401 }
+    )
   }
+  
+  // Use the REAL user ID from database, not the session ID
+  const realUserId = validation.realUserId
 
   const { searchParams } = new URL(req.url)
   const ideaId = searchParams.get('ideaId')
   const page = parseInt(searchParams.get('page') || '1')
-  const limit = parseInt(searchParams.get('limit') || '10')
+  const limit = parseInt(searchParams.get('page') || '10')
   const skip = (page - 1) * limit
 
   try {
@@ -81,7 +98,7 @@ export async function GET(req: NextRequest) {
     
     const where = {
       ...(ideaId ? { ideaId } : {}),
-      ...(isCreative(session) ? { createdById: session.user.id } : {}),
+      ...(isCreative({ user: { role: validation.userRole } }) ? { createdById: realUserId } : {}),
       ...createOrgFilter(orgContext.organizationId), // Add organization filter
     }
 
