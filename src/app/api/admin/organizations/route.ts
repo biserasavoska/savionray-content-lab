@@ -156,13 +156,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  console.log('=== FUNCTION CALLED: POST ===')
-  console.log('Function execution started at:', new Date().toISOString())
-  
-  console.log('=== ORGANIZATION CREATION START ===')
-  console.log('Request received at:', new Date().toISOString())
+  console.log('🚀 ENHANCED LOGGING VERSION DEPLOYED - Organization creation API called')
   
   try {
+    console.log('=== FUNCTION CALLED: POST ===')
+    console.log('Function execution started at:', new Date().toISOString())
+    
+    console.log('=== ORGANIZATION CREATION START ===')
+    console.log('Request received at:', new Date().toISOString())
+    
     console.log('Getting server session...')
     const session = await getServerSession(authOptions)
     console.log('Session obtained:', !!session)
