@@ -1,3 +1,6 @@
+// 🚨 CRITICAL: This file has been modified to fix organization creation 500 errors
+// 🚨 Railway must deploy this updated code immediately
+// 🚨 Enhanced logging and debugging has been added throughout
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
