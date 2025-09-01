@@ -333,6 +333,7 @@ export async function POST(request: NextRequest) {
 
           if (!user) {
             // Create new user
+            console.log('🔍 DEBUG: Creating new user for client:', clientUser.email)
             logger.info('Creating new user for client', {
               userId: session.user.id,
               organizationId: organization.id,
@@ -346,11 +347,19 @@ export async function POST(request: NextRequest) {
               emailVerified: new Date()
             }
             
+            console.log('🔍 DEBUG: User data to create:', JSON.stringify(userData, null, 2))
             logger.info('User data to create:', userData)
             
-            user = await tx.user.create({
-              data: userData
-            })
+            try {
+              console.log('🔍 DEBUG: About to create user in database...')
+              user = await tx.user.create({
+                data: userData
+              })
+              console.log('🔍 DEBUG: User created successfully:', JSON.stringify(user, null, 2))
+            } catch (userCreateError) {
+              console.log('🔍 DEBUG: User creation failed:', userCreateError)
+              throw userCreateError
+            }
             
             logger.info('New user created successfully', {
               userId: session.user.id,
@@ -361,6 +370,7 @@ export async function POST(request: NextRequest) {
             })
             
             // CRITICAL: Log the user object immediately after creation
+            console.log('🔍 DEBUG: User object immediately after creation:', JSON.stringify(user, null, 2))
             logger.info('User object immediately after creation:', {
               userId: session.user.id,
               organizationId: organization.id,
@@ -373,6 +383,7 @@ export async function POST(request: NextRequest) {
             
             // CRITICAL: Verify user ID is valid UUID
             if (!user.id || typeof user.id !== 'string' || user.id.length < 10) {
+              console.log('🔍 DEBUG: CRITICAL - User created but ID is invalid!')
               logger.error('CRITICAL: User created but ID is invalid!', undefined, {
                 userId: session.user.id,
                 organizationId: organization.id,
@@ -383,7 +394,10 @@ export async function POST(request: NextRequest) {
               })
               throw new Error(`User created but ID is invalid: ${JSON.stringify(user)}`)
             }
+            
+            console.log('🔍 DEBUG: User ID validation passed:', user.id)
           } else {
+            console.log('🔍 DEBUG: Using existing user:', JSON.stringify(user, null, 2))
             // Update existing user's name if provided
             if (clientUser.name && user.name !== clientUser.name) {
               logger.info('Updating existing user name', {
@@ -401,7 +415,9 @@ export async function POST(request: NextRequest) {
           }
 
           // Validate user exists before creating relationship
+          console.log('🔍 DEBUG: Validating user before relationship creation...')
           if (!user || !user.id) {
+            console.log('🔍 DEBUG: User validation failed - user is invalid')
             logger.error('Cannot create organization user relationship - user is invalid', undefined, {
               userId: session.user.id,
               organizationId: organization.id,
@@ -412,6 +428,7 @@ export async function POST(request: NextRequest) {
             throw new Error(`Invalid user data for client: ${clientUser.email}`)
           }
 
+          console.log('🔍 DEBUG: User validation passed, proceeding to create relationship')
           // CRITICAL: Additional validation before relationship creation
           logger.info('Final user validation before relationship creation:', {
             userId: session.user.id,
@@ -427,6 +444,7 @@ export async function POST(request: NextRequest) {
           })
 
           // Create organization user relationship
+          console.log('🔍 DEBUG: Creating organization user relationship...')
           logger.info('Creating organization user relationship', {
             userId: session.user.id,
             organizationId: organization.id,
@@ -435,6 +453,7 @@ export async function POST(request: NextRequest) {
           })
           
           // Double-check user exists and has valid ID
+          console.log('🔍 DEBUG: Final user check before database call...')
           logger.info('User validation before creating relationship:', {
             userExists: !!user,
             userId: user?.id,
@@ -452,9 +471,11 @@ export async function POST(request: NextRequest) {
             joinedAt: new Date()
           }
           
+          console.log('🔍 DEBUG: Organization user data to create:', JSON.stringify(organizationUserData, null, 2))
           logger.info('Organization user data to create:', organizationUserData)
           
           // CRITICAL: Final validation before database call
+          console.log('🔍 DEBUG: About to create OrganizationUser in database...')
           logger.info('About to create OrganizationUser with data:', {
             userId: session.user.id,
             organizationId: organization.id,
@@ -464,14 +485,16 @@ export async function POST(request: NextRequest) {
             userIdExists: !!user?.id
           })
           
-          await tx.organizationUser.create({
-            data: organizationUserData
-          })
-          logger.info('Organization user relationship created successfully', {
-            userId: session.user.id,
-            organizationId: organization.id,
-            clientUserId: user.id
-          })
+          try {
+            console.log('🔍 DEBUG: Executing OrganizationUser.create()...')
+            await tx.organizationUser.create({
+              data: organizationUserData
+            })
+            console.log('🔍 DEBUG: OrganizationUser created successfully!')
+          } catch (orgUserError) {
+            console.log('🔍 DEBUG: OrganizationUser creation failed:', orgUserError)
+            throw orgUserError
+          }
         } catch (clientUserError) {
           logger.error('Error processing client user', clientUserError instanceof Error ? clientUserError : new Error(String(clientUserError)), {
             userId: session.user.id,
