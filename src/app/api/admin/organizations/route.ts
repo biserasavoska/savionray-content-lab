@@ -304,6 +304,32 @@ export async function POST(request: NextRequest) {
         isActive: true,
         joinedAt: new Date()
       }
+      
+      // CRITICAL: Verify admin user exists before creating relationship
+      console.log('🔍 DEBUG: Verifying admin user exists before creating relationship...')
+      const adminUserExists = await tx.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, email: true, role: true }
+      })
+      
+      if (!adminUserExists) {
+        console.log('🔍 DEBUG: CRITICAL - Admin user does not exist in database!')
+        logger.error('CRITICAL: Admin user does not exist in database before creating relationship', undefined, {
+          userId: session.user.id,
+          organizationId: organization.id,
+          sessionUserEmail: session.user.email,
+          adminUserExists: false
+        })
+        throw new Error(`Admin user ${session.user.id} does not exist in database`)
+      }
+      
+      console.log('🔍 DEBUG: Admin user verified, creating relationship...')
+      logger.info('Admin user verified, creating organization user relationship', {
+        userId: session.user.id,
+        organizationId: organization.id,
+        adminUserData
+      })
+      
       await tx.organizationUser.create({
         data: adminUserData
       })
