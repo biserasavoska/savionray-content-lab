@@ -7,7 +7,7 @@ import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if database is accessible
+    // Check if database is accessible - DEFAULT CONFIG TEST
     try {
       await prisma.$queryRaw`SELECT 1`
     } catch (dbError) {
@@ -367,6 +367,18 @@ export async function POST(request: NextRequest) {
             }
           }
 
+          // Validate user exists before creating relationship
+          if (!user || !user.id) {
+            logger.error('Cannot create organization user relationship - user is invalid', {
+              userId: session.user.id,
+              organizationId: organization.id,
+              clientUserEmail: clientUser.email,
+              userExists: !!user,
+              userIdExists: !!user?.id
+            })
+            throw new Error(`Invalid user data for client: ${clientUser.email}`)
+          }
+
           // Create organization user relationship
           logger.info('Creating organization user relationship', {
             userId: session.user.id,
@@ -374,16 +386,21 @@ export async function POST(request: NextRequest) {
             clientUserId: user.id,
             clientUserRole: clientUser.organizationRole || 'ADMIN'
           })
+          
+          const organizationUserData = {
+            organizationId: organization.id,
+            userId: user.id,
+            role: clientUser.organizationRole || 'ADMIN',
+            permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
+            isActive: true,
+            invitedBy: session.user.id,
+            joinedAt: new Date()
+          }
+          
+          logger.info('Organization user data to create:', organizationUserData)
+          
           await tx.organizationUser.create({
-            data: {
-              organizationId: organization.id,
-              userId: user.id,
-              role: clientUser.organizationRole || 'ADMIN',
-              permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
-              isActive: true,
-              invitedBy: session.user.id,
-              joinedAt: new Date()
-            }
+            data: organizationUserData
           })
           logger.info('Organization user relationship created successfully', {
             userId: session.user.id,
