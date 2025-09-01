@@ -543,7 +543,7 @@ export async function POST(request: NextRequest) {
             role: clientUser.organizationRole || 'ADMIN',
             permissions: getPermissionsForRole(clientUser.organizationRole || 'ADMIN'),
             isActive: true,
-            invitedBy: session.user.id,
+            invitedBy: realUserId,
             joinedAt: new Date()
           }
           
@@ -553,7 +553,7 @@ export async function POST(request: NextRequest) {
           // CRITICAL: Final validation before database call
           console.log('🔍 DEBUG: About to create OrganizationUser in database...')
           logger.info('About to create OrganizationUser with data:', {
-            userId: session.user.id,
+            userId: realUserId,
             organizationId: organization.id,
             organizationUserData,
             userObject: user,
@@ -573,7 +573,7 @@ export async function POST(request: NextRequest) {
           }
         } catch (clientUserError) {
           logger.error('Error processing client user', clientUserError instanceof Error ? clientUserError : new Error(String(clientUserError)), {
-            userId: session.user.id,
+            userId: realUserId,
             organizationId: organization.id,
             clientUser,
             error: clientUserError instanceof Error ? clientUserError.message : String(clientUserError),
@@ -590,7 +590,7 @@ export async function POST(request: NextRequest) {
     logger.info('Organization created by admin', {
       organizationId: result.id,
       organizationName: result.name,
-      createdBy: session.user.id,
+      createdBy: realUserId,
       clientCount: clientUsers.length,
       welcomeMessage: welcomeMessage ? 'Custom' : 'Default'
     })
