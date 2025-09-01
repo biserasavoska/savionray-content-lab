@@ -3,21 +3,33 @@ import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { validateSessionUser } from '@/lib/utils/session-validation'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateSessionUser()
     
-    if (!session?.user?.id) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: validation.error },
+        { status: validation.status || 401 }
       )
     }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole
+    })
 
-    // Get user with organization through OrganizationUser
+    // Get user with organization through OrganizationUser - ✅ Use REAL user ID
     const userWithOrg = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: realUserId },
       include: { 
         organizationUsers: {
           include: {
@@ -68,14 +80,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateSessionUser()
     
-    if (!session?.user?.id) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: validation.error },
+        { status: validation.status || 401 }
       )
     }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole
+    })
 
     const body = await request.json()
     const { planType, billingCycle = 'MONTHLY' } = body
@@ -87,9 +110,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user with organization through OrganizationUser
+    // Get user with organization through OrganizationUser - ✅ Use REAL user ID
     const userWithOrg = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: realUserId },
       include: { 
         organizationUsers: {
           include: {
@@ -160,21 +183,32 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateSessionUser()
     
-    if (!session?.user?.id) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: validation.error },
+        { status: validation.status || 401 }
       )
     }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole
+    })
 
     const body = await request.json()
     const { action, planType, cancelAtPeriodEnd } = body
 
-    // Get user with organization through OrganizationUser
+    // Get user with organization through OrganizationUser - ✅ Use REAL user ID
     const userWithOrg = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: realUserId },
       include: { 
         organizationUsers: {
           include: {

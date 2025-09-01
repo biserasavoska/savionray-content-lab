@@ -5,25 +5,37 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
 import { OrganizationContext } from '@/lib/types/security'
+import { validateSessionUser } from '@/lib/utils/session-validation'
 
 export async function withOrganizationContext(
   request: NextRequest,
   handler: (req: NextRequest, context: OrganizationContext) => Promise<NextResponse>
 ): Promise<NextResponse> {
   try {
-    const session = await getServerSession(authOptions)
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateSessionUser()
     
-    if (!session?.user) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: validation.error },
+        { status: validation.status || 401 }
       )
     }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    
+    console.log('🔍 DEBUG: Session validation successful in middleware:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole
+    })
 
-    // Get user's active organization membership
+    // Get user's active organization membership - ✅ Use REAL user ID
     const organizationMembership = await prisma.organizationUser.findFirst({
       where: {
-        userId: session.user.id,
+        userId: realUserId,
         isActive: true
       },
       include: {
@@ -43,19 +55,19 @@ export async function withOrganizationContext(
 
     const context: OrganizationContext = {
       organizationId: organizationMembership.organizationId,
-      userId: session.user.id,
-      userRole: session.user.role,
+      userId: realUserId,
+      userRole: validation.userRole,
       organizationRole: organizationMembership.role,
-      userEmail: session.user.email || '',
-      isSuperAdmin: session.user.isSuperAdmin || false,
+      userEmail: validation.userEmail,
+      isSuperAdmin: validation.userRole === 'SUPER_ADMIN',
       permissions: Array.isArray(organizationMembership.permissions) 
         ? (organizationMembership.permissions as string[]).filter(p => typeof p === 'string')
         : []
     }
 
     logger.info('Organization context established', {
-      userId: session.user.id,
-      userEmail: session.user.email,
+      userId: realUserId,
+      userEmail: validation.userEmail,
       organizationId: context.organizationId,
       organizationName: organizationMembership.organization.name,
       userRole: context.userRole
