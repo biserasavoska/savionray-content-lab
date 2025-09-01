@@ -4,8 +4,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-import { requireOrganizationContext, requireOrganizationContextWithOverride } from '@/lib/middleware/organization-context'
-import { CONTENT_ITEM_STATUS, CONTENT_TYPE, WORKFLOW_STAGE } from '@/lib/constants'
+import { requireOrganizationContext, requireOrganizationContextWithOverride } from '@/lib/utils/organization-context'
+import { CONTENT_ITEM_STATUS, CONTENT_TYPE, WORKFLOW_STAGE } from '@/lib/utils/enum-constants'
 import { validateSessionUser } from '@/lib/utils/session-validation'
 
 export async function POST(request: NextRequest) {

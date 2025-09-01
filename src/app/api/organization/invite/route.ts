@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 import { authOptions, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requireOrganizationContext } from '@/lib/middleware/organization-context'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import { validateAdminSessionUser } from '@/lib/utils/session-validation'
 
 export async function GET(request: NextRequest) {

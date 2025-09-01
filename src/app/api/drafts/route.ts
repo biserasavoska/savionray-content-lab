@@ -3,8 +3,8 @@ import { getServerSession } from 'next-auth'
 
 import { authOptions, isCreative } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requireOrganizationContext } from '@/lib/middleware/organization-context'
-import { CONTENT_TYPE } from '@/lib/constants'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
+import { CONTENT_TYPE } from '@/lib/utils/enum-constants'
 import { validateSessionUser } from '@/lib/utils/session-validation'
 
 // Helper function to create organization filter

@@ -1,39 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
-import { authOptions , isAdmin, isCreative } from '@/lib/auth'
+import { authOptions, isCreative, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
+import { validateSessionUser } from '@/lib/utils/session-validation'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateSessionUser()
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: validation.error },
+        { status: validation.status || 401 }
       )
     }
+    
+    // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole
+    })
 
-    // Only Creative and Admin users can access client organizations
-    if (!isCreative(session) && !isAdmin(session)) {
-      return NextResponse.json(
-        { error: 'Access denied. Creative or Admin role required.' },
-        { status: 403 }
-      )
-    }
-
-    const url = new URL(request.url)
-    const page = parseInt(url.searchParams.get('page') || '1')
-    const limit = parseInt(url.searchParams.get('limit') || '50')
-    const search = url.searchParams.get('search') || ''
-
+    const { searchParams } = new URL(request.url)
+    const search = searchParams.get('search') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
     // Build where clause
-    const where: any = {}
-    
+    const where: any = {
+      subscriptionStatus: { not: 'CANCELLED' }
+    }
+
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
@@ -42,11 +47,11 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // For Creative users, only show organizations they have access to
-    if (isCreative(session) && !isAdmin(session)) {
+    // For Creative users, only show organizations they have access to - ✅ Use REAL user ID
+    if (isCreative({ user: { role: validation.userRole } }) && !isAdmin({ user: { role: validation.userRole } })) {
       const userOrganizations = await prisma.organizationUser.findMany({
         where: {
-          userId: session.user.id,
+          userId: realUserId,
           isActive: true
         },
         select: {
@@ -120,9 +125,9 @@ export async function GET(request: NextRequest) {
     }))
 
     logger.info('Client organizations fetched', {
-      userId: session.user.id,
-      userEmail: session.user.email,
-      userRole: session.user.role,
+      userId: realUserId,
+      userEmail: validation.userEmail,
+      userRole: validation.userRole,
       organizationCount: total,
       page,
       limit

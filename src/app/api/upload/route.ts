@@ -5,7 +5,7 @@ import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
-import { requireOrganizationContext } from '@/lib/middleware/organization-context'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import { validateSessionUser } from '@/lib/utils/session-validation'
 
 const s3Client = new S3Client({

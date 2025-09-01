@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { DraftStatus } from '@/lib/constants'
+import { DraftStatus } from '@/lib/utils/enum-constants'
 import { validateSessionUser } from '@/lib/utils/session-validation'
 
 export async function POST(req: NextRequest) {
