@@ -159,7 +159,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // 🚀 DEPLOYMENT MARKER - This should appear in Railway logs if deployed
   console.log('🚀 ENHANCED LOGGING VERSION DEPLOYED - Organization creation API called')
+  console.log('🔍 DEBUG: Function execution started at:', new Date().toISOString())
+  console.log('🔍 DEBUG: This should show up in Railway logs if deployed')
   
   try {
     console.log('=== FUNCTION CALLED: POST ===')
@@ -170,7 +173,7 @@ export async function POST(request: NextRequest) {
     
     console.log('Getting server session...')
     const session = await getServerSession(authOptions)
-    console.log('Session obtained:', !!session)
+    console.log('🔍 DEBUG: Session obtained:', !!session, session?.user?.id)
     
     // Check if database is accessible
     try {
