@@ -1,253 +1,341 @@
-
-
 'use client'
 
 import React, { useState } from 'react'
-
-// Sample content data for demonstration
-const sampleContent = [
-  {
-    id: '1',
-    title: 'Getting Started with Next.js 14',
-    description: 'A comprehensive guide to building modern web applications with Next.js 14, covering all the new features and best practices.',
-    content: 'Next.js 14 introduces several groundbreaking features that make building full-stack applications easier than ever...',
-    status: 'published',
-    contentType: 'article',
-    author: 'John Doe',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-    tags: ['Next.js', 'React', 'Web Development', 'Tutorial'],
-    priority: 'high',
-    estimatedReadTime: 8,
-  },
-  {
-    id: '2',
-    title: 'AI-Powered Content Creation',
-    description: 'Exploring how artificial intelligence is revolutionizing content creation workflows and improving productivity.',
-    content: 'Artificial intelligence has transformed the way we approach content creation...',
-    status: 'review',
-    contentType: 'blog',
-    author: 'Jane Smith',
-    createdAt: new Date('2024-01-18'),
-    updatedAt: new Date('2024-01-19'),
-    tags: ['AI', 'Content Creation', 'Productivity', 'Innovation'],
-    priority: 'urgent',
-    estimatedReadTime: 12,
-  },
-]
+import { 
+  ContentCard, 
+  EnhancedContentCard, 
+  ContentCardGrid,
+  ContentTypeBadge,
+  ContentCardHeader,
+  ContentCardBody
+} from '@/components/ui/content'
+import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
+import { Button } from '@/components/ui/common/Button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/common/Tabs'
+import { Badge } from '@/components/ui/common/Badge'
 
 export default function ContentCardShowcase() {
-  const [currentView, setCurrentView] = useState<'showcase' | 'grid' | 'skeleton'>('showcase')
+  const [currentView, setCurrentView] = useState('enhanced')
+  const [selectedItems, setSelectedItems] = useState<string[]>([])
+
+  // Sample content data
+  const sampleContent = [
+    {
+      id: '1',
+      title: 'The Future of AI in Content Creation',
+      description: 'Exploring how artificial intelligence is revolutionizing the way we create and consume content.',
+      content: 'Artificial intelligence is transforming the content creation landscape at an unprecedented pace. From automated writing tools to intelligent content optimization, AI is enabling creators to produce higher quality content more efficiently than ever before. This comprehensive guide explores the latest developments in AI-powered content creation, including natural language processing, computer vision, and machine learning applications that are reshaping the industry.',
+      status: 'published' as const,
+      contentType: 'article' as const,
+      author: 'Sarah Johnson',
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-20'),
+      tags: ['AI', 'Content Creation', 'Technology', 'Future Trends'],
+      priority: 'high' as const,
+      estimatedReadTime: 8,
+    },
+    {
+      id: '2',
+      title: 'Social Media Marketing Best Practices',
+      description: 'A comprehensive guide to effective social media marketing strategies for modern businesses.',
+      content: 'Social media marketing has become an essential component of any successful business strategy. With billions of users across various platforms, understanding how to effectively engage your audience and drive meaningful results is crucial for business growth.',
+      status: 'review' as const,
+      contentType: 'blog' as const,
+      author: 'Mike Chen',
+      createdAt: new Date('2024-01-18'),
+      updatedAt: new Date('2024-01-22'),
+      tags: ['Social Media', 'Marketing', 'Strategy'],
+      priority: 'medium' as const,
+      estimatedReadTime: 5,
+    },
+    {
+      id: '3',
+      title: 'Weekly Newsletter - Industry Updates',
+      description: 'Stay informed with the latest industry news and insights delivered to your inbox.',
+      content: 'This week we cover the latest developments in content marketing, including new platform features, algorithm updates, and emerging trends that are shaping the future of digital marketing.',
+      status: 'draft' as const,
+      contentType: 'newsletter' as const,
+      author: 'Emily Rodriguez',
+      createdAt: new Date('2024-01-20'),
+      updatedAt: new Date('2024-01-20'),
+      tags: ['Newsletter', 'Industry News', 'Updates'],
+      priority: 'low' as const,
+      estimatedReadTime: 3,
+    },
+    {
+      id: '4',
+      title: 'Podcast Episode: Content Strategy Deep Dive',
+      description: 'An in-depth discussion about developing effective content strategies for different industries.',
+      content: 'In this episode, we sit down with industry experts to discuss the key components of a successful content strategy, including audience research, content planning, and performance measurement.',
+      status: 'approved' as const,
+      contentType: 'podcast' as const,
+      author: 'David Kim',
+      createdAt: new Date('2024-01-12'),
+      updatedAt: new Date('2024-01-19'),
+      tags: ['Podcast', 'Strategy', 'Content Planning'],
+      priority: 'high' as const,
+      estimatedReadTime: 45,
+    },
+    {
+      id: '5',
+      title: 'Video Tutorial: Content Creation Tools',
+      description: 'Learn how to use the latest content creation tools to enhance your workflow.',
+      content: 'This comprehensive video tutorial covers the most popular content creation tools available today, including design software, video editing platforms, and collaboration tools that can help streamline your content production process.',
+      status: 'archived' as const,
+      contentType: 'video' as const,
+      author: 'Lisa Wang',
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-15'),
+      tags: ['Video', 'Tutorial', 'Tools', 'Workflow'],
+      priority: 'medium' as const,
+      estimatedReadTime: 15,
+    },
+  ]
 
   const handleEdit = (id: string) => {
-    console.log('Edit item:', id)
-    alert(`Edit item: ${id}`)
+    console.log('Edit content:', id)
   }
 
   const handleDelete = (id: string) => {
-    console.log('Delete item:', id)
-    alert(`Delete item: ${id}`)
+    console.log('Delete content:', id)
   }
 
   const handleApprove = (id: string) => {
-    console.log('Approve item:', id)
-    alert(`Approve item: ${id}`)
+    console.log('Approve content:', id)
   }
 
   const handlePublish = (id: string) => {
-    console.log('Publish item:', id)
-    alert(`Publish item: ${id}`)
+    console.log('Publish content:', id)
   }
 
   const handleArchive = (id: string) => {
-    console.log('Archive item:', id)
-    alert(`Archive item: ${id}`)
+    console.log('Archive content:', id)
   }
 
+  const handleView = (id: string) => {
+    console.log('View content:', id)
+  }
+
+  const handleDuplicate = (id: string) => {
+    console.log('Duplicate content:', id)
+  }
+
+  const handleSelect = (id: string, selected: boolean) => {
+    if (selected) {
+      setSelectedItems(prev => [...prev, id])
+    } else {
+      setSelectedItems(prev => prev.filter(item => item !== id))
+    }
+  }
+
+  const contentTypes = ['article', 'blog', 'social', 'video', 'podcast', 'newsletter', 'image', 'document', 'audio', 'rss'] as const
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Content Card System Showcase
-          </h1>
-          <p className="mt-2 text-lg text-gray-600">
-            Demonstrating the comprehensive content card system with all features and capabilities
-          </p>
-          
-          {/* Navigation */}
-          <div className="mt-4 flex gap-2">
-            <button
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentView === 'showcase' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-              onClick={() => setCurrentView('showcase')}
-            >
-              Individual Cards
-            </button>
-            <button
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentView === 'grid' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-              onClick={() => setCurrentView('grid')}
-            >
-              Grid System
-            </button>
-            <button
-              className={`px-4 py-2 rounded-md text-sm font-medium ${
-                currentView === 'skeleton' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-              onClick={() => setCurrentView('skeleton')}
-            >
-              Loading States
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="space-y-6">
-          {currentView === 'showcase' && (
-            <div>
-              <h3 className="text-xl font-semibold mb-6">Individual Content Cards</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sampleContent.map((item) => (
-                  <div key={item.id} className="bg-white rounded-lg border shadow-sm p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
-                        <p className="text-sm text-gray-600">{item.description}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          item.status === 'published' ? 'bg-green-100 text-green-800' :
-                          item.status === 'review' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {item.status}
-                        </span>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          {item.contentType}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap gap-1">
-                        {item.tags.slice(0, 3).map((tag, index) => (
-                          <span key={index} className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>By {item.author}</span>
-                        <span>{item.estimatedReadTime} min read</span>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button
-                          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                          onClick={() => handleEdit(item.id)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {currentView === 'grid' && (
-            <div>
-              <h3 className="text-xl font-semibold mb-6">Content Grid System</h3>
-              <div className="bg-white rounded-lg border shadow-sm p-6 mb-6">
-                <h4 className="font-medium mb-4">Filters and Controls</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <input
-                    type="text"
-                    placeholder="Search content..."
-                    className="px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                  <select className="px-3 py-2 border border-gray-300 rounded-md">
-                    <option value="all">All Statuses</option>
-                    <option value="draft">Draft</option>
-                    <option value="review">Review</option>
-                    <option value="published">Published</option>
-                  </select>
-                  <select className="px-3 py-2 border border-gray-300 rounded-md">
-                    <option value="all">All Types</option>
-                    <option value="article">Article</option>
-                    <option value="blog">Blog</option>
-                  </select>
-                  <button className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sampleContent.map((item) => (
-                  <div key={item.id} className="bg-white rounded-lg border shadow-sm p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
-                    <p className="text-sm text-gray-600 mb-4">{item.description}</p>
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
-                        onClick={() => handleEdit(item.id)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {currentView === 'skeleton' && (
-            <div>
-              <h3 className="text-xl font-semibold mb-6">Loading States (Skeletons)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="bg-white rounded-lg border shadow-sm p-6 animate-pulse">
-                    <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="space-y-2 mb-4">
-                      <div className="h-4 bg-gray-200 rounded w-full"></div>
-                      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-16 bg-gray-200 rounded"></div>
-                      <div className="h-8 w-16 bg-gray-200 rounded"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+    <div className="container mx-auto p-6 space-y-8">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Content Card System Showcase</h1>
+        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          Explore the comprehensive Content Card System with enhanced components, advanced features, and flexible customization options.
+        </p>
       </div>
+
+      <Tabs value={currentView} onValueChange={setCurrentView} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="enhanced">Enhanced Cards</TabsTrigger>
+          <TabsTrigger value="original">Original Cards</TabsTrigger>
+          <TabsTrigger value="components">Individual Components</TabsTrigger>
+          <TabsTrigger value="grid">Grid System</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="enhanced" className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-4">Enhanced Content Cards</h2>
+            <p className="text-gray-600 mb-6">
+              Advanced content cards with selection, expandable content, and enhanced actions.
+            </p>
+            {selectedItems.length > 0 && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800">
+                  {selectedItems.length} item(s) selected: {selectedItems.join(', ')}
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSelectedItems([])}
+                  className="mt-2"
+                >
+                  Clear Selection
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sampleContent.map((item) => (
+              <EnhancedContentCard
+                key={item.id}
+                {...item}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onApprove={handleApprove}
+                onPublish={handlePublish}
+                onArchive={handleArchive}
+                onView={handleView}
+                onDuplicate={handleDuplicate}
+                isSelected={selectedItems.includes(item.id)}
+                onSelect={handleSelect}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="original" className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-4">Original Content Cards</h2>
+            <p className="text-gray-600 mb-6">
+              The original content card implementation with standard features.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sampleContent.slice(0, 3).map((item) => (
+              <ContentCard
+                key={item.id}
+                {...item}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onApprove={handleApprove}
+                onPublish={handlePublish}
+                onArchive={handleArchive}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="components" className="space-y-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-4">Individual Components</h2>
+            <p className="text-gray-600 mb-6">
+              Explore the individual components that make up the Content Card System.
+            </p>
+          </div>
+
+          {/* Content Type Badges */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-xl font-semibold">Content Type Badges</h3>
+              <p className="text-gray-600">Color-coded badges for different content types</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {contentTypes.map((type) => (
+                  <ContentTypeBadge key={type} contentType={type} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Content Card Header */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-xl font-semibold">Content Card Header</h3>
+              <p className="text-gray-600">Header component with metadata and status indicators</p>
+            </CardHeader>
+            <CardContent>
+              <ContentCardHeader
+                title="Sample Article Title"
+                description="This is a sample description for the content card header component."
+                status="published"
+                contentType="article"
+                author="John Doe"
+                createdAt={new Date()}
+                updatedAt={new Date()}
+                estimatedReadTime={5}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Content Card Body */}
+          <Card>
+            <CardHeader>
+              <h3 className="text-xl font-semibold">Content Card Body</h3>
+              <p className="text-gray-600">Body component with expandable content and tags</p>
+            </CardHeader>
+            <CardContent>
+              <ContentCardBody
+                content="This is a sample content that demonstrates the expandable functionality of the ContentCardBody component. It can handle long text content and provides a 'Show More' button when the content exceeds a certain length."
+                tags={['Sample', 'Component', 'Demo', 'Content']}
+                priority="high"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="grid" className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold mb-4">Content Card Grid System</h2>
+            <p className="text-gray-600 mb-6">
+              Advanced grid system with filtering, sorting, and bulk operations.
+            </p>
+          </div>
+
+          <ContentCardGrid
+            content={sampleContent}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onApprove={handleApprove}
+            onPublish={handlePublish}
+            onArchive={handleArchive}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Features Overview */}
+      <Card className="mt-12">
+        <CardHeader>
+          <h2 className="text-2xl font-semibold">Content Card System Features</h2>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <h3 className="font-semibold mb-2">🎨 Enhanced Design</h3>
+              <p className="text-sm text-gray-600">
+                Modern, responsive design with hover effects, smooth transitions, and consistent styling.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">🔧 Flexible Components</h3>
+              <p className="text-sm text-gray-600">
+                Modular components that can be used independently or combined for custom layouts.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">📱 Responsive Layout</h3>
+              <p className="text-sm text-gray-600">
+                Adapts seamlessly to different screen sizes with proper breakpoints and spacing.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">⚡ Performance Optimized</h3>
+              <p className="text-sm text-gray-600">
+                Efficient rendering with proper memoization and optimized re-renders.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">♿ Accessibility</h3>
+              <p className="text-sm text-gray-600">
+                WCAG compliant with proper ARIA labels, keyboard navigation, and screen reader support.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2">🎯 Type Safe</h3>
+              <p className="text-sm text-gray-600">
+                Full TypeScript support with comprehensive type definitions and interfaces.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
