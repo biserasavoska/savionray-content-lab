@@ -357,6 +357,30 @@ export async function POST(request: NextRequest) {
               clientUserEmail: clientUser.email,
               createdUser: user
             })
+            
+            // CRITICAL: Log the user object immediately after creation
+            logger.info('User object immediately after creation:', {
+              userId: session.user.id,
+              organizationId: organization.id,
+              userObject: user,
+              userType: typeof user,
+              userKeys: user ? Object.keys(user) : 'NO_USER',
+              userIdType: user?.id ? typeof user.id : 'NO_ID',
+              userIdValue: user?.id
+            })
+            
+            // CRITICAL: Verify user ID is valid UUID
+            if (!user.id || typeof user.id !== 'string' || user.id.length < 10) {
+              logger.error('CRITICAL: User created but ID is invalid!', undefined, {
+                userId: session.user.id,
+                organizationId: organization.id,
+                createdUser: user,
+                userIdValue: user?.id,
+                userIdType: typeof user?.id,
+                userIdLength: user?.id?.length
+              })
+              throw new Error(`User created but ID is invalid: ${JSON.stringify(user)}`)
+            }
           } else {
             // Update existing user's name if provided
             if (clientUser.name && user.name !== clientUser.name) {
@@ -386,6 +410,20 @@ export async function POST(request: NextRequest) {
             throw new Error(`Invalid user data for client: ${clientUser.email}`)
           }
 
+          // CRITICAL: Additional validation before relationship creation
+          logger.info('Final user validation before relationship creation:', {
+            userId: session.user.id,
+            organizationId: organization.id,
+            userObject: user,
+            userType: typeof user,
+            userKeys: user ? Object.keys(user) : 'NO_USER',
+            userIdValue: user?.id,
+            userIdType: typeof user?.id,
+            userIdLength: user?.id?.length,
+            userEmail: user?.email,
+            userRole: user?.role
+          })
+
           // Create organization user relationship
           logger.info('Creating organization user relationship', {
             userId: session.user.id,
@@ -413,6 +451,16 @@ export async function POST(request: NextRequest) {
           }
           
           logger.info('Organization user data to create:', organizationUserData)
+          
+          // CRITICAL: Final validation before database call
+          logger.info('About to create OrganizationUser with data:', {
+            userId: session.user.id,
+            organizationId: organization.id,
+            organizationUserData,
+            userObject: user,
+            userExists: !!user,
+            userIdExists: !!user?.id
+          })
           
           await tx.organizationUser.create({
             data: organizationUserData
