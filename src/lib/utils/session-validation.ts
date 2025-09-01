@@ -34,8 +34,7 @@ export async function validateSessionUser() {
       select: { 
         id: true, 
         email: true, 
-        role: true,
-        isActive: true 
+        role: true
       }
     })
     
@@ -44,14 +43,6 @@ export async function validateSessionUser() {
         success: false,
         error: 'Session user not found in database',
         status: 401
-      }
-    }
-
-    if (!sessionUserInDb.isActive) {
-      return {
-        success: false,
-        error: 'User account is deactivated',
-        status: 403
       }
     }
 
