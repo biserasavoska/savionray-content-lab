@@ -13,14 +13,33 @@ interface Organization {
   id: string
   name: string
   slug: string
-  domain: string
-  primaryColor: string
+  domain: string | null
+  primaryColor: string | null
   subscriptionPlan: string
+  subscriptionStatus: string
   maxUsers: number
   createdAt: string
   updatedAt: string
-  userCount: number
-  stats: {
+  OrganizationUser: Array<{
+    id: string
+    organizationId: string
+    userId: string
+    role: string
+    permissions: any
+    isActive: boolean
+    invitedBy: string | null
+    invitedAt: string | null
+    joinedAt: string | null
+    User_OrganizationUser_userIdToUser: {
+      id: string
+      name: string | null
+      email: string | null
+      role: string
+      image: string | null
+    }
+  }>
+  // Add stats for the deletion modal
+  stats?: {
     ideas: number
     contentDrafts: number
     contentItems: number
@@ -165,6 +184,10 @@ export default function OrganizationViewPage() {
                   {new Date(organization.updatedAt).toLocaleDateString()}
                 </dd>
               </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Active Users</dt>
+                <dd className="text-sm text-gray-900">{organization.userCount || organization.OrganizationUser.length}</dd>
+              </div>
             </dl>
           </div>
 
@@ -195,6 +218,69 @@ export default function OrganizationViewPage() {
           </div>
         </div>
       </div>
+
+      {/* Organization Users */}
+      <div className="bg-white shadow rounded-lg p-6 mt-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Team Members</h3>
+        <div className="space-y-3">
+          {organization.OrganizationUser.map((orgUser) => (
+            <div key={orgUser.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-medium text-gray-600">
+                    {orgUser.User_OrganizationUser_userIdToUser.name?.charAt(0) || 
+                     orgUser.User_OrganizationUser_userIdToUser.email?.charAt(0) || '?'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {orgUser.User_OrganizationUser_userIdToUser.name || 'No name'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {orgUser.User_OrganizationUser_userIdToUser.email}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {orgUser.role}
+                </span>
+                <p className="text-xs text-gray-500 mt-1">
+                  Joined: {orgUser.joinedAt ? new Date(orgUser.joinedAt).toLocaleDateString() : 'Unknown'}
+                </p>
+              </div>
+            </div>
+          ))}
+          {organization.OrganizationUser.length === 0 && (
+            <p className="text-gray-500 text-center py-4">No team members found</p>
+          )}
+        </div>
+      </div>
+
+      {/* Organization Stats */}
+      {organization.stats && (
+        <div className="bg-white shadow rounded-lg p-6 mt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Content Statistics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{organization.stats.ideas}</p>
+              <p className="text-sm text-gray-500">Ideas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">{organization.stats.contentDrafts}</p>
+              <p className="text-sm text-gray-500">Drafts</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-600">{organization.stats.contentItems}</p>
+              <p className="text-sm text-gray-500">Content Items</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-orange-600">{organization.stats.deliveryPlans}</p>
+              <p className="text-sm text-gray-500">Delivery Plans</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Organization Deletion Modal */}
       {organization && (

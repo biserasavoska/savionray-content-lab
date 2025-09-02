@@ -36,6 +36,14 @@ export async function GET(
               }
             }
           }
+        },
+        _count: {
+          select: {
+            Idea: true,
+            ContentDraft: true,
+            ContentItem: true,
+            deliveryPlans: true
+          }
         }
       }
     })
@@ -44,7 +52,22 @@ export async function GET(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
-    return NextResponse.json(organization)
+    // Transform the data to include stats for the frontend
+    const transformedOrganization = {
+      ...organization,
+      userCount: organization.OrganizationUser.length,
+      stats: {
+        ideas: organization._count.Idea,
+        contentDrafts: organization._count.ContentDraft,
+        contentItems: organization._count.ContentItem,
+        deliveryPlans: organization._count.deliveryPlans,
+        scheduledPosts: 0, // Not implemented yet
+        feedback: 0, // Not implemented yet
+        uploads: 0 // Not implemented yet
+      }
+    }
+
+    return NextResponse.json(transformedOrganization)
   } catch (error) {
     console.error('Error fetching organization:', error)
     return NextResponse.json(
