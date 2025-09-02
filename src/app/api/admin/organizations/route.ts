@@ -7,6 +7,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions , isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
+import { validateAdminSessionUser } from '@/lib/utils/session-validation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
     ])
 
     // Transform data for frontend
-    const transformedOrganizations = organizations.map(org => ({
+    const transformedOrganizations = organizations.map((org: any) => ({
       id: org.id,
       name: org.name,
       slug: org.slug,
@@ -172,19 +173,27 @@ export async function POST(request: NextRequest) {
     console.log('Request received at:', new Date().toISOString())
     
     console.log('Getting server session...')
-    const session = await getServerSession(authOptions)
-    console.log('🔍 DEBUG: Session obtained:', !!session, session?.user?.id)
+    // 🚨 CRITICAL: Use session validation utility to get REAL user ID
+    const validation = await validateAdminSessionUser()
     
-    // CRITICAL: Debug session details
-    if (session) {
-      console.log('🔍 DEBUG: Session details:', {
-        sessionUserId: session.user.id,
-        sessionUserEmail: session.user.email,
-        sessionUserRole: session.user.role,
-        sessionType: typeof session.user.id,
-        sessionLength: session.user.id?.length
-      })
+    if (!validation.success) {
+      console.log('🔍 DEBUG: Session validation failed:', validation.error)
+      return NextResponse.json(
+        { error: validation.error },
+        { status: validation.status || 401 }
+      )
     }
+    
+    const realUserId = validation.realUserId
+    const userEmail = validation.userEmail
+    const userRole = validation.userRole
+    
+    console.log('🔍 DEBUG: Session validation successful:', {
+      sessionUserId: validation.sessionUserId,
+      databaseUserId: realUserId,
+      userEmail: userEmail,
+      userRole: userRole
+    })
     
     // Check if database is accessible
     try {
@@ -317,7 +326,7 @@ export async function POST(request: NextRequest) {
     console.log('Client users data:', clientUsers)
 
     // Wrap everything in a transaction for atomicity
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create the organization
       const organization = await tx.organization.create({
         data: {
