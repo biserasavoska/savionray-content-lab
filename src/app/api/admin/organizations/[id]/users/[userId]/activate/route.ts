@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-
-import { authOptions , isAdmin } from '@/lib/auth'
+import { validateAdminSessionUser } from '@/lib/utils/session-validation'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
 
@@ -10,21 +8,17 @@ export async function PUT(
   { params }: { params: { id: string; userId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
+    const validation = await validateAdminSessionUser()
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
+        { error: validation.error },
+        { status: validation.status || 401 }
       )
     }
-
-    if (!isAdmin(session)) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    
+    const realUserId = validation.realUserId!
+    const userEmail = validation.userEmail
 
     const organizationId = params.id
     const userId = params.userId
@@ -83,8 +77,8 @@ export async function PUT(
     })
 
     logger.info('User activated by admin', {
-      adminId: session.user.id,
-      adminEmail: session.user.email,
+      adminId: realUserId,
+      adminEmail: userEmail,
       organizationId,
       userId,
       userName: updatedUser.User_OrganizationUser_userIdToUser.name,
