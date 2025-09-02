@@ -18,8 +18,11 @@ interface Organization {
   stats: {
     ideas: number
     contentDrafts: number
-    deliveryPlans: number
     contentItems: number
+    deliveryPlans: number
+    scheduledPosts: number
+    feedback: number
+    uploads: number
   }
   users: Array<{
     id: string
@@ -38,6 +41,7 @@ export default function OrganizationManagementList({}: OrganizationManagementLis
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+
 
   useEffect(() => {
     fetchOrganizations()
@@ -72,6 +76,8 @@ export default function OrganizationManagementList({}: OrganizationManagementLis
     setStatusFilter(status)
     fetchOrganizations()
   }
+
+
 
   if (isLoading) {
     return (
@@ -226,12 +232,7 @@ export default function OrganizationManagementList({}: OrganizationManagementLis
                 >
                   Manage Users
                 </Link>
-                <Link
-                  href={`/admin/organizations/${org.id}/edit`}
-                  className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 text-center"
-                >
-                  Edit
-                </Link>
+
               </div>
             </div>
           </div>
@@ -243,6 +244,8 @@ export default function OrganizationManagementList({}: OrganizationManagementLis
           <p className="text-gray-500">No organizations found</p>
         </div>
       )}
+
+
     </div>
   )
 } 

@@ -39,6 +39,28 @@ export type { BadgeProps } from './Badge'
 // Tabs Components
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'
 
+// Alert Components
+export { default as Alert, AlertDescription } from './Alert'
+export type { AlertProps, AlertDescriptionProps } from './Alert'
+
+// Dialog Components
+export { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from './Dialog'
+export type { 
+  DialogProps, 
+  DialogContentProps, 
+  DialogHeaderProps, 
+  DialogTitleProps, 
+  DialogDescriptionProps, 
+  DialogFooterProps 
+} from './Dialog'
+
 // Utility Components
 export { default as LoadingSpinner } from './LoadingSpinner'
 export { default as ErrorDisplay } from './ErrorDisplay'

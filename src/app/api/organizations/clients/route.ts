@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Use the REAL user ID from database, not the session ID
-    const realUserId = validation.realUserId
+    const realUserId = validation.realUserId!
     
     console.log('🔍 DEBUG: Session validation successful:', {
       sessionUserId: validation.sessionUserId,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     // For Creative users, only show organizations they have access to - ✅ Use REAL user ID
-    if (isCreative({ user: { role: validation.userRole } }) && !isAdmin({ user: { role: validation.userRole } })) {
+    if (validation.userRole === 'CREATIVE') {
       const userOrganizations = await prisma.organizationUser.findMany({
         where: {
           userId: realUserId,

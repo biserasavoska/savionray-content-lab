@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     )
   }
   
-  // Use the REAL user ID from database, not the session ID
-  const realUserId = validation.realUserId
+      // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId!
   
   console.log('🔍 DEBUG: Session validation successful:', {
     sessionUserId: validation.sessionUserId,

@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Button from '@/components/ui/common/Button'
+import Alert, { AlertDescription } from '@/components/ui/common/Alert'
+import OrganizationDeletionModal from '@/components/ui/admin/OrganizationDeletionModal'
+import { Trash2, AlertTriangle } from 'lucide-react'
 
 interface Organization {
   id: string
@@ -15,6 +19,16 @@ interface Organization {
   maxUsers: number
   createdAt: string
   updatedAt: string
+  userCount: number
+  stats: {
+    ideas: number
+    contentDrafts: number
+    contentItems: number
+    deliveryPlans: number
+    scheduledPosts: number
+    feedback: number
+    uploads: number
+  }
 }
 
 export default function OrganizationViewPage() {
@@ -24,6 +38,9 @@ export default function OrganizationViewPage() {
   const [organization, setOrganization] = useState<Organization | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (!session) return
@@ -49,6 +66,39 @@ export default function OrganizationViewPage() {
 
     fetchOrganization()
   }, [id, session])
+
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true)
+    setDeleteError(null)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!organization) return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch(`/api/admin/organizations/${organization.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete organization')
+      }
+
+      // Redirect back to organizations list after successful deletion
+      router.push('/admin/organizations')
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Failed to delete organization')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleDeleteModalClose = () => {
+    setDeleteModalOpen(false)
+    setDeleteError(null)
+  }
 
   if (!session) {
     return <div className="p-6">Please sign in to view this organization.</div>
@@ -133,10 +183,37 @@ export default function OrganizationViewPage() {
               >
                 Manage Users
               </Link>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteClick}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Organization
+              </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Organization Deletion Modal */}
+      {organization && (
+        <OrganizationDeletionModal
+          isOpen={deleteModalOpen}
+          onClose={handleDeleteModalClose}
+          onConfirm={handleDeleteConfirm}
+          organization={organization}
+          isLoading={isDeleting}
+        />
+      )}
+
+      {/* Error Display */}
+      {deleteError && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{deleteError}</AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }

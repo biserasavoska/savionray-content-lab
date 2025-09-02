@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { DraftStatus } from '@/lib/utils/enum-constants'
+import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
 import { validateSessionUser } from '@/lib/utils/session-validation'
 
 export async function POST(req: NextRequest) {
@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     )
   }
   
-  // Use the REAL user ID from database, not the session ID
-  const realUserId = validation.realUserId
+      // Use the REAL user ID from database, not the session ID
+    const realUserId = validation.realUserId!
   
   console.log('🔍 DEBUG: Session validation successful:', {
     sessionUserId: validation.sessionUserId,
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
     }
 
-    if (draft.status === DraftStatus.AWAITING_REVISION) {
+    if (draft.status === DRAFT_STATUS.AWAITING_REVISION) {
       return NextResponse.json(
         { error: 'Cannot add feedback to draft in revision state' },
         { status: 400 }

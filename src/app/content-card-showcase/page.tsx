@@ -10,9 +10,9 @@ import {
   ContentCardBody
 } from '@/components/ui/content'
 import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
-import { Button } from '@/components/ui/common/Button'
+import Button from '@/components/ui/common/Button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/common/Tabs'
-import { Badge } from '@/components/ui/common/Badge'
+import Badge from '@/components/ui/common/Badge'
 
 export default function ContentCardShowcase() {
   const [currentView, setCurrentView] = useState('enhanced')

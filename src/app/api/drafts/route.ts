@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
     
     // Use the REAL user ID from database, not the session ID
-    const realUserId = validation.realUserId
+    const realUserId = validation.realUserId!
     
     console.log('🔍 DEBUG: Session validation successful:', {
       sessionUserId: validation.sessionUserId,
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
     
     const where = {
       ...(ideaId ? { ideaId } : {}),
-      ...(isCreative({ user: { role: validation.userRole } }) ? { createdById: realUserId } : {}),
+      ...(validation.userRole === 'CREATIVE' ? { createdById: realUserId } : {}),
       ...createOrgFilter(orgContext.organizationId), // Add organization filter
     }
 

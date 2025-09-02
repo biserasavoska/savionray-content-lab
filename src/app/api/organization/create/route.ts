@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Use the REAL user ID from database, not the session ID
-    const realUserId = validation.realUserId
+    const realUserId = validation.realUserId!
     const userEmail = validation.userEmail
     const userRole = validation.userRole
     
