@@ -200,26 +200,16 @@ export async function DELETE(
 
     // 🛡️ COMPREHENSIVE DELETION GUARDRAILS
     
-    // 1. Check for active users
+    // 1. Check for active users - Allow deletion but warn about cascade deletion
     if (organization.OrganizationUser.length > 0) {
-      logger.warn('Organization deletion blocked - has active users', {
+      logger.warn('Organization deletion proceeding with active users - cascade deletion will occur', {
         organizationId: params.id,
         organizationName: organization.name,
         userCount: organization.OrganizationUser.length,
         deletedBy: realUserId,
-        deletedByEmail: userEmail
+        deletedByEmail: userEmail,
+        warning: 'All users will be removed from the organization during deletion'
       })
-      
-      return NextResponse.json(
-        { 
-          error: 'Cannot delete organization with active users',
-          details: {
-            userCount: organization.OrganizationUser.length,
-            message: 'Please remove all users from the organization before deletion'
-          }
-        },
-        { status: 400 }
-      )
     }
 
     // 2. Check for content that should be preserved

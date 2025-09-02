@@ -63,7 +63,7 @@ const OrganizationDeletionModal: React.FC<OrganizationDeletionModalProps> = ({
 
   const hasUsers = organization.userCount > 0
   const hasContent = totalContent > 0
-  const canDelete = !hasUsers && !hasContent
+  const canDelete = !hasContent // Allow deletion even with users - cascade deletion will handle it
 
   const handleConfirm = async () => {
     if (step === 1) {
@@ -153,18 +153,22 @@ const OrganizationDeletionModal: React.FC<OrganizationDeletionModalProps> = ({
             <div className="space-y-3">
               {/* Users Check */}
               <div className="flex items-center gap-3 p-3 border rounded-lg">
-                {getStatusIcon(hasUsers)}
+                {hasUsers ? (
+                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                ) : (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                )}
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     <span className="font-medium">Active Users</span>
-                    <Badge variant={hasUsers ? 'destructive' : 'secondary'}>
+                    <Badge variant={hasUsers ? 'secondary' : 'secondary'}>
                       {organization.userCount}
                     </Badge>
                   </div>
-                  {getStatusText(hasUsers, 
+                  {getStatusText(false, 
                     hasUsers 
-                      ? 'Organization has active users that must be removed first'
+                      ? `Organization has ${organization.userCount} active users - they will be removed during deletion`
                       : 'No active users found'
                   )}
                 </div>
