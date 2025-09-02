@@ -160,111 +160,27 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  // 🚀 DEPLOYMENT MARKER - This should appear in Railway logs if deployed
-  console.log('🚀 ENHANCED LOGGING VERSION DEPLOYED - Organization creation API called')
-  console.log('🔍 DEBUG: Function execution started at:', new Date().toISOString())
-  console.log('🔍 DEBUG: This should show up in Railway logs if deployed')
-  
   try {
-    console.log('=== FUNCTION CALLED: POST ===')
-    console.log('Function execution started at:', new Date().toISOString())
-    
-    console.log('=== ORGANIZATION CREATION START ===')
-    console.log('Request received at:', new Date().toISOString())
-    
-    console.log('Getting server session...')
     // 🚨 CRITICAL: Use session validation utility to get REAL user ID
     const validation = await validateAdminSessionUser()
     
     if (!validation.success) {
-      console.log('🔍 DEBUG: Session validation failed:', validation.error)
       return NextResponse.json(
         { error: validation.error },
         { status: validation.status || 401 }
       )
     }
     
-    const realUserId = validation.realUserId
+    const realUserId = validation.realUserId!
     const userEmail = validation.userEmail
     const userRole = validation.userRole
     
     console.log('🔍 DEBUG: Session validation successful:', {
       sessionUserId: validation.sessionUserId,
       databaseUserId: realUserId,
-      userEmail: userEmail,
-      userRole: userRole
+      userEmail,
+      userRole
     })
-    
-    // Check if database is accessible
-    try {
-      console.log('Testing database connection...')
-      await prisma.$queryRaw`SELECT 1`
-      console.log('Database connection successful')
-    } catch (dbError) {
-      console.error('Database connection failed:', dbError)
-      logger.error('Database connection failed during organization creation', dbError instanceof Error ? dbError : new Error(String(dbError)))
-      return NextResponse.json(
-        { error: 'Database connection failed' },
-        { status: 503 }
-      )
-    }
-    
-    if (!session) {
-      console.log('No session found - returning 401')
-      logger.warn('Organization creation attempted without session')
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    // CRITICAL: Verify session user exists in database and get the REAL user ID
-    console.log('🔍 DEBUG: Verifying session user exists in database...')
-    const sessionUserInDb = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { id: true, email: true, role: true }
-    })
-    
-    if (!sessionUserInDb) {
-      console.log('🔍 DEBUG: CRITICAL - Session user email not found in database!')
-      logger.error('CRITICAL: Session user email not found in database', undefined, {
-        sessionUserId: session.user.id,
-        sessionUserEmail: session.user.email,
-        sessionUserRole: session.user.role
-      })
-      return NextResponse.json(
-        { error: 'Session user not found in database' },
-        { status: 401 }
-      )
-    }
-    
-    console.log('🔍 DEBUG: Session user verified in database:', {
-      sessionUserId: session.user.id,
-      databaseUserId: sessionUserInDb.id,
-      sessionUserEmail: session.user.email,
-      databaseUserEmail: sessionUserInDb.email,
-      sessionUserRole: session.user.role,
-      databaseUserRole: sessionUserInDb.role
-    })
-    
-    // Use the REAL user ID from database, not the session ID
-    const realUserId = sessionUserInDb.id
-    
-    console.log('User authenticated:', session.user.email)
-    console.log('User role:', session.user.role)
-    console.log('🔍 DEBUG: Using REAL user ID from database:', realUserId)
-
-    if (!isAdmin(session)) {
-      console.log('User is not admin - returning 403')
-      logger.warn('Non-admin user attempted to create organization', {
-        userId: session.user.id,
-        userRole: session.user.role
-      })
-      return NextResponse.json(
-        { error: 'Super admin access required' },
-        { status: 403 }
-      )
-    }
 
     console.log('Parsing request body...')
     const body = await request.json()
@@ -285,7 +201,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!name || !slug || !clientUsers || !Array.isArray(clientUsers) || clientUsers.length === 0) {
       logger.warn('Invalid organization creation request - missing required fields', {
-        userId: session.user.id,
+        userId: realUserId,
         hasName: !!name,
         hasSlug: !!slug,
         hasClientUsers: !!clientUsers,
@@ -304,7 +220,7 @@ export async function POST(request: NextRequest) {
 
     if (existingOrg) {
       logger.warn('Organization creation failed - slug already exists', {
-        userId: session.user.id,
+        userId: realUserId,
         requestedSlug: slug,
         existingOrgId: existingOrg.id
       })
@@ -368,17 +284,17 @@ export async function POST(request: NextRequest) {
       if (!adminUserExists) {
         console.log('🔍 DEBUG: CRITICAL - Admin user does not exist in database!')
         logger.error('CRITICAL: Admin user does not exist in database before creating relationship', undefined, {
-          userId: session.user.id,
+          userId: realUserId,
           organizationId: organization.id,
-          sessionUserEmail: session.user.email,
+          userEmail: userEmail,
           adminUserExists: false
         })
-        throw new Error(`Admin user ${session.user.id} does not exist in database`)
+        throw new Error(`Admin user ${realUserId} does not exist in database`)
       }
       
       console.log('🔍 DEBUG: Admin user verified, creating relationship...')
       logger.info('Admin user verified, creating organization user relationship', {
-        userId: session.user.id,
+        userId: realUserId,
         organizationId: organization.id,
         adminUserData
       })
@@ -388,7 +304,7 @@ export async function POST(request: NextRequest) {
       })
 
       logger.info('Admin user relationship created', {
-        userId: session.user.id,
+        userId: realUserId,
         organizationId: organization.id
       })
 
@@ -516,7 +432,7 @@ export async function POST(request: NextRequest) {
           console.log('🔍 DEBUG: User validation passed, proceeding to create relationship')
           // CRITICAL: Additional validation before relationship creation
           logger.info('Final user validation before relationship creation:', {
-            userId: session.user.id,
+            userId: realUserId,
             organizationId: organization.id,
             userObject: user,
             userType: typeof user,
@@ -531,7 +447,7 @@ export async function POST(request: NextRequest) {
           // Create organization user relationship
           console.log('🔍 DEBUG: Creating organization user relationship...')
           logger.info('Creating organization user relationship', {
-            userId: session.user.id,
+            userId: realUserId,
             organizationId: organization.id,
             clientUserId: user.id,
             clientUserRole: clientUser.organizationRole || 'ADMIN'
