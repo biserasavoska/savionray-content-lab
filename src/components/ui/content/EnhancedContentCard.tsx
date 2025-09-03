@@ -73,47 +73,42 @@ const EnhancedContentCard: React.FC<EnhancedContentCardProps> = ({
   const [showMoreActions, setShowMoreActions] = useState(false)
 
   const getStatusActions = () => {
-    const actions = []
+    const actions: Array<{
+      icon: React.ComponentType<{ className?: string }>
+      label: string
+      action: () => void
+      variant: 'default' | 'outline' | 'ghost' | 'destructive'
+    }> = []
 
     switch (status) {
       case 'draft':
-        actions.push(
-          onEdit && { icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' as const },
-          onView && { icon: Eye, label: 'Preview', action: () => onView(id), variant: 'ghost' as const },
-          onDuplicate && { icon: Copy, label: 'Duplicate', action: () => onDuplicate(id), variant: 'ghost' as const },
-          onDelete && { icon: Trash2, label: 'Delete', action: () => onDelete(id), variant: 'destructive' as const }
-        )
+        if (onEdit) actions.push({ icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' })
+        if (onView) actions.push({ icon: Eye, label: 'Preview', action: () => onView(id), variant: 'ghost' })
+        if (onDuplicate) actions.push({ icon: Copy, label: 'Duplicate', action: () => onDuplicate(id), variant: 'ghost' })
+        if (onDelete) actions.push({ icon: Trash2, label: 'Delete', action: () => onDelete(id), variant: 'destructive' })
         break
       case 'review':
-        actions.push(
-          onApprove && { icon: Check, label: 'Approve', action: () => onApprove(id), variant: 'default' as const },
-          onEdit && { icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' as const },
-          onView && { icon: Eye, label: 'Preview', action: () => onView(id), variant: 'ghost' as const }
-        )
+        if (onApprove) actions.push({ icon: Check, label: 'Approve', action: () => onApprove(id), variant: 'default' })
+        if (onEdit) actions.push({ icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' })
+        if (onView) actions.push({ icon: Eye, label: 'Preview', action: () => onView(id), variant: 'ghost' })
         break
       case 'approved':
-        actions.push(
-          onPublish && { icon: Send, label: 'Publish', action: () => onPublish(id), variant: 'default' as const },
-          onEdit && { icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' as const },
-          onView && { icon: Eye, label: 'Preview', action: () => onView(id), variant: 'ghost' as const }
-        )
+        if (onPublish) actions.push({ icon: Send, label: 'Publish', action: () => onPublish(id), variant: 'default' })
+        if (onEdit) actions.push({ icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' })
+        if (onView) actions.push({ icon: Eye, label: 'Preview', action: () => onView(id), variant: 'ghost' })
         break
       case 'published':
-        actions.push(
-          onArchive && { icon: Archive, label: 'Archive', action: () => onArchive(id), variant: 'outline' as const },
-          onEdit && { icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' as const },
-          onView && { icon: Eye, label: 'View', action: () => onView(id), variant: 'ghost' as const }
-        )
+        if (onArchive) actions.push({ icon: Archive, label: 'Archive', action: () => onArchive(id), variant: 'outline' })
+        if (onEdit) actions.push({ icon: Edit, label: 'Edit', action: () => onEdit(id), variant: 'outline' })
+        if (onView) actions.push({ icon: Eye, label: 'View', action: () => onView(id), variant: 'ghost' })
         break
       case 'archived':
-        actions.push(
-          onEdit && { icon: RotateCcw, label: 'Restore', action: () => onEdit(id), variant: 'outline' as const },
-          onView && { icon: Eye, label: 'View', action: () => onView(id), variant: 'ghost' as const }
-        )
+        if (onEdit) actions.push({ icon: RotateCcw, label: 'Restore', action: () => onEdit(id), variant: 'outline' })
+        if (onView) actions.push({ icon: Eye, label: 'View', action: () => onView(id), variant: 'ghost' })
         break
     }
 
-    return actions.filter(Boolean)
+    return actions
   }
 
   const statusActions = getStatusActions()
