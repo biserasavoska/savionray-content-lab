@@ -23,7 +23,7 @@ export async function withOrganizationContext(
     }
     
     // Use the REAL user ID from database, not the session ID
-    const realUserId = validation.realUserId
+    const realUserId = validation.realUserId!
     
     console.log('🔍 DEBUG: Session validation successful in middleware:', {
       sessionUserId: validation.sessionUserId,
