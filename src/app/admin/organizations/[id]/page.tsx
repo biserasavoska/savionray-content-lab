@@ -186,7 +186,7 @@ export default function OrganizationViewPage() {
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Active Users</dt>
-                <dd className="text-sm text-gray-900">{organization.userCount || organization.OrganizationUser.length}</dd>
+                <dd className="text-sm text-gray-900">{organization.OrganizationUser.length}</dd>
               </div>
             </dl>
           </div>
