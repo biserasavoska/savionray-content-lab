@@ -56,10 +56,10 @@ export async function withOrganizationContext(
     const context: OrganizationContext = {
       organizationId: organizationMembership.organizationId,
       userId: realUserId,
-      userRole: validation.userRole,
+      userRole: validation.userRole!,
       organizationRole: organizationMembership.role,
-      userEmail: validation.userEmail,
-      isSuperAdmin: validation.userRole === 'SUPER_ADMIN',
+      userEmail: validation.userEmail!,
+      isSuperAdmin: validation.userRole! === 'SUPER_ADMIN',
       permissions: Array.isArray(organizationMembership.permissions) 
         ? (organizationMembership.permissions as string[]).filter(p => typeof p === 'string')
         : []
