@@ -10,7 +10,7 @@ export interface ContentCardHeaderProps {
   title: string
   description?: string
   status: 'draft' | 'review' | 'approved' | 'published' | 'archived'
-  contentType: 'article' | 'blog' | 'social' | 'video' | 'podcast' | 'newsletter'
+  contentType: 'article' | 'blog' | 'social' | 'video' | 'podcast' | 'newsletter' | 'image' | 'document' | 'audio' | 'rss'
   author?: string
   createdAt: Date
   updatedAt: Date
