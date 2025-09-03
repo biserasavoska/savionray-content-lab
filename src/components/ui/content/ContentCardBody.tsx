@@ -11,7 +11,7 @@ export interface ContentCardBodyProps {
   tags?: string[]
   priority?: 'low' | 'medium' | 'high' | 'urgent'
   isExpanded?: boolean
-  onToggleExpand?: () => void
+  onToggleExpand?: (expanded: boolean) => void
   className?: string
 }
 
