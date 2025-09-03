@@ -288,7 +288,19 @@ export default function OrganizationViewPage() {
           isOpen={deleteModalOpen}
           onClose={handleDeleteModalClose}
           onConfirm={handleDeleteConfirm}
-          organization={organization}
+          organization={{
+            ...organization,
+            userCount: organization.OrganizationUser.length,
+            stats: organization.stats || {
+              ideas: 0,
+              contentDrafts: 0,
+              contentItems: 0,
+              deliveryPlans: 0,
+              scheduledPosts: 0,
+              feedback: 0,
+              uploads: 0
+            }
+          }}
           isLoading={isDeleting}
         />
       )}
