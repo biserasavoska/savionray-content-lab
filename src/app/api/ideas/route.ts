@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     const context = await requireOrganizationContext(undefined, request);
     const body = await request.json();
     
-    const { title, description, contentType, mediaType, publishingDateTime } = body;
+    const { title, description, contentType, mediaType, publishingDateTime, organizationId } = body;
     
     if (!title || !description) {
       return NextResponse.json(
@@ -105,6 +105,9 @@ export async function POST(request: NextRequest) {
       }
     };
 
+    // Use provided organizationId if available (for admin users), otherwise use context organizationId
+    const targetOrganizationId = organizationId || context.organizationId;
+
     const idea = await prisma.idea.create({
       data: {
         title,
@@ -114,7 +117,7 @@ export async function POST(request: NextRequest) {
         publishingDateTime: publishingDateTime ? new Date(publishingDateTime) : null,
         status: 'PENDING',
         createdById: context.userId,
-        organizationId: context.organizationId,
+        organizationId: targetOrganizationId,
       },
       include: {
         User: {

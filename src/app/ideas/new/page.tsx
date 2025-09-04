@@ -1,17 +1,29 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { isAdmin } from '@/lib/auth'
+
+interface Organization {
+  id: string
+  name: string
+  slug: string
+  primaryColor: string
+  subscriptionStatus: string
+  userCount: number
+}
 
 export default function NewIdeaPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [loadingOrgs, setLoadingOrgs] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -19,13 +31,42 @@ export default function NewIdeaPage() {
     mediaType: 'text',
     publishingDateTime: '',
     savedForLater: false,
+    organizationId: '', // Add organization selection
   })
+
+  // Fetch organizations for admin users
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      if (!session || !isAdmin(session)) return
+      
+      setLoadingOrgs(true)
+      try {
+        const response = await fetch('/api/admin/organizations/options')
+        if (response.ok) {
+          const data = await response.json()
+          setOrganizations(data.organizations)
+        }
+      } catch (error) {
+        console.error('Error fetching organizations:', error)
+      } finally {
+        setLoadingOrgs(false)
+      }
+    }
+
+    fetchOrganizations()
+  }, [session])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!formData.title.trim() || !formData.description.trim()) {
       alert('Please fill in all required fields')
+      return
+    }
+
+    // For admin users, organizationId is required
+    if (isAdmin(session) && !formData.organizationId) {
+      alert('Please select an organization for this idea')
       return
     }
 
@@ -117,6 +158,36 @@ export default function NewIdeaPage() {
                 required
               />
             </div>
+
+            {/* Organization Selection for Admin Users */}
+            {isAdmin(session) && (
+              <div>
+                <label htmlFor="organizationId" className="block text-sm font-medium text-gray-700 mb-2">
+                  Organization *
+                </label>
+                <select
+                  id="organizationId"
+                  name="organizationId"
+                  value={formData.organizationId}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                  disabled={loadingOrgs}
+                >
+                  <option value="">
+                    {loadingOrgs ? 'Loading organizations...' : 'Select an organization'}
+                  </option>
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name} ({org.userCount} users)
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-sm text-gray-500">
+                  This idea will only be visible to users in the selected organization.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
