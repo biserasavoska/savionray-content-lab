@@ -47,11 +47,10 @@ export async function GET(request: NextRequest) {
           name: true,
           email: true,
           role: true,
-          createdAt: true,
           emailVerified: true,
           isSuperAdmin: true
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { id: 'desc' },
         skip,
         take: limit
       }),
