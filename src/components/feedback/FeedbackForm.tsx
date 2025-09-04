@@ -7,23 +7,32 @@ import Button from '@/components/ui/common/Button'
 import { useFormData } from '@/components/ui/common/hooks'
 
 interface FeedbackFormProps {
-  draftId: string
+  draftId?: string
+  ideaId?: string
   onSuccess?: () => void
 }
 
-export default function FeedbackForm({ draftId, onSuccess }: FeedbackFormProps) {
+export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFormProps) {
   const { data: session } = useSession()
 
   // Use the new form hook
   const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
     initialData: {
       comment: '',
+      rating: 0,
+      category: 'general',
+      priority: 'medium',
+      actionable: false,
     },
     onValidate: (data) => {
       const validationErrors: Record<string, string> = {}
       
       if (!data.comment.trim()) {
         validationErrors.comment = 'Feedback comment is required'
+      }
+      
+      if (data.rating < 1 || data.rating > 5) {
+        validationErrors.rating = 'Rating must be between 1 and 5'
       }
       
       return Object.keys(validationErrors).length > 0 ? validationErrors : null
@@ -37,8 +46,13 @@ export default function FeedbackForm({ draftId, onSuccess }: FeedbackFormProps) 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contentDraftId: draftId,
+          contentDraftId: draftId || null,
+          ideaId: ideaId || null,
           comment: data.comment.trim(),
+          rating: data.rating,
+          category: data.category,
+          priority: data.priority,
+          actionable: data.actionable,
         }),
       })
 
@@ -51,17 +65,98 @@ export default function FeedbackForm({ draftId, onSuccess }: FeedbackFormProps) 
   })
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Rating */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Rating (1-5 stars)
+        </label>
+        <div className="flex space-x-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => updateFormData('rating', star)}
+              className={`text-2xl ${
+                star <= formData.rating
+                  ? 'text-yellow-400'
+                  : 'text-gray-300'
+              } hover:text-yellow-400 transition-colors`}
+              disabled={loading}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+        {errors.rating && (
+          <p className="mt-1 text-sm text-red-600">{errors.rating}</p>
+        )}
+      </div>
+
+      {/* Category */}
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+          Category
+        </label>
+        <select
+          id="category"
+          value={formData.category}
+          onChange={(e) => updateFormData('category', e.target.value)}
+          disabled={loading}
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="general">General</option>
+          <option value="content">Content</option>
+          <option value="design">Design</option>
+          <option value="technical">Technical</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      {/* Priority */}
+      <div>
+        <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
+          Priority
+        </label>
+        <select
+          id="priority"
+          value={formData.priority}
+          onChange={(e) => updateFormData('priority', e.target.value)}
+          disabled={loading}
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+
+      {/* Actionable */}
+      <div className="flex items-center">
+        <input
+          id="actionable"
+          type="checkbox"
+          checked={formData.actionable}
+          onChange={(e) => updateFormData('actionable', e.target.checked)}
+          disabled={loading}
+          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        />
+        <label htmlFor="actionable" className="ml-2 block text-sm text-gray-700">
+          This feedback requires action/follow-up
+        </label>
+      </div>
+
+      {/* Comment */}
       <div>
         <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
-          Add Feedback
+          Feedback Comment
         </label>
         <Textarea
           id="comment"
           value={formData.comment}
           onChange={(e) => updateFormData('comment', e.target.value)}
           rows={4}
-          placeholder="Enter your feedback here..."
+          placeholder="Enter your detailed feedback here..."
           disabled={loading}
         />
         {errors.comment && (
@@ -73,7 +168,7 @@ export default function FeedbackForm({ draftId, onSuccess }: FeedbackFormProps) 
         <Button
           type="submit"
           loading={loading}
-          disabled={!formData.comment.trim()}
+          disabled={!formData.comment.trim() || formData.rating < 1}
         >
           Submit Feedback
         </Button>

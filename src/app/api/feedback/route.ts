@@ -30,39 +30,77 @@ export async function POST(req: NextRequest) {
   try {
     const {
       contentDraftId,
-      comment
+      ideaId,
+      comment,
+      rating = 0,
+      category = 'general',
+      priority = 'medium',
+      actionable = false
     } = await req.json()
 
-    if (!contentDraftId || !comment) {
+    if (!comment) {
       return NextResponse.json(
-        { error: 'Content draft ID and comment are required' },
+        { error: 'Comment is required' },
         { status: 400 }
       )
     }
 
-    const draft = await prisma.contentDraft.findUnique({
-      where: { id: contentDraftId },
-      include: {
-        Idea: true,
-      },
-    })
-
-    if (!draft) {
-      return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
-    }
-
-    if (draft.status === DRAFT_STATUS.AWAITING_REVISION) {
+    if (!contentDraftId && !ideaId) {
       return NextResponse.json(
-        { error: 'Cannot add feedback to draft in revision state' },
+        { error: 'Either content draft ID or idea ID is required' },
         { status: 400 }
       )
+    }
+
+    if (contentDraftId && ideaId) {
+      return NextResponse.json(
+        { error: 'Cannot provide both content draft ID and idea ID' },
+        { status: 400 }
+      )
+    }
+
+    // Validate content draft if provided
+    if (contentDraftId) {
+      const draft = await prisma.contentDraft.findUnique({
+        where: { id: contentDraftId },
+        include: {
+          Idea: true,
+        },
+      })
+
+      if (!draft) {
+        return NextResponse.json({ error: 'Draft not found' }, { status: 404 })
+      }
+
+      if (draft.status === DRAFT_STATUS.AWAITING_REVISION) {
+        return NextResponse.json(
+          { error: 'Cannot add feedback to draft in revision state' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validate idea if provided
+    if (ideaId) {
+      const idea = await prisma.idea.findUnique({
+        where: { id: ideaId },
+      })
+
+      if (!idea) {
+        return NextResponse.json({ error: 'Idea not found' }, { status: 404 })
+      }
     }
 
     // Create enhanced feedback - ✅ Use REAL user ID
     const feedback = await prisma.feedback.create({
       data: {
         comment,
-        contentDraftId,
+        contentDraftId: contentDraftId || null,
+        ideaId: ideaId || null,
+        rating,
+        category,
+        priority,
+        actionable,
         createdById: realUserId,
       },
       include: {
@@ -99,19 +137,29 @@ export async function GET(req: NextRequest) {
 
   const url = new URL(req.url)
   const draftId = url.searchParams.get('draftId')
+  const ideaId = url.searchParams.get('ideaId')
 
-  if (!draftId) {
+  if (!draftId && !ideaId) {
     return NextResponse.json(
-      { error: 'Draft ID is required' },
+      { error: 'Either draft ID or idea ID is required' },
+      { status: 400 }
+    )
+  }
+
+  if (draftId && ideaId) {
+    return NextResponse.json(
+      { error: 'Cannot provide both draft ID and idea ID' },
       { status: 400 }
     )
   }
 
   try {
+    const whereClause = draftId 
+      ? { contentDraftId: draftId }
+      : { ideaId: ideaId }
+
     const feedbacks = await prisma.feedback.findMany({
-      where: {
-        contentDraftId: draftId,
-      },
+      where: whereClause,
       include: {
         User: {
           select: {

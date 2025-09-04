@@ -295,11 +295,18 @@ model Feedback {
   comment        String
   createdAt      DateTime      @default(now())
   contentDraftId String?
+  ideaId         String?
   createdById    String
+  rating         Int           @default(0)
+  category       String        @default("general")
+  priority       String        @default("medium")
+  actionable     Boolean       @default(false)
   ContentDraft   ContentDraft? @relation(fields: [contentDraftId], references: [id])
+  Idea           Idea?         @relation(fields: [ideaId], references: [id], onDelete: Cascade)
   User           User          @relation(fields: [createdById], references: [id])
 
   @@index([contentDraftId])
+  @@index([ideaId])
   @@index([createdById])
 }
 
@@ -322,6 +329,7 @@ model Idea {
   ContentDeliveryItem ContentDeliveryItem? @relation(fields: [deliveryItemId], references: [id])
   Organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   comments            IdeaComment[]
+  feedback            Feedback[]
 
   @@index([organizationId])
 }
