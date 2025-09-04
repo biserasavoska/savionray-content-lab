@@ -8,6 +8,9 @@ import { authOptions, isAdmin } from '@/lib/auth'
 import Button from '@/components/ui/common/Button'
 import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function AdminOrganizationsPage() {
   const session = await getServerSession(authOptions)
 

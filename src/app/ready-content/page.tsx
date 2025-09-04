@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   description: 'View content ready for review and approval',
 }
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function ReadyContentPage() {
   const session = await getServerSession(authOptions)
 

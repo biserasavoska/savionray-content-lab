@@ -7,6 +7,9 @@ import { authOptions , isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function UserManagementPage() {
   const session = await getServerSession(authOptions)
 

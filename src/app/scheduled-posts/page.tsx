@@ -7,6 +7,9 @@ import { authOptions , isCreative, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getOrganizationContext, requireOrganizationContext } from '@/lib/utils/organization-context'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function ScheduledPostsPage() {
   const session = await getServerSession(authOptions)
 

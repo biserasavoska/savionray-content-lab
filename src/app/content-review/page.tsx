@@ -10,6 +10,9 @@ import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 import { getOrganizationContext } from '@/lib/utils/organization-context'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 
 export default async function ContentReviewPage() {
   const session = await getServerSession(authOptions)

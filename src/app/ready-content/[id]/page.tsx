@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma'
 import { getOrganizationContext } from '@/lib/utils/organization-context'
 import { headers } from 'next/headers'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 interface ReadyContentPageProps {
   params: {
     id: string

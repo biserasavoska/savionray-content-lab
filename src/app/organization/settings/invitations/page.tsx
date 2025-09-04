@@ -6,6 +6,9 @@ import InviteUserForm from './InviteUserForm'
 
 import { authOptions , isAdmin } from '@/lib/auth'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function OrganizationInvitationsPage() {
   const session = await getServerSession(authOptions)
 

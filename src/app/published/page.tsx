@@ -11,6 +11,9 @@ import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { getOrganizationContext } from '@/lib/utils/organization-context'
 import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function PublishedPage() {
   const session = await getServerSession(authOptions)
 

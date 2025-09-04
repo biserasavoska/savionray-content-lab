@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description: 'Manage your content delivery plans and schedules',
 }
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function DeliveryPlansPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {

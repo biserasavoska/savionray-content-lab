@@ -9,6 +9,9 @@ import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
 import { logger } from '@/lib/utils/logger'
 import ApprovedContentList from '@/components/approved-content/ApprovedContentList'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function ApprovedContentPage() {
   const session = await getServerSession(authOptions)
 

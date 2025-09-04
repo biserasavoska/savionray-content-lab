@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function TestAuthPage() {
   const session = await getServerSession(authOptions)
 

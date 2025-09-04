@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: 'Create a new content delivery plan',
 }
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function NewDeliveryPlanPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {

@@ -5,6 +5,9 @@ import CreateOrganizationForm from './CreateOrganizationForm'
 
 import { authOptions, isAdmin } from '@/lib/auth'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function CreateOrganizationPage() {
   const session = await getServerSession(authOptions)
 

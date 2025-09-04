@@ -5,6 +5,9 @@ import { authOptions, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import ClientUserManagement from '@/components/admin/ClientUserManagement'
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 interface UserManagementPageProps {
   params: { id: string }
 }

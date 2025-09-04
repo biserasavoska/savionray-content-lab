@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: 'Review and manage feedback for your organization',
 }
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic'
+
 export default async function FeedbackManagementPage() {
   const session = await getServerSession(authOptions)
 
