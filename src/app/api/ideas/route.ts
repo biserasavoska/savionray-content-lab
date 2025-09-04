@@ -36,7 +36,10 @@ export async function GET(request: NextRequest) {
     const [ideas, total] = await Promise.all([
       prisma.idea.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [
+          { publishingDateTime: 'asc' },
+          { createdAt: 'asc' }  // Fallback for ideas without publish date
+        ],
         skip,
         take: limit,
         include: {
