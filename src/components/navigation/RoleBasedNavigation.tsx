@@ -57,8 +57,8 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     
-    // Content Review (Legacy System)
-    { name: 'Content Review', href: '/content-review', icon: EyeIcon, roles: ['CREATIVE', 'ADMIN'] },
+    // Content Creation (Legacy System)
+    { name: 'Content Creation', href: '/content-review', icon: EyeIcon, roles: ['CREATIVE', 'ADMIN'] },
     { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Approved Content', href: '/approved', icon: DocumentTextIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Published', href: '/published', icon: FolderIcon, roles: ['CREATIVE', 'ADMIN'] },

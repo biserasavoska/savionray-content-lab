@@ -120,7 +120,7 @@ export default function Navigation() {
                 href="/content-review"
                 className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/content-review')}`}
               >
-                Content Review
+                Content Creation
               </Link>
               <Link
                 href="/ready-content"

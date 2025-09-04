@@ -8,8 +8,14 @@ export async function GET(request: NextRequest) {
   try {
     // Check for organization in headers first (from client selection)
     const selectedOrgId = request.headers.get('x-selected-organization');
+    console.log('Ideas API - Selected org from header:', selectedOrgId);
     
     const context = await requireOrganizationContext(selectedOrgId || undefined, request);
+    console.log('Ideas API - Organization context:', {
+      organizationId: context.organizationId,
+      userId: context.userId,
+      userEmail: context.userEmail
+    });
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');

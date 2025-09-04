@@ -256,7 +256,7 @@ export default function ClientNavigationSwitcher() {
                       <button
                         onClick={() => handleQuickAction('content', org.id)}
                         className="p-1 text-gray-400 hover:text-gray-600"
-                        title="Content Review"
+                        title="Content Creation"
                       >
                         <EyeIcon className="h-3 w-3" />
                       </button>

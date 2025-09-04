@@ -32,7 +32,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon },
     { name: 'Ideas', href: '/ideas', icon: LightBulbIcon },
-    { name: 'Content Review', href: '/content-review', icon: EyeIcon },
+    { name: 'Content Creation', href: '/content-review', icon: EyeIcon },
     { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon },
     { name: 'Published', href: '/published', icon: FolderIcon },
     { name: 'Scheduled Posts', href: '/scheduled-posts', icon: CalendarIcon },

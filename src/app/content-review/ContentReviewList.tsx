@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { SparklesIcon, LightBulbIcon, ChartBarIcon, CheckCircleIcon, XCircleIcon, UserIcon, DocumentTextIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 // Feedback type defined locally to avoid import issues
 interface Feedback {
@@ -51,23 +52,50 @@ interface User {
   email: string
 }
 
-
-
 interface ContentReviewListProps {
-  drafts: (ContentDraft & {
-    Idea: Idea
-    User: User
-  })[]
   isCreativeUser: boolean
   isClientUser: boolean
 }
 
-export default function ContentReviewList({ drafts, isCreativeUser, isClientUser }: ContentReviewListProps) {
+export default function ContentReviewList({ isCreativeUser, isClientUser }: ContentReviewListProps) {
   const { data: session } = useSession()
+  const { currentOrganization } = useOrganization()
+  const [drafts, setDrafts] = useState<(ContentDraft & { Idea: Idea; User: User })[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
   const [showAIReview, setShowAIReview] = useState<{ [key: string]: boolean }>({})
   const [isClient, setIsClient] = useState(false)
+
+  // Fetch content drafts based on organization
+  useEffect(() => {
+    if (currentOrganization) {
+      fetchDrafts()
+    }
+  }, [currentOrganization])
+
+  const fetchDrafts = async () => {
+    if (!currentOrganization) return
+    
+    try {
+      setLoading(true)
+      const response = await fetch('/api/content-drafts', {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
+      if (!response.ok) {
+        throw new Error('Failed to fetch content drafts')
+      }
+      const data = await response.json()
+      setDrafts(data.drafts || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch content drafts')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -121,14 +149,31 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
     window.location.reload()
   }
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600 mb-4">{error}</p>
+        <Button onClick={fetchDrafts}>Try Again</Button>
+      </div>
+    )
+  }
+
   if (!drafts || drafts.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No content to review</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No content to create</h3>
         <p className="text-gray-600 mb-4">
           {isCreativeUser 
-            ? "You don't have any content drafts awaiting review. Create some content from approved content items first."
-            : "There are no content drafts awaiting review at this time."
+            ? "You don't have any content drafts awaiting creation. Create some content from approved content items first."
+            : "There are no content drafts awaiting creation at this time."
           }
         </p>
         {isCreativeUser && (
@@ -150,7 +195,7 @@ export default function ContentReviewList({ drafts, isCreativeUser, isClientUser
           <div className="flex items-center space-x-3">
             <SparklesIcon className="h-6 w-6 text-green-600" />
             <div>
-              <h3 className="text-lg font-medium text-gray-900">AI-Powered Content Review</h3>
+              <h3 className="text-lg font-medium text-gray-900">AI-Powered Content Creation</h3>
               <p className="text-sm text-gray-600">Get AI insights, performance predictions, and optimization suggestions</p>
             </div>
           </div>
