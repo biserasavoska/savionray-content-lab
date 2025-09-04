@@ -6,7 +6,10 @@ import { authOptions, isAdmin } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const context = await requireOrganizationContext(undefined, request);
+    // Check for organization in headers first (from client selection)
+    const selectedOrgId = request.headers.get('x-selected-organization');
+    
+    const context = await requireOrganizationContext(selectedOrgId || undefined, request);
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');

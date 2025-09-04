@@ -8,6 +8,7 @@ import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
 import { PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface Idea {
   id: string
@@ -27,18 +28,27 @@ interface Idea {
 
 export default function IdeasList() {
   const { data: session } = useSession()
+  const { currentOrganization } = useOrganization()
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchIdeas()
-  }, [])
+    if (currentOrganization) {
+      fetchIdeas()
+    }
+  }, [currentOrganization])
 
   const fetchIdeas = async () => {
+    if (!currentOrganization) return
+    
     try {
       setLoading(true)
-      const response = await fetch('/api/ideas')
+      const response = await fetch('/api/ideas', {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
       if (!response.ok) {
         throw new Error('Failed to fetch ideas')
       }
