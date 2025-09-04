@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
 import OrganizationManagementList from './OrganizationManagementList'
+import AdminNavigation from '@/components/admin/AdminNavigation'
 
 import { authOptions, isAdmin } from '@/lib/auth'
 import Button from '@/components/ui/common/Button'
@@ -24,6 +25,7 @@ export default async function AdminOrganizationsPage() {
 
   return (
     <PageLayout size="full">
+      <AdminNavigation />
       <PageHeader
         title="Organization Management"
         description="Manage all client organizations and their settings"
