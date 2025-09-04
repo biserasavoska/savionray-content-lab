@@ -1,19 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
+import { getServerSession } from 'next-auth'
+import { authOptions, isAdmin } from '@/lib/auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const context = await requireOrganizationContext(undefined, request)
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // For admin users, allow access to ideas from any organization
+    // For regular users, use organization context
+    let whereClause: any = { id: params.id }
+    
+    if (isAdmin(session)) {
+      // Admin users can access ideas from any organization
+      // No organization filter needed
+    } else {
+      // Regular users can only access ideas from their organization
+      const context = await requireOrganizationContext(undefined, request)
+      whereClause.organizationId = context.organizationId
+    }
     
     const idea = await prisma.idea.findFirst({
-      where: {
-        id: params.id,
-        organizationId: context.organizationId,
-      },
+      where: whereClause,
       include: {
         User: {
           select: {
@@ -47,7 +66,15 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const context = await requireOrganizationContext(undefined, request)
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     
     // Check if this is a status-only update or a full update
@@ -71,11 +98,21 @@ export async function PATCH(
         )
       }
 
+      // For admin users, allow access to ideas from any organization
+      // For regular users, use organization context
+      let whereClause: any = { id: params.id }
+      
+      if (isAdmin(session)) {
+        // Admin users can access ideas from any organization
+        // No organization filter needed
+      } else {
+        // Regular users can only access ideas from their organization
+        const context = await requireOrganizationContext(undefined, request)
+        whereClause.organizationId = context.organizationId
+      }
+
       const idea = await prisma.idea.findFirst({
-        where: {
-          id: params.id,
-          organizationId: context.organizationId,
-        },
+        where: whereClause,
       })
 
       if (!idea) {
@@ -101,6 +138,11 @@ export async function PATCH(
       // If the idea is being approved, automatically create a content draft
       if (status === 'APPROVED') {
         try {
+          // Get the organization context for the idea
+          const ideaOrgContext = isAdmin(session) 
+            ? { userId: session.user.id, organizationId: updatedIdea.organizationId }
+            : await requireOrganizationContext(undefined, request)
+          
           // Create a content draft from the approved idea
           await prisma.contentDraft.create({
             data: {
@@ -115,8 +157,8 @@ export async function PATCH(
               },
               ideaId: params.id,
               contentType: updatedIdea.contentType || 'SOCIAL_MEDIA_POST',
-              createdById: context.userId,
-              organizationId: context.organizationId,
+              createdById: ideaOrgContext.userId,
+              organizationId: ideaOrgContext.organizationId,
             },
           })
           
@@ -164,11 +206,21 @@ export async function PATCH(
         }
       }
 
+      // For admin users, allow access to ideas from any organization
+      // For regular users, use organization context
+      let whereClause2: any = { id: params.id }
+      
+      if (isAdmin(session)) {
+        // Admin users can access ideas from any organization
+        // No organization filter needed
+      } else {
+        // Regular users can only access ideas from their organization
+        const context = await requireOrganizationContext(undefined, request)
+        whereClause2.organizationId = context.organizationId
+      }
+
       const idea = await prisma.idea.findFirst({
-        where: {
-          id: params.id,
-          organizationId: context.organizationId,
-        },
+        where: whereClause2,
       })
 
       if (!idea) {
@@ -215,13 +267,30 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const context = await requireOrganizationContext(undefined, request)
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // For admin users, allow access to ideas from any organization
+    // For regular users, use organization context
+    let whereClause: any = { id: params.id }
+    
+    if (isAdmin(session)) {
+      // Admin users can access ideas from any organization
+      // No organization filter needed
+    } else {
+      // Regular users can only access ideas from their organization
+      const context = await requireOrganizationContext(undefined, request)
+      whereClause.organizationId = context.organizationId
+    }
     
     const idea = await prisma.idea.findFirst({
-      where: {
-        id: params.id,
-        organizationId: context.organizationId,
-      },
+      where: whereClause,
     })
 
     if (!idea) {
