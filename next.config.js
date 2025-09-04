@@ -1,31 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Simplified webpack configuration for better performance
-  webpack: (config, { dev, isServer }) => {
-    // Only apply minimal fixes in development
-    if (dev) {
-      // Basic fallbacks for Node.js modules
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-        stream: false,
-        url: false,
-        zlib: false,
-        http: false,
-        https: false,
-        assert: false,
-        os: false,
-        path: false
-      }
-    }
+  // Let Next.js handle CSS processing by default
+  // No custom webpack configuration to avoid CSS processing issues
 
-    return config
-  },
-
-  // Basic production optimizations
+  // Production optimizations
   swcMinify: true,
   poweredByHeader: false,
   reactStrictMode: true,
