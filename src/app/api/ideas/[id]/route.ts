@@ -20,7 +20,7 @@ export async function GET(
 
     // For admin users, allow access to ideas from any organization
     // For regular users, use organization context
-    let whereClause: any = { id: params.id }
+    const whereClause: any = { id: params.id }
     
     if (isAdmin(session)) {
       // Admin users can access ideas from any organization
@@ -100,7 +100,7 @@ export async function PATCH(
 
       // For admin users, allow access to ideas from any organization
       // For regular users, use organization context
-      let whereClause: any = { id: params.id }
+      const whereClause: any = { id: params.id }
       
       if (isAdmin(session)) {
         // Admin users can access ideas from any organization
@@ -208,7 +208,7 @@ export async function PATCH(
 
       // For admin users, allow access to ideas from any organization
       // For regular users, use organization context
-      let whereClause2: any = { id: params.id }
+      const whereClause2: any = { id: params.id }
       
       if (isAdmin(session)) {
         // Admin users can access ideas from any organization
@@ -278,7 +278,7 @@ export async function DELETE(
 
     // For admin users, allow access to ideas from any organization
     // For regular users, use organization context
-    let whereClause: any = { id: params.id }
+    const whereClause: any = { id: params.id }
     
     if (isAdmin(session)) {
       // Admin users can access ideas from any organization
