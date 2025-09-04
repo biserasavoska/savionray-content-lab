@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireOrganizationContext } from '@/lib/utils/organization-context';
+import { getServerSession } from 'next-auth';
+import { authOptions, isAdmin } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,7 +71,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const context = await requireOrganizationContext(undefined, request);
     const body = await request.json();
     
     const { title, description, contentType, mediaType, publishingDateTime, organizationId } = body;
@@ -79,6 +80,46 @@ export async function POST(request: NextRequest) {
         { error: 'Title and description are required' },
         { status: 400 }
       );
+    }
+
+    // Get session to check if user is admin
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    let targetOrganizationId: string;
+    let createdById: string;
+
+    if (isAdmin(session) && organizationId) {
+      // Admin user creating idea for specific organization
+      // Validate that the admin has access to this organization
+      const adminOrgAccess = await prisma.organizationUser.findFirst({
+        where: {
+          userId: session.user.id,
+          organizationId: organizationId,
+          isActive: true,
+        },
+      });
+
+      if (!adminOrgAccess) {
+        return NextResponse.json(
+          { error: 'You do not have access to this organization' },
+          { status: 403 }
+        );
+      }
+
+      targetOrganizationId = organizationId;
+      createdById = session.user.id;
+    } else {
+      // Regular user or admin without specific organization - use context
+      const context = await requireOrganizationContext(undefined, request);
+      targetOrganizationId = context.organizationId;
+      createdById = context.userId;
     }
     
     // Map form values to Prisma enum values
@@ -105,9 +146,6 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    // Use provided organizationId if available (for admin users), otherwise use context organizationId
-    const targetOrganizationId = organizationId || context.organizationId;
-
     const idea = await prisma.idea.create({
       data: {
         title,
@@ -116,7 +154,7 @@ export async function POST(request: NextRequest) {
         mediaType: mapMediaType(mediaType),
         publishingDateTime: publishingDateTime ? new Date(publishingDateTime) : null,
         status: 'PENDING',
-        createdById: context.userId,
+        createdById: createdById,
         organizationId: targetOrganizationId,
       },
       include: {
