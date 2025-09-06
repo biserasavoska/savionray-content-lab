@@ -1,11 +1,8 @@
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 
-import ScheduledPostsList from './ScheduledPostsList'
-
-import { authOptions , isCreative, isAdmin } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { getOrganizationContext, requireOrganizationContext } from '@/lib/utils/organization-context'
+import { authOptions, isCreative, isAdmin } from '@/lib/auth'
+import ScheduledPostsList from '@/app/scheduled-posts/ScheduledPostsList'
 
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic'
@@ -21,40 +18,6 @@ export default async function ScheduledPostsPage() {
     redirect('/dashboard')
   }
 
-  const orgContext = await requireOrganizationContext()
-  if (!orgContext) {
-    redirect('/auth/signin')
-  }
-
-  const scheduledPosts = await prisma.scheduledPost.findMany({
-    where: {
-      contentDraft: {
-        organizationId: orgContext.organizationId,
-        ...(isCreative(session) ? { createdById: session.user.id } : {}),
-      },
-    },
-    include: {
-      contentDraft: {
-        include: {
-          User: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-          Idea: {
-            select: {
-              title: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      scheduledDate: 'asc',
-    },
-  })
-
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div className="px-4 py-6 sm:px-0">
@@ -66,9 +29,9 @@ export default async function ScheduledPostsPage() {
         </div>
 
         <div className="bg-white shadow rounded-lg">
-          <ScheduledPostsList posts={scheduledPosts} />
+          <ScheduledPostsList />
         </div>
       </div>
     </div>
   )
-} 
+}

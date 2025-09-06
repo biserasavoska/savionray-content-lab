@@ -78,13 +78,23 @@ export async function GET(request: NextRequest) {
       userRole: validation.userRole
     })
 
-    const orgContext = await requireOrganizationContext(undefined, request)
+    // Check for organization in headers first (from client selection)
+    const selectedOrgId = request.headers.get('x-selected-organization');
+    console.log('Approved Content API - Selected org from header:', selectedOrgId);
+    
+    const orgContext = await requireOrganizationContext(selectedOrgId || undefined, request)
     if (!orgContext) {
       return NextResponse.json(
         { error: 'Organization context required' },
         { status: 400 }
       )
     }
+    
+    console.log('Approved Content API - Organization context:', {
+      organizationId: orgContext.organizationId,
+      userId: orgContext.userId,
+      userEmail: orgContext.userEmail
+    });
 
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '10')

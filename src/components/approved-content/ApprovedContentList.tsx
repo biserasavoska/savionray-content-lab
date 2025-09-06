@@ -1,24 +1,63 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
 import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
 import { formatDate } from '@/lib/utils/date-helpers'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface ApprovedContentListProps {
-  content: any[]
   isAdminUser: boolean
   isCreativeUser: boolean
   isClientUser: boolean
 }
 
-export default function ApprovedContentList({ content, isAdminUser, isCreativeUser, isClientUser }: ApprovedContentListProps) {
+export default function ApprovedContentList({ isAdminUser, isCreativeUser, isClientUser }: ApprovedContentListProps) {
   const { data: session } = useSession()
+  const { currentOrganization } = useOrganization()
+  const [content, setContent] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [expandedContent, setExpandedContent] = useState<Set<string>>(new Set())
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
+
+  // Fetch approved content data
+  useEffect(() => {
+    const fetchContent = async () => {
+      if (!currentOrganization) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch('/api/approved', {
+          headers: {
+            'x-selected-organization': currentOrganization.id
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch approved content')
+        }
+        
+        const data = await response.json()
+        setContent(data.content || [])
+      } catch (err) {
+        console.error('Error fetching approved content:', err)
+        setError('Failed to load approved content')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchContent()
+  }, [currentOrganization])
 
   console.log('ApprovedContentList: Rendering with', {
     contentCount: content.length,
@@ -107,6 +146,45 @@ export default function ApprovedContentList({ content, isAdminUser, isCreativeUs
       }
       return newSet
     })
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 text-gray-400 animate-spin">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Loading approved content...</h3>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 text-red-400">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="mt-2 text-sm font-medium text-red-900">Error loading content</h3>
+          <p className="mt-1 text-sm text-red-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (content.length === 0) {
