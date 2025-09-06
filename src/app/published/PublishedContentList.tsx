@@ -37,6 +37,7 @@ export default function PublishedContentList({ isCreativeUser }: PublishedConten
   useEffect(() => {
     const fetchContent = async () => {
       if (!currentOrganization) {
+        console.log('No current organization, skipping fetch')
         setLoading(false)
         return
       }
@@ -45,6 +46,8 @@ export default function PublishedContentList({ isCreativeUser }: PublishedConten
         setLoading(true)
         setError(null)
         
+        console.log('Fetching published content for organization:', currentOrganization.id)
+        
         const response = await fetch('/api/published', {
           headers: {
             'x-selected-organization': currentOrganization.id
@@ -52,10 +55,13 @@ export default function PublishedContentList({ isCreativeUser }: PublishedConten
         })
         
         if (!response.ok) {
-          throw new Error('Failed to fetch published content')
+          const errorText = await response.text()
+          console.error('API error:', response.status, errorText)
+          throw new Error(`Failed to fetch published content: ${response.status}`)
         }
         
         const data = await response.json()
+        console.log('Published content data:', data)
         setPublishedContent(data.content || [])
       } catch (err) {
         console.error('Error fetching published content:', err)
@@ -93,6 +99,9 @@ export default function PublishedContentList({ isCreativeUser }: PublishedConten
         </div>
         <h3 className="mt-2 text-lg font-medium text-red-900">Error loading content</h3>
         <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-xs text-gray-500">
+          Current organization: {currentOrganization?.name || 'None selected'}
+        </p>
         <button 
           onClick={() => window.location.reload()} 
           className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
@@ -103,7 +112,7 @@ export default function PublishedContentList({ isCreativeUser }: PublishedConten
     )
   }
 
-  if (publishedContent.length === 0) {
+  if (!publishedContent || publishedContent.length === 0) {
     return (
       <div className="text-center py-12">
         <h3 className="text-lg font-medium text-gray-900 mb-2">No published content</h3>
@@ -114,7 +123,7 @@ export default function PublishedContentList({ isCreativeUser }: PublishedConten
 
   return (
     <div className="space-y-6">
-      {publishedContent.map((content) => (
+      {publishedContent?.map((content) => (
         <Card key={content.id} className="overflow-hidden">
           <CardHeader>
             <div className="flex items-center space-x-3">
@@ -144,7 +153,7 @@ export default function PublishedContentList({ isCreativeUser }: PublishedConten
             </div>
 
             {/* Scheduled Posts */}
-            {content.scheduledPosts.length > 0 && (
+            {(content.scheduledPosts?.length || 0) > 0 && (
               <div className="mt-4">
                 <h4 className="text-sm font-medium text-gray-900 mb-2">Scheduled Posts:</h4>
                 <div className="space-y-2">

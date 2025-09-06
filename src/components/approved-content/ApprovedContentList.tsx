@@ -28,6 +28,7 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
   useEffect(() => {
     const fetchContent = async () => {
       if (!currentOrganization) {
+        console.log('No current organization, skipping fetch')
         setLoading(false)
         return
       }
@@ -36,6 +37,8 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
         setLoading(true)
         setError(null)
         
+        console.log('Fetching approved content for organization:', currentOrganization.id)
+        
         const response = await fetch('/api/approved', {
           headers: {
             'x-selected-organization': currentOrganization.id
@@ -43,10 +46,13 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
         })
         
         if (!response.ok) {
-          throw new Error('Failed to fetch approved content')
+          const errorText = await response.text()
+          console.error('API error:', response.status, errorText)
+          throw new Error(`Failed to fetch approved content: ${response.status}`)
         }
         
         const data = await response.json()
+        console.log('Approved content data:', data)
         setContent(data.content || [])
       } catch (err) {
         console.error('Error fetching approved content:', err)
@@ -60,7 +66,7 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
   }, [currentOrganization])
 
   console.log('ApprovedContentList: Rendering with', {
-    contentCount: content.length,
+    contentCount: content?.length || 0,
     isAdminUser,
     isCreativeUser,
     isClientUser,
@@ -176,6 +182,9 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
           </div>
           <h3 className="mt-2 text-sm font-medium text-red-900">Error loading content</h3>
           <p className="mt-1 text-sm text-red-600">{error}</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Current organization: {currentOrganization?.name || 'None selected'}
+          </p>
           <button 
             onClick={() => window.location.reload()} 
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
@@ -187,7 +196,7 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
     )
   }
 
-  if (content.length === 0) {
+  if (!content || content.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
         <div className="text-center">
@@ -207,7 +216,7 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
 
   return (
     <div className="space-y-6">
-      {content.map((item) => (
+      {content?.map((item) => (
         <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -255,12 +264,12 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
                   <div className="text-sm text-gray-800 whitespace-pre-wrap">
                     {expandedContent.has(item.id) 
                       ? item.body 
-                      : item.body.length > 200 
+                      : (item.body?.length || 0) > 200 
                         ? item.body.substring(0, 200) + '...' 
                         : item.body
                     }
                   </div>
-                  {item.body.length > 200 && (
+                  {(item.body?.length || 0) > 200 && (
                     <button
                       onClick={() => toggleContentExpansion(item.id)}
                       className="mt-2 text-sm text-green-600 hover:text-green-800 font-medium"
@@ -296,7 +305,7 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
               </div>
 
               {/* Feedback Summary */}
-              {item.feedbacks && item.feedbacks.length > 0 && (
+              {item.feedbacks && (item.feedbacks?.length || 0) > 0 && (
                 <div className="mb-4 p-3 bg-gray-50 rounded-md">
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Client Feedback</h4>
                   <div className="space-y-2">
@@ -306,9 +315,9 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
                         <span className="ml-1">{feedback.comment}</span>
                       </div>
                     ))}
-                    {item.feedbacks.length > 2 && (
+                    {(item.feedbacks?.length || 0) > 2 && (
                       <p className="text-xs text-gray-500">
-                        +{item.feedbacks.length - 2} more feedback items
+                        +{(item.feedbacks?.length || 0) - 2} more feedback items
                       </p>
                     )}
                   </div>

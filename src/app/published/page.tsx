@@ -1,18 +1,46 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
+'use client'
 
-import { authOptions, isCreative } from '@/lib/auth'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+
+import { isCreative } from '@/lib/auth'
 import PublishedContentList from '@/app/published/PublishedContentList'
 import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic'
+export default function PublishedPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
-export default async function PublishedPage() {
-  const session = await getServerSession(authOptions)
+  useEffect(() => {
+    if (status === 'loading') return // Still loading
+
+    if (!session) {
+      router.push('/auth/signin')
+      return
+    }
+  }, [session, status, router])
+
+  if (status === 'loading') {
+    return (
+      <PageLayout>
+        <PageHeader
+          title="Published Content"
+          description="View all published content and scheduled posts"
+        />
+        <PageContent>
+          <PageSection>
+            <div className="flex items-center justify-center h-64">
+              <div className="text-gray-500">Loading...</div>
+            </div>
+          </PageSection>
+        </PageContent>
+      </PageLayout>
+    )
+  }
 
   if (!session) {
-    redirect('/auth/signin')
+    return null // Will redirect
   }
 
   const isCreativeUser = isCreative(session)

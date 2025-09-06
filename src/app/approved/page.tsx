@@ -1,27 +1,52 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
+'use client'
 
-import { authOptions, isAdmin, isCreative } from '@/lib/auth'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+
+import { isAdmin, isCreative } from '@/lib/auth'
 import ApprovedContentList from '@/components/approved-content/ApprovedContentList'
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic'
+export default function ApprovedContentPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
-export default async function ApprovedContentPage() {
-  const session = await getServerSession(authOptions)
+  useEffect(() => {
+    if (status === 'loading') return // Still loading
+
+    if (!session) {
+      router.push('/auth/signin')
+      return
+    }
+
+    const isAdminUser = isAdmin(session)
+    const isCreativeUser = isCreative(session)
+    const isClientUser = session.user.role === 'CLIENT'
+
+    // All authenticated users can access approved content
+    if (!isAdminUser && !isCreativeUser && !isClientUser) {
+      router.push('/')
+      return
+    }
+  }, [session, status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      </div>
+    )
+  }
 
   if (!session) {
-    redirect('/auth/signin')
+    return null // Will redirect
   }
 
   const isAdminUser = isAdmin(session)
   const isCreativeUser = isCreative(session)
   const isClientUser = session.user.role === 'CLIENT'
-
-  // All authenticated users can access approved content
-  if (!isAdminUser && !isCreativeUser && !isClientUser) {
-    redirect('/')
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">

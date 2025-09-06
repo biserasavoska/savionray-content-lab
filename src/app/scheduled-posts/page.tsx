@@ -1,21 +1,44 @@
-import { getServerSession } from 'next-auth'
-import { redirect } from 'next/navigation'
+'use client'
 
-import { authOptions, isCreative, isAdmin } from '@/lib/auth'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+
+import { isCreative, isAdmin } from '@/lib/auth'
 import ScheduledPostsList from '@/app/scheduled-posts/ScheduledPostsList'
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic'
+export default function ScheduledPostsPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
-export default async function ScheduledPostsPage() {
-  const session = await getServerSession(authOptions)
+  useEffect(() => {
+    if (status === 'loading') return // Still loading
 
-  if (!session) {
-    redirect('/auth/signin')
+    if (!session) {
+      router.push('/auth/signin')
+      return
+    }
+
+    if (!isCreative(session) && !isAdmin(session)) {
+      router.push('/dashboard')
+      return
+    }
+  }, [session, status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-500">Loading...</div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  if (!isCreative(session) && !isAdmin(session)) {
-    redirect('/dashboard')
+  if (!session) {
+    return null // Will redirect
   }
 
   return (

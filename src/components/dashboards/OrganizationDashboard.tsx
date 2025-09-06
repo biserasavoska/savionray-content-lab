@@ -41,7 +41,11 @@ export default function OrganizationDashboard({ organizationId }: OrganizationDa
     const fetchOrganizationStats = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`/api/organization/${orgId}/stats`)
+        const response = await fetch(`/api/organization/${orgId}/stats`, {
+          headers: {
+            'x-selected-organization': orgId
+          }
+        })
         
         if (!response.ok) {
           throw new Error('Failed to fetch organization statistics')

@@ -19,11 +19,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Client access only' }, { status: 403 })
     }
 
-    // Get organization context
-    const orgContext = await getOrganizationContext(undefined, request)
+    // Check for organization in headers first (from client selection)
+    const selectedOrgId = request.headers.get('x-selected-organization');
+    console.log('Client Stats API - Selected org from header:', selectedOrgId);
+    
+    const orgContext = await getOrganizationContext(selectedOrgId || undefined, request)
     if (!orgContext) {
       return NextResponse.json({ error: 'Organization context not found' }, { status: 400 })
     }
+    
+    console.log('Client Stats API - Organization context:', {
+      organizationId: orgContext.organizationId,
+      userId: orgContext.userId,
+      userEmail: orgContext.userEmail
+    });
 
     // Calculate dashboard statistics
     const [

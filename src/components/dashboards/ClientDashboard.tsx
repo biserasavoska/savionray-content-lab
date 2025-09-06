@@ -17,7 +17,7 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline'
 
-import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import { useInterface } from '@/hooks/useInterface'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
@@ -51,7 +51,7 @@ interface DashboardStats {
 
 export default function ClientDashboard() {
   const { data: session } = useSession()
-  const { organization, isLoading: orgLoading } = useCurrentOrganization()
+  const { currentOrganization, isLoading: orgLoading } = useOrganization()
   const interfaceContext = useInterface()
   const [pendingContent, setPendingContent] = useState<ContentItem[]>([])
   const [recentApproved, setRecentApproved] = useState<ContentItem[]>([])
@@ -67,14 +67,26 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!session?.user) return
+      if (!session?.user || !currentOrganization) return
 
       try {
-        // Fetch real data from API endpoints
+        // Fetch real data from API endpoints with organization context
         const [readyContentRes, approvedContentRes, statsRes] = await Promise.all([
-          fetch('/api/ready-content?limit=5'),
-          fetch('/api/approved?limit=5'),
-          fetch('/api/client/stats')
+          fetch('/api/ready-content?limit=5', {
+            headers: {
+              'x-selected-organization': currentOrganization.id
+            }
+          }),
+          fetch('/api/approved?limit=5', {
+            headers: {
+              'x-selected-organization': currentOrganization.id
+            }
+          }),
+          fetch('/api/client/stats', {
+            headers: {
+              'x-selected-organization': currentOrganization.id
+            }
+          })
         ])
 
         if (readyContentRes.ok) {
@@ -191,7 +203,7 @@ export default function ClientDashboard() {
     }
 
     fetchDashboardData()
-  }, [session?.user])
+  }, [session?.user, currentOrganization])
 
   const getStatusBadge = (status: string) => {
     switch (status) {

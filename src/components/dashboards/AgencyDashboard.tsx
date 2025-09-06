@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import { 
   LightBulbIcon, 
   DocumentTextIcon, 
@@ -30,6 +32,8 @@ interface RecentActivity {
 }
 
 export default function AgencyDashboard() {
+  const { data: session } = useSession()
+  const { currentOrganization } = useOrganization()
   const [stats, setStats] = useState<DashboardStats>({
     totalIdeas: 0,
     pendingDrafts: 0,
@@ -40,51 +44,65 @@ export default function AgencyDashboard() {
   })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Mock data - in real implementation, fetch from API
-    const mockStats: DashboardStats = {
-      totalIdeas: 24,
-      pendingDrafts: 8,
-      approvedContent: 156,
-      activeClients: 12,
-      contentThisMonth: 23,
-      pendingApprovals: 3
+    const fetchDashboardData = async () => {
+      if (!session?.user || !currentOrganization) return
+
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // Fetch real data from API endpoints with organization context
+        const [statsRes, activityRes] = await Promise.all([
+          fetch('/api/agency/stats', {
+            headers: {
+              'x-selected-organization': currentOrganization.id
+            }
+          }),
+          fetch('/api/agency/activity', {
+            headers: {
+              'x-selected-organization': currentOrganization.id
+            }
+          })
+        ])
+
+        if (statsRes.ok) {
+          const statsData = await statsRes.json()
+          setStats(statsData)
+        } else {
+          throw new Error('Failed to fetch stats')
+        }
+
+        if (activityRes.ok) {
+          const activityData = await activityRes.json()
+          setRecentActivity(activityData.activity || [])
+        } else {
+          throw new Error('Failed to fetch activity')
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
+        
+        // Fallback to mock data
+        const mockStats: DashboardStats = {
+          totalIdeas: 0,
+          pendingDrafts: 0,
+          approvedContent: 0,
+          activeClients: 0,
+          contentThisMonth: 0,
+          pendingApprovals: 0
+        }
+        setStats(mockStats)
+        setRecentActivity([])
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    const mockActivity: RecentActivity[] = [
-      {
-        id: '1',
-        type: 'idea',
-        title: 'Q4 Marketing Campaign',
-        status: 'APPROVED',
-        client: 'TechCorp',
-        createdAt: '2025-01-07T10:00:00Z'
-      },
-      {
-        id: '2',
-        type: 'draft',
-        title: 'Product Launch Announcement',
-        status: 'PENDING_APPROVAL',
-        client: 'StartupXYZ',
-        createdAt: '2025-01-07T09:30:00Z'
-      },
-      {
-        id: '3',
-        type: 'content',
-        title: 'Holiday Promotion',
-        status: 'PUBLISHED',
-        client: 'RetailCo',
-        createdAt: '2025-01-06T15:00:00Z'
-      }
-    ]
-
-    setTimeout(() => {
-      setStats(mockStats)
-      setRecentActivity(mockActivity)
-      setIsLoading(false)
-    }, 1000)
-  }, [])
+    fetchDashboardData()
+  }, [session?.user, currentOrganization])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -135,6 +153,23 @@ export default function AgencyDashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-lg font-medium text-red-800 mb-2">Error loading dashboard</h3>
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
