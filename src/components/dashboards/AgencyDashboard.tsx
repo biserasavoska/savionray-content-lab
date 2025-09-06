@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import { 
   LightBulbIcon, 
@@ -184,77 +185,95 @@ export default function AgencyDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <LightBulbIcon className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Ideas</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalIdeas}</p>
+        {/* Total Ideas */}
+        <Link href="/ideas" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-200 hover:border-blue-300 cursor-pointer border border-transparent">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <LightBulbIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Ideas</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalIdeas}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <DocumentTextIcon className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending Drafts</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingDrafts}</p>
+        {/* Pending Drafts */}
+        <Link href="/ready-content" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-200 hover:border-yellow-300 cursor-pointer border border-transparent">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <DocumentTextIcon className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Pending Drafts</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingDrafts}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Approved</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.approvedContent}</p>
+        {/* Approved */}
+        <Link href="/approved" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-200 hover:border-green-300 cursor-pointer border border-transparent">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircleIcon className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Approved</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.approvedContent}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <UsersIcon className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active Clients</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.activeClients}</p>
+        {/* Active Clients */}
+        <Link href="/admin/organizations" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-200 hover:border-purple-300 cursor-pointer border border-transparent">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <UsersIcon className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Active Clients</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeClients}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <ChartBarIcon className="h-6 w-6 text-indigo-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Content This Month</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.contentThisMonth}</p>
+        {/* Content This Month */}
+        <Link href="/ready-content" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-200 hover:border-indigo-300 cursor-pointer border border-transparent">
+            <div className="flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <ChartBarIcon className="h-6 w-6 text-indigo-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Content This Month</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.contentThisMonth}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <ExclamationTriangleIcon className="h-6 w-6 text-orange-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending Approvals</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+        {/* Pending Approvals */}
+        <Link href="/ready-content" className="block">
+          <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-200 hover:border-orange-300 cursor-pointer border border-transparent">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <ExclamationTriangleIcon className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Pending Approvals</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Quick Actions */}
