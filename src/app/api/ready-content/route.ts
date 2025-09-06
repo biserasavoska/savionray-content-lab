@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
-import { getOrganizationContext } from '@/lib/utils/organization-context'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 import { sanitizeContentDraftsData } from '@/lib/utils/data-sanitization'
 
@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get organization context
-    const orgContext = await getOrganizationContext(undefined, request)
-    if (!orgContext) {
+    // Get organization context from header
+    const context = await requireOrganizationContext(undefined, request)
+    if (!context) {
       return NextResponse.json({ error: 'Organization context not found' }, { status: 400 })
     }
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Fetch content ready for review (awaiting feedback)
     const readyContent = await prisma.contentDraft.findMany({
       where: {
-        organizationId: orgContext.organizationId,
+        organizationId: context.organizationId,
         status: DRAFT_STATUS.AWAITING_FEEDBACK
       },
       include: {
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     // Get total count for pagination
     const totalCount = await prisma.contentDraft.count({
       where: {
-        organizationId: orgContext.organizationId,
+        organizationId: context.organizationId,
         status: DRAFT_STATUS.AWAITING_FEEDBACK
       }
     })
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     logger.info('Ready content fetched', {
       userId: session.user.id,
       userEmail: session.user.email,
-      organizationId: orgContext.organizationId,
+      organizationId: context.organizationId,
       contentCount: safeContent.length,
       totalCount,
       page,

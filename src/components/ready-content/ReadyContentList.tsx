@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
@@ -13,9 +13,19 @@ import FeedbackList from '@/components/feedback/FeedbackList'
 import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
 import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface ReadyContentListProps {
-  content: (Omit<ContentDraft, 'status'> & {
+  isCreativeUser: boolean
+  isClientUser: boolean
+}
+
+
+
+export default function ReadyContentList({ isCreativeUser, isClientUser }: ReadyContentListProps) {
+  const { data: session } = useSession()
+  const { currentOrganization } = useOrganization()
+  const [content, setContent] = useState<(Omit<ContentDraft, 'status'> & {
     status: string
     Idea: Idea & {
       User: Pick<User, 'name' | 'email'>
@@ -25,20 +35,49 @@ interface ReadyContentListProps {
     Feedback: (Feedback & {
       User: Pick<User, 'name' | 'email'>
     })[]
-  })[]
-  isCreativeUser: boolean
-  isClientUser: boolean
-}
-
-
-
-export default function ReadyContentList({ content, isCreativeUser, isClientUser }: ReadyContentListProps) {
-  const { data: session } = useSession()
+  })[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<ContentType | 'ALL'>('ALL')
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [updatedItems, setUpdatedItems] = useState<Set<string>>(new Set())
+
+  // Fetch ready content data
+  useEffect(() => {
+    const fetchContent = async () => {
+      if (!currentOrganization) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch('/api/ready-content', {
+          headers: {
+            'x-selected-organization': currentOrganization.id
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch ready content')
+        }
+        
+        const data = await response.json()
+        setContent(data.content || [])
+      } catch (err) {
+        console.error('Error fetching ready content:', err)
+        setError('Failed to load ready content')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchContent()
+  }, [currentOrganization])
 
   const filteredContent = content.filter(item => {
     if (selectedType !== 'ALL' && item.contentType !== selectedType) {
@@ -138,6 +177,36 @@ export default function ReadyContentList({ content, isCreativeUser, isClientUser
   }
 
   const CONTENT_TYPE_OPTIONS: ContentType[] = ['NEWSLETTER', 'BLOG_POST', 'SOCIAL_MEDIA_POST', 'EMAIL_CAMPAIGN', 'WEBSITE_COPY']
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto h-12 w-12 text-gray-400 animate-spin">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </div>
+        <h3 className="mt-2 text-lg font-medium text-gray-900">Loading ready content...</h3>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto h-12 w-12 text-red-400">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 className="mt-2 text-lg font-medium text-red-900">Error loading content</h3>
+        <p className="text-red-600 mb-4">{error}</p>
+        <Button onClick={() => window.location.reload()}>Try Again</Button>
+      </div>
+    )
+  }
 
   if (!content || content.length === 0) {
     return (
