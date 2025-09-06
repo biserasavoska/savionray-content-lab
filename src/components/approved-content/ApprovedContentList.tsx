@@ -86,7 +86,7 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
       case 'EMAIL_CAMPAIGN':
         return 'Email Campaign'
       default:
-        return contentType.replace(/_/g, ' ')
+        return contentType?.replace(/_/g, ' ') || 'Unknown'
     }
   }
 
@@ -294,12 +294,12 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
                 </div>
                 <div className="flex items-center">
                   <span className="font-medium">Approved:</span>
-                  <span className="ml-1">{formatDate(item.updatedAt)}</span>
+                  <span className="ml-1">{item.updatedAt ? formatDate(item.updatedAt) : 'Unknown date'}</span>
                 </div>
                 {item.idea?.createdBy && (
                   <div className="flex items-center">
                     <span className="font-medium">Idea by:</span>
-                    <span className="ml-1">{item.idea.createdBy.name}</span>
+                    <span className="ml-1">{item.idea.createdBy?.name || 'Unknown'}</span>
                   </div>
                 )}
               </div>

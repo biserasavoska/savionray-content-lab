@@ -280,19 +280,19 @@ export default function ClientDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {organization ? `${organization.name} Content Lab` : 'Content Creation Dashboard'}
+              {currentOrganization ? `${currentOrganization.name} Content Lab` : 'Content Creation Dashboard'}
             </h1>
             <p className="text-gray-600 mt-2">
-          {organization 
-            ? `Review and approve content for ${organization.name}`
+          {currentOrganization 
+            ? `Review and approve content for ${currentOrganization.name}`
             : 'Review and approve content from your creative team'
           }
         </p>
-        {organization && (
+        {currentOrganization && (
               <div className="mt-3 flex items-center space-x-3">
                 <Badge variant="default">
                   <LightBulbIcon className="w-3 h-3 mr-1" />
-              Organization: {organization.name}
+              Organization: {currentOrganization.name}
                 </Badge>
                 <Badge variant="default">
                   <CheckCircleIcon className="w-3 h-3 mr-1" />
@@ -458,12 +458,12 @@ export default function ClientDashboard() {
               </Button>
             </div>
           ) : (
-            pendingContent.map((item) => (
+            pendingContent?.map((item) => (
               <div key={item.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-sm font-semibold text-gray-900">{item.title}</h3>
+                      <h3 className="text-sm font-semibold text-gray-900">{item.title || 'Untitled'}</h3>
                       {getPriorityBadge(item.priority)}
                                              {isOverdue(item.dueDate) && (
                          <Badge variant="destructive" size="sm">Overdue</Badge>
@@ -472,10 +472,10 @@ export default function ClientDashboard() {
                     <div className="flex items-center space-x-4 text-sm text-gray-500 mb-2">
                       <span className="flex items-center">
                         {getContentTypeIcon(item.contentType)}
-                        <span className="ml-1">{item.contentType.replace(/_/g, ' ')}</span>
+                        <span className="ml-1">{item.contentType?.replace(/_/g, ' ') || 'Unknown'}</span>
                       </span>
                       <span>Created by {item.createdBy?.name || item.createdBy?.email || 'Unknown'}</span>
-                      <span>{formatDate(item.createdAt)}</span>
+                      <span>{item.createdAt ? formatDate(item.createdAt) : 'Unknown date'}</span>
                       {item.dueDate && (
                         <span className={`flex items-center ${isOverdue(item.dueDate) ? 'text-red-600' : 'text-gray-500'}`}>
                           <CalendarIcon className="h-3 w-3 mr-1" />
@@ -526,7 +526,7 @@ export default function ClientDashboard() {
               <p className="text-gray-500">Approved content will appear here.</p>
             </div>
           ) : (
-            recentApproved.map((item) => (
+            recentApproved?.map((item) => (
               <div key={item.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -534,10 +534,10 @@ export default function ClientDashboard() {
                     <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
                       <span className="flex items-center">
                         {getContentTypeIcon(item.contentType)}
-                        <span className="ml-1">{item.contentType.replace(/_/g, ' ')}</span>
+                        <span className="ml-1">{item.contentType?.replace(/_/g, ' ') || 'Unknown'}</span>
                       </span>
                       <span>Created by {item.createdBy?.name || item.createdBy?.email || 'Unknown'}</span>
-                      <span>Approved {new Date(item.createdAt).toLocaleDateString()}</span>
+                      <span>Approved {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Unknown date'}</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
