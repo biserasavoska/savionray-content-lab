@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
           domain: domain || null,
           primaryColor: primaryColor || '#3B82F6',
           subscriptionPlan: subscriptionPlan || 'FREE',
-          maxUsers: maxUsers || 5,
+          maxUsers: parseInt(maxUsers) || 5,
           settings: {
             welcomeMessage: welcomeMessage || `Welcome to ${name}!`
           }
