@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // 3. Approved Content - same as /approved page (approved content drafts)
+    // 3. Approved - same as /approved page (approved content drafts)
     const approvedContent = await prisma.contentDraft.count({
       where: {
         organizationId: context.organizationId,

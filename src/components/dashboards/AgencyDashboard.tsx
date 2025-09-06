@@ -214,7 +214,7 @@ export default function AgencyDashboard() {
               <CheckCircleIcon className="h-6 w-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Approved Content</p>
+              <p className="text-sm font-medium text-gray-500">Approved</p>
               <p className="text-2xl font-bold text-gray-900">{stats.approvedContent}</p>
             </div>
           </div>

@@ -6,8 +6,8 @@ import { authOptions, isClient, isCreative } from '@/lib/auth'
 import ReadyContentList from '@/components/ready-content/ReadyContentList'
 
 export const metadata: Metadata = {
-  title: 'Ready Content',
-  description: 'View content ready for review and approval',
+  title: 'Drafts',
+  description: 'View content drafts ready for review and approval',
 }
 
 // Force dynamic rendering for this page
@@ -26,9 +26,9 @@ export default async function ReadyContentPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Ready Content</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Drafts</h1>
         <p className="text-gray-600">
-          Content that has been created with AI and is ready for client review and approval.
+          Content drafts created with AI for review and approval.
         </p>
       </div>
       

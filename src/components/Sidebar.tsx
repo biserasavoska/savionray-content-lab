@@ -33,7 +33,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Dashboard', href: '/', icon: HomeIcon },
     { name: 'Ideas', href: '/ideas', icon: LightBulbIcon },
     { name: 'Content Creation', href: '/content-review', icon: EyeIcon },
-    { name: 'Ready Content', href: '/ready-content', icon: DocumentTextIcon },
+    { name: 'Drafts', href: '/ready-content', icon: DocumentTextIcon },
     { name: 'Published', href: '/published', icon: FolderIcon },
     { name: 'Scheduled Posts', href: '/scheduled-posts', icon: CalendarIcon },
     { name: 'Delivery Plans', href: '/delivery-plans', icon: ChartBarIcon },

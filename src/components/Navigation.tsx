@@ -126,7 +126,7 @@ export default function Navigation() {
                 href="/ready-content"
                 className={`border-b-2 py-4 px-1 text-sm font-medium ${isActive('/ready-content')}`}
               >
-                Ready Content
+                Drafts
               </Link>
               <Link
                 href="/scheduled-posts"

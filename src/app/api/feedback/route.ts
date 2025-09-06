@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Don't automatically change status when feedback is submitted
-    // The status should remain as is, allowing the content to stay in Ready Content
+    // The status should remain as is, allowing the content to stay in Drafts
     // Status changes should be done explicitly by users through the UI
 
     return NextResponse.json(feedback)

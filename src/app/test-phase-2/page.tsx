@@ -44,8 +44,8 @@ export default function TestPhase2Page() {
         data: statsRes.ok ? await statsRes.json() : null
       }
 
-      // Test 2: Ready Content API
-      console.log('Testing Ready Content API...')
+      // Test 2: Drafts API
+      console.log('Testing Drafts API...')
       const readyRes = await fetch('/api/ready-content?limit=5')
       results.readyContent = {
         success: readyRes.ok,
@@ -212,7 +212,7 @@ export default function TestPhase2Page() {
                 <div className="flex items-center space-x-3">
                   <DocumentTextIcon className="h-6 w-6 text-green-600" />
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900">Ready Content</h3>
+                    <h3 className="text-sm font-medium text-gray-900">Drafts</h3>
                     <p className="text-xs text-gray-500">Review content pending approval</p>
                   </div>
                 </div>

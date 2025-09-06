@@ -93,7 +93,7 @@ export default async function ReadyContentPage({ params }: ReadyContentPageProps
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            {contentDraft.Idea?.title || 'Ready Content'}
+            {contentDraft.Idea?.title || 'Draft'}
           </h1>
           <p className="text-gray-600 mb-4">
             This content is ready for review and editing.

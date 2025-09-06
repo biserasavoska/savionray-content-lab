@@ -468,7 +468,7 @@ export default function IdeaDetailPage() {
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-blue-800">Idea Approved!</h3>
                     <div className="mt-2 text-sm text-blue-700">
-                      <p>A content draft has been automatically created and is now available in <strong>Content Status → Ready Content</strong>.</p>
+                      <p>A content draft has been automatically created and is now available in <strong>Content Status → Drafts</strong>.</p>
                       <p className="mt-1">The creative team will now work on creating content based on this approved idea.</p>
                     </div>
                     <div className="mt-3">

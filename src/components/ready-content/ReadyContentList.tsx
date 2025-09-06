@@ -12,7 +12,7 @@ import { DRAFT_STATUS, CONTENT_TYPE } from '@/lib/utils/enum-utils'
 import FeedbackList from '@/components/feedback/FeedbackList'
 import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
-import { PageLayout, PageHeader, PageContent, PageSection } from '@/components/ui/layout/PageLayout'
+import { PageContent, PageSection } from '@/components/ui/layout/PageLayout'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface ReadyContentListProps {
@@ -246,9 +246,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   }
 
   return (
-    <PageLayout>
-      <PageHeader title="Ready for Review" />
-      <PageContent>
+    <PageContent>
         <PageSection>
           {/* Success Message */}
           {successMessage && (
@@ -543,7 +541,6 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
             ))}
           </div>
         </PageSection>
-      </PageContent>
-    </PageLayout>
+    </PageContent>
   )
 } 
