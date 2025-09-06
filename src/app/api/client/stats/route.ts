@@ -36,14 +36,29 @@ export async function GET(request: NextRequest) {
 
     // Calculate dashboard statistics
     const [
-      pendingReviewCount,
-      recentlyApprovedCount,
-      totalContentCount,
+      totalIdeasCount,
+      pendingDraftsCount,
+      pendingApprovalsCount,
+      approvedCount,
       feedbackProvidedCount,
-      overdueItemsCount,
-      thisWeekDeadlinesCount
+      totalContentCount
     ] = await Promise.all([
-      // Pending review count
+      // Total ideas count
+      prisma.idea.count({
+        where: {
+          organizationId: orgContext.organizationId
+        }
+      }),
+
+      // Pending drafts count (DRAFT status)
+      prisma.contentDraft.count({
+        where: {
+          organizationId: orgContext.organizationId,
+          status: DRAFT_STATUS.DRAFT
+        }
+      }),
+
+      // Pending approvals count (AWAITING_FEEDBACK status)
       prisma.contentDraft.count({
         where: {
           organizationId: orgContext.organizationId,
@@ -51,21 +66,11 @@ export async function GET(request: NextRequest) {
         }
       }),
 
-      // Recently approved count (last 7 days)
+      // Approved count
       prisma.contentDraft.count({
         where: {
           organizationId: orgContext.organizationId,
-          status: DRAFT_STATUS.APPROVED,
-          updatedAt: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // 7 days ago
-          }
-        }
-      }),
-
-      // Total content count
-      prisma.contentDraft.count({
-        where: {
-          organizationId: orgContext.organizationId
+          status: DRAFT_STATUS.APPROVED
         }
       }),
 
@@ -81,30 +86,21 @@ export async function GET(request: NextRequest) {
         }
       }),
 
-      // Overdue items count (items with due dates in the past)
+      // Total content count
       prisma.contentDraft.count({
         where: {
-          organizationId: orgContext.organizationId,
-          status: DRAFT_STATUS.AWAITING_FEEDBACK
-        }
-      }),
-
-      // This week deadlines count
-      prisma.contentDraft.count({
-        where: {
-          organizationId: orgContext.organizationId,
-          status: DRAFT_STATUS.AWAITING_FEEDBACK
+          organizationId: orgContext.organizationId
         }
       })
     ])
 
     const stats = {
-      pendingReview: pendingReviewCount,
-      recentlyApproved: recentlyApprovedCount,
-      totalContent: totalContentCount,
+      totalIdeas: totalIdeasCount,
+      pendingDrafts: pendingDraftsCount,
+      pendingApprovals: pendingApprovalsCount,
+      approved: approvedCount,
       feedbackProvided: feedbackProvidedCount,
-      overdueItems: overdueItemsCount,
-      thisWeekDeadlines: thisWeekDeadlinesCount
+      totalContent: totalContentCount
     }
 
     logger.info('Client dashboard stats fetched', {

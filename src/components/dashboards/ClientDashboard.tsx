@@ -41,12 +41,12 @@ interface ContentItem {
 }
 
 interface DashboardStats {
-  pendingReview: number
-  recentlyApproved: number
-  totalContent: number
+  totalIdeas: number
+  pendingDrafts: number
+  pendingApprovals: number
+  approved: number
   feedbackProvided: number
-  overdueItems: number
-  thisWeekDeadlines: number
+  totalContent: number
 }
 
 export default function ClientDashboard() {
@@ -193,12 +193,12 @@ export default function ClientDashboard() {
       setPendingContent(mockPendingContent)
       setRecentApproved(mockRecentApproved)
       setStats({
-        pendingReview: mockPendingContent.length,
-        recentlyApproved: mockRecentApproved.length,
-        totalContent: mockPendingContent.length + mockRecentApproved.length,
+        totalIdeas: 5,
+        pendingDrafts: mockPendingContent.length,
+        pendingApprovals: mockPendingContent.length,
+        approved: mockRecentApproved.length,
         feedbackProvided: 3,
-        overdueItems: 1,
-        thisWeekDeadlines: 2
+        totalContent: mockPendingContent.length + mockRecentApproved.length
       })
     }
 
@@ -307,121 +307,130 @@ export default function ClientDashboard() {
 
       {/* Enhanced Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <ClockIcon className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending Review</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingReview}</p>
-              {stats.overdueItems > 0 && (
-                <p className="text-xs text-red-600 mt-1">
-                  {stats.overdueItems} overdue
-                </p>
-              )}
+        {/* Total Ideas */}
+        <Link href="/ideas" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-blue-300 cursor-pointer">
+            <div className="flex items-center">
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <LightBulbIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Ideas</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalIdeas}</p>
+                <p className="text-xs text-blue-600 mt-1">All ideas</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CheckCircleIcon className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Recently Approved</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.recentlyApproved}</p>
-              <p className="text-xs text-green-600 mt-1">This week</p>
+        {/* Pending Drafts */}
+        <Link href="/ready-content" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-yellow-300 cursor-pointer">
+            <div className="flex items-center">
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <DocumentTextIcon className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Pending Drafts</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingDrafts}</p>
+                <p className="text-xs text-yellow-600 mt-1">Awaiting review</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <DocumentTextIcon className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Content</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalContent}</p>
-              <p className="text-xs text-blue-600 mt-1">All time</p>
+        {/* Pending Approvals */}
+        <Link href="/ready-content" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-orange-300 cursor-pointer">
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <ClockIcon className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Pending Approvals</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+                <p className="text-xs text-orange-600 mt-1">Needs approval</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <ChatBubbleLeftIcon className="h-6 w-6 text-purple-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Feedback Provided</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.feedbackProvided}</p>
-              <p className="text-xs text-purple-600 mt-1">This month</p>
+        {/* Approved */}
+        <Link href="/approved" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-green-300 cursor-pointer">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CheckCircleIcon className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Approved</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.approved}</p>
+                <p className="text-xs text-green-600 mt-1">Ready to publish</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-red-100 rounded-lg">
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Overdue Items</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.overdueItems}</p>
-              <p className="text-xs text-red-600 mt-1">Needs attention</p>
+        {/* Feedback Provided */}
+        <Link href="/feedback-management" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-purple-300 cursor-pointer">
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <ChatBubbleLeftIcon className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Feedback Provided</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.feedbackProvided}</p>
+                <p className="text-xs text-purple-600 mt-1">This month</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          <div className="flex items-center">
-            <div className="p-3 bg-indigo-100 rounded-lg">
-              <CalendarIcon className="h-6 w-6 text-indigo-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">This Week</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.thisWeekDeadlines}</p>
-              <p className="text-xs text-indigo-600 mt-1">Deadlines</p>
+        {/* Total Content */}
+        <Link href="/ready-content" className="block">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-indigo-300 cursor-pointer">
+            <div className="flex items-center">
+              <div className="p-3 bg-indigo-100 rounded-lg">
+                <ChartBarIcon className="h-6 w-6 text-indigo-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Content</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalContent}</p>
+                <p className="text-xs text-indigo-600 mt-1">All content</p>
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
-      {/* Enhanced Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
+          <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
         </div>
-        <div className="px-6 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/ideas">
-              <Button variant="default" className="w-full justify-center">
-              <CheckCircleIcon className="h-5 w-5 mr-2" />
-              Approve Ideas
-              </Button>
-            </Link>
-            <Link href="/ready-content">
-              <Button variant="default" className="w-full justify-center">
-              <EyeIcon className="h-5 w-5 mr-2" />
-              Review Content
-              </Button>
-            </Link>
-            <Link href="/feedback-management">
-              <Button variant="secondary" className="w-full justify-center">
-              <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
-              Provide Feedback
-              </Button>
-            </Link>
-            <Link href="/approved">
-              <Button variant="outline" className="w-full justify-center">
-                <DocumentTextIcon className="h-5 w-5 mr-2" />
-                View Approved
-              </Button>
-            </Link>
-          </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button 
+            onClick={() => window.location.href = '/ideas'}
+            className="flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+          >
+            <CheckCircleIcon className="h-5 w-5 mr-2" />
+            Approve Ideas
+          </button>
+          <button 
+            onClick={() => window.location.href = '/ready-content'}
+            className="flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          >
+            <EyeIcon className="h-5 w-5 mr-2" />
+            Review Content
+          </button>
+          <button 
+            onClick={() => window.location.href = '/feedback-management'}
+            className="flex items-center justify-center px-4 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          >
+            <ChatBubbleLeftIcon className="h-5 w-5 mr-2" />
+            Provide Feedback
+          </button>
         </div>
       </div>
 
@@ -432,9 +441,9 @@ export default function ClientDashboard() {
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
             <EyeIcon className="h-5 w-5 mr-2 text-blue-600" />
             Content Pending Review
-              {stats.pendingReview > 0 && (
+              {stats.pendingApprovals > 0 && (
                 <Badge variant="secondary" size="sm" className="ml-2">
-                  {stats.pendingReview}
+                  {stats.pendingApprovals}
                 </Badge>
               )}
           </h2>
