@@ -230,12 +230,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-          logger.info('Starting organization creation process', {
-        userId: realUserId,
-        organizationName: name,
-        organizationSlug: slug,
-        clientUserCount: clientUsers.length
-      })
+    logger.info('Starting organization creation process', {
+      userId: realUserId,
+      organizationName: name,
+      organizationSlug: slug,
+      clientUserCount: clientUsers.length
+    })
 
     console.log('About to start database transaction...')
     console.log('Organization data:', { name, slug, domain, primaryColor, subscriptionPlan, maxUsers, welcomeMessage })
