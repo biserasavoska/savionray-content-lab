@@ -57,12 +57,12 @@ export default function ClientDashboard() {
   const [recentApproved, setRecentApproved] = useState<ContentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats>({
-    pendingReview: 0,
-    recentlyApproved: 0,
-    totalContent: 0,
+    totalIdeas: 0,
+    pendingDrafts: 0,
+    pendingApprovals: 0,
+    approved: 0,
     feedbackProvided: 0,
-    overdueItems: 0,
-    thisWeekDeadlines: 0
+    totalContent: 0
   })
 
   useEffect(() => {
