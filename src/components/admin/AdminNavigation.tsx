@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils/cn'
 
 const navigation = [
   { name: 'Organizations', href: '/admin/organizations' },
-  { name: 'Users', href: '/admin/users' },
+  { name: 'Team', href: '/organization/users' },
 ]
 
 export default function AdminNavigation() {

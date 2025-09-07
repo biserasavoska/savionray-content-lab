@@ -48,7 +48,14 @@ function SignInForm() {
       {/* Left: Login Form Card */}
       <div className="flex-1 flex flex-col justify-center items-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-10 flex flex-col items-center">
-          <img src="/logo.svg" alt="Savion Ray Logo" className="mb-6" style={{ width: '48px', height: '48px' }} />
+          <img 
+            src="/logo.svg" 
+            alt="Savion Ray Logo" 
+            className="mb-6" 
+            width={48} 
+            height={48}
+            style={{ width: '48px', height: '48px' }}
+          />
           <h2 className="text-2xl font-bold mb-2 text-gray-900 text-center">Log in to your account</h2>
           <p className="text-gray-500 mb-6 text-center">Enter your details to proceed further</p>
           {error && (

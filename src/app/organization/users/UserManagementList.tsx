@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import {
   Button,
   StatusBadge,
@@ -44,6 +45,7 @@ interface UserManagementListProps {
 }
 
 export default function UserManagementList({ organization }: UserManagementListProps) {
+  const { data: session } = useSession()
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
@@ -244,6 +246,7 @@ export default function UserManagementList({ organization }: UserManagementListP
                     {/* Organization Role */}
                     <div className="col-span-3">
                       <Select
+                        id={`org-role-${orgUser.userId}`}
                         options={roleOptions}
                         value={orgUser.role}
                         onChange={(e) => handleRoleChange(orgUser.userId, e.target.value)}
@@ -254,10 +257,11 @@ export default function UserManagementList({ organization }: UserManagementListP
                     {/* System Role */}
                     <div className="col-span-3">
                       <Select
+                        id={`system-role-${orgUser.userId}`}
                         options={systemRoleOptions}
                         value={orgUser.User_OrganizationUser_userIdToUser.role}
                         onChange={(e) => handleSystemRoleChange(orgUser.userId, e.target.value)}
-                        disabled={isLoading}
+                        disabled={isLoading || orgUser.userId === session?.user?.id}
                       />
                     </div>
 
@@ -277,7 +281,7 @@ export default function UserManagementList({ organization }: UserManagementListP
                             </Button>
                             <Button
                               onClick={() => handleDeleteUser(orgUser.userId)}
-                              disabled={isLoading}
+                              disabled={isLoading || orgUser.userId === session?.user?.id}
                               variant="ghost"
                               size="sm"
                               className="text-red-600 hover:text-red-800"

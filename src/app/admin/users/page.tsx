@@ -126,9 +126,8 @@ export default function AdminUsersPage() {
 
   return (
     <PageLayout size="full">
-      <AdminNavigation />
       <PageHeader
-        title="User Management"
+        title="All Users"
         description="Manage all user accounts across the entire system. Reset passwords and view global user data."
       />
       <PageContent>
