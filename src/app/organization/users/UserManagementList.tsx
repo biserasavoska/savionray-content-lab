@@ -79,6 +79,37 @@ export default function UserManagementList({ organization }: UserManagementListP
     }
   }
 
+  const handleSystemRoleChange = async (userId: string, newSystemRole: string) => {
+    setIsLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(`/api/organization/users/${userId}/system-role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ systemRole: newSystemRole }),
+      })
+
+      if (response.ok) {
+        setMessage('User system role updated successfully!')
+        setMessageType('success')
+        // Refresh the page to show updated data
+        window.location.reload()
+      } else {
+        const error = await response.json()
+        setMessage(`Error: ${error.message}`)
+        setMessageType('error')
+      }
+    } catch (error) {
+      setMessage('An error occurred while updating user system role')
+      setMessageType('error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleRemoveUser = async (userId: string) => {
     if (!confirm('Are you sure you want to remove this user from the organization?')) {
       return
@@ -110,12 +141,49 @@ export default function UserManagementList({ organization }: UserManagementListP
     }
   }
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this user? This action cannot be undone and will remove all user data.')) {
+      return
+    }
+
+    setIsLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(`/api/organization/users/${userId}/delete`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        setMessage('User permanently deleted successfully!')
+        setMessageType('success')
+        // Refresh the page to show updated data
+        window.location.reload()
+      } else {
+        const error = await response.json()
+        setMessage(`Error: ${error.message}`)
+        setMessageType('error')
+      }
+    } catch (error) {
+      setMessage('An error occurred while deleting user')
+      setMessageType('error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const roleOptions = [
     { value: 'OWNER', label: 'Owner' },
     { value: 'ADMIN', label: 'Admin' },
     { value: 'MANAGER', label: 'Manager' },
     { value: 'MEMBER', label: 'Member' },
     { value: 'VIEWER', label: 'Viewer' }
+  ]
+
+  const systemRoleOptions = [
+    { value: 'ADMIN', label: 'Admin' },
+    { value: 'CLIENT', label: 'Client' },
+    { value: 'CREATIVE', label: 'Creative' }
   ]
 
   return (
@@ -185,25 +253,40 @@ export default function UserManagementList({ organization }: UserManagementListP
 
                     {/* System Role */}
                     <div className="col-span-3">
-                      <StatusBadge 
-                        status={orgUser.User_OrganizationUser_userIdToUser.role.toLowerCase() as any}
-                        size="sm"
+                      <Select
+                        options={systemRoleOptions}
+                        value={orgUser.User_OrganizationUser_userIdToUser.role}
+                        onChange={(e) => handleSystemRoleChange(orgUser.userId, e.target.value)}
+                        disabled={isLoading}
                       />
                     </div>
 
                     {/* Actions */}
                     <div className="col-span-2">
-                      {orgUser.role !== 'OWNER' && (
-                        <Button
-                          onClick={() => handleRemoveUser(orgUser.userId)}
-                          disabled={isLoading}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Remove
-                        </Button>
-                      )}
+                      <div className="flex space-x-2">
+                        {orgUser.role !== 'OWNER' && (
+                          <>
+                            <Button
+                              onClick={() => handleRemoveUser(orgUser.userId)}
+                              disabled={isLoading}
+                              variant="ghost"
+                              size="sm"
+                              className="text-orange-600 hover:text-orange-800"
+                            >
+                              Remove
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteUser(orgUser.userId)}
+                              disabled={isLoading}
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
