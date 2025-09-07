@@ -129,7 +129,7 @@ export default function AdminUsersPage() {
       <AdminNavigation />
       <PageHeader
         title="User Management"
-        description="Manage user accounts and reset passwords"
+        description="Manage all user accounts across the entire system. Reset passwords and view global user data."
       />
       <PageContent>
         <PageSection>

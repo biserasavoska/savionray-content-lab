@@ -57,7 +57,7 @@ export default async function UserManagementPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Manage your organization's team members and their roles
+            Manage your organization's team members, roles, and permissions. Edit system roles and remove/delete team members.
           </p>
         </div>
 

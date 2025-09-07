@@ -73,7 +73,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     
     // Admin-only items
     { name: 'Organizations', href: '/admin/organizations', icon: BuildingOfficeIcon, roles: ['ADMIN'] },
-    { name: 'Team', href: '/team', icon: UsersIcon, roles: ['ADMIN'] },
+    { name: 'Users', href: '/admin/users', icon: UsersIcon, roles: ['ADMIN'] },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, roles: ['ADMIN'] },
     { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['ADMIN'] },
     
