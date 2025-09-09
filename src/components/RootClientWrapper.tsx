@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 
 import RoleBasedNavigation from './navigation/RoleBasedNavigation'
 import TopNavigation from './TopNavigation'
+import LogRocketProvider from './LogRocketProvider'
 
 import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
 
@@ -33,9 +34,11 @@ export default function RootClientWrapper({
     return (
       <SessionProvider session={session}>
         <OrganizationProvider>
-          <div className="min-h-screen bg-gray-50">
-            {children}
-          </div>
+          <LogRocketProvider>
+            <div className="min-h-screen bg-gray-50">
+              {children}
+            </div>
+          </LogRocketProvider>
         </OrganizationProvider>
       </SessionProvider>
     )
@@ -44,21 +47,23 @@ export default function RootClientWrapper({
   return (
     <SessionProvider session={session}>
       <OrganizationProvider>
-        <div className="min-h-screen bg-gray-50 flex flex-row">
-          {/* Role-based Sidebar (hidden on auth pages) */}
-          {!isAuthPage && (
-            <RoleBasedNavigation isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-          )}
-          {/* Main content area */}
-          <div className="flex-1 flex flex-col min-h-screen">
-            {/* Top navigation for mobile */}
-            {!isAuthPage && <TopNavigation setIsSidebarOpen={setIsSidebarOpen} />}
-            {/* Main page content */}
-            <main className="flex-1">
-              {children}
-            </main>
+        <LogRocketProvider>
+          <div className="min-h-screen bg-gray-50 flex flex-row">
+            {/* Role-based Sidebar (hidden on auth pages) */}
+            {!isAuthPage && (
+              <RoleBasedNavigation isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+            )}
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col min-h-screen">
+              {/* Top navigation for mobile */}
+              {!isAuthPage && <TopNavigation setIsSidebarOpen={setIsSidebarOpen} />}
+              {/* Main page content */}
+              <main className="flex-1">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
+        </LogRocketProvider>
       </OrganizationProvider>
     </SessionProvider>
   )
