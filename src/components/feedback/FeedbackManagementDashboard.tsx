@@ -9,9 +9,12 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   ClockIcon,
-  FunnelIcon
+  FunnelIcon,
+  ArrowTopRightOnSquareIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline'
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid'
+import Link from 'next/link'
 
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
@@ -31,6 +34,9 @@ interface Feedback {
   targetType: 'idea' | 'content'
   targetTitle: string
   targetId: string
+  feedbackType: 'idea' | 'content'
+  contentDraftId?: string
+  ideaId?: string
 }
 
 interface FeedbackStats {
@@ -337,24 +343,57 @@ export default function FeedbackManagementDashboard() {
                     <div className="flex items-center space-x-2 mb-3">
                       <div className="flex items-center space-x-1">
                         {renderStars(feedback.rating)}
+                        {feedback.rating > 0 && (
+                          <span className="text-sm text-gray-600 ml-1">({feedback.rating}/5)</span>
+                        )}
                       </div>
                       <Badge className={getCategoryColor(feedback.category)}>
                         {feedback.category}
                       </Badge>
                       <Badge className={getPriorityColor(feedback.priority)}>
-                        {feedback.priority}
+                        {feedback.priority} priority
                       </Badge>
                       {feedback.actionable && (
                         <Badge className="bg-green-100 text-green-800">
+                          <CheckCircleIcon className="h-3 w-3 mr-1" />
                           Actionable
                         </Badge>
                       )}
                     </div>
                     
-                    <p className="text-gray-700 mb-2">{feedback.comment}</p>
+                    <p className="text-gray-700 mb-3">{feedback.comment}</p>
                     
-                    <div className="text-sm text-gray-500">
-                      Target: {feedback.targetTitle} ({feedback.targetType})
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-500">
+                        Target: {feedback.targetTitle} ({feedback.targetType})
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        {feedback.ideaId && (
+                          <Link href={`/ideas/${feedback.ideaId}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center space-x-1"
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                              <span>View Idea</span>
+                            </Button>
+                          </Link>
+                        )}
+                        {feedback.contentDraftId && (
+                          <Link href={`/drafts/${feedback.contentDraftId}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center space-x-1"
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                              <span>View Draft</span>
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

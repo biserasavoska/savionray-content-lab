@@ -42,14 +42,25 @@ export async function GET(request: NextRequest) {
     // Get organization IDs the user has access to
     const organizationIds = userOrganizations.map(ou => ou.organizationId)
 
-    // Fetch feedbacks for all organizations the user has access to
+    // Fetch feedbacks for all organizations the user has access to - includes both Ideas and ContentDrafts
     const feedbacks = await prisma.feedback.findMany({
       where: {
-        ContentDraft: {
-          organizationId: {
-            in: organizationIds
+        OR: [
+          {
+            ContentDraft: {
+              organizationId: {
+                in: organizationIds
+              }
+            }
+          },
+          {
+            Idea: {
+              organizationId: {
+                in: organizationIds
+              }
+            }
           }
-        }
+        ]
       },
       include: {
         User: {
@@ -68,6 +79,12 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        Idea: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -75,23 +92,47 @@ export async function GET(request: NextRequest) {
     })
 
     // Transform feedbacks to include target information
-    const transformedFeedbacks = feedbacks.map(feedback => ({
-      id: feedback.id,
-      comment: feedback.comment,
-      createdAt: feedback.createdAt.toISOString(),
-      createdBy: feedback.User,
-      targetType: 'content' as const,
-      targetTitle: feedback.ContentDraft?.Idea?.title || 'Unknown Content',
-      targetId: feedback.ContentDraft?.Idea?.id || '',
-    }))
+    const transformedFeedbacks = feedbacks.map(feedback => {
+      // Determine if this feedback is for an Idea or ContentDraft
+      const isIdeaFeedback = feedback.ideaId && feedback.Idea
+      const isContentDraftFeedback = feedback.contentDraftId && feedback.ContentDraft
+      
+      return {
+        id: feedback.id,
+        comment: feedback.comment,
+        rating: feedback.rating || 0,
+        category: feedback.category || 'general',
+        priority: feedback.priority || 'medium',
+        actionable: feedback.actionable || false,
+        createdAt: feedback.createdAt.toISOString(),
+        createdBy: feedback.User,
+        targetType: isIdeaFeedback ? 'idea' as const : 'content' as const,
+        targetTitle: isIdeaFeedback 
+          ? feedback.Idea?.title || 'Unknown Idea'
+          : feedback.ContentDraft?.Idea?.title || 'Unknown Content',
+        targetId: isIdeaFeedback 
+          ? feedback.Idea?.id || ''
+          : feedback.ContentDraft?.Idea?.id || '',
+        feedbackType: isIdeaFeedback ? 'idea' : 'content',
+        // Add the actual content draft or idea ID for navigation
+        contentDraftId: feedback.contentDraftId,
+        ideaId: feedback.ideaId
+      }
+    })
 
-    // Calculate stats
+    // Calculate stats from actual feedback data
     const total = transformedFeedbacks.length
-    const averageRating = 0 // Rating field doesn't exist in current schema
-    const actionable = 0 // Actionable field doesn't exist in current schema
-    const highPriority = 0 // Priority field doesn't exist in current schema
+    const ratings = feedbacks.map(f => f.rating).filter(r => r > 0)
+    const averageRating = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : 0
+    const actionable = feedbacks.filter(f => f.actionable).length
+    const highPriority = feedbacks.filter(f => f.priority === 'high').length
     
-    const byCategory = { 'general': total } // Category field doesn't exist in current schema
+    // Group by category
+    const byCategory = feedbacks.reduce((acc, feedback) => {
+      const category = feedback.category || 'general'
+      acc[category] = (acc[category] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
 
     const stats = {
       total,

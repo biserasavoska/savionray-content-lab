@@ -74,12 +74,21 @@ export async function GET(request: NextRequest) {
         }
       }),
 
-      // Feedback provided count (last 30 days)
+      // Feedback provided count (last 30 days) - includes both Ideas and ContentDrafts
       prisma.feedback.count({
         where: {
-          ContentDraft: {
-            organizationId: orgContext.organizationId
-          },
+          OR: [
+            {
+              ContentDraft: {
+                organizationId: orgContext.organizationId
+              }
+            },
+            {
+              Idea: {
+                organizationId: orgContext.organizationId
+              }
+            }
+          ],
           createdAt: {
             gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
           }
