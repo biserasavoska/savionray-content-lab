@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 import type { User } from '@/types/content'
 import { AVAILABLE_MODELS } from '@/lib/models'
@@ -167,6 +168,7 @@ interface GeneratedContent {
 export default function ContentReviewDetailPage({ params }: { params: { id: string } }) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
   const [contentItem, setContentItem] = useState<ContentItemWithDetails | null>(null)
   const [loading, setLoading] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
@@ -185,25 +187,42 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   const [showReasoning, setShowReasoning] = useState(false)
 
   useEffect(() => {
-    if (session?.user && params.id) {
+    if (session?.user && params.id && currentOrganization) {
       fetchContentItem()
     }
-  }, [session, params.id])
+  }, [session, params.id, currentOrganization])
 
   const fetchContentItem = async () => {
     try {
       setLoading(true)
       setError('')
       console.log('Fetching content draft with ID:', params.id)
+      console.log('Current organization:', currentOrganization?.id)
       
-      const response = await fetch(`/api/drafts/${params.id}`)
+      const headers: HeadersInit = {}
+      if (currentOrganization?.id) {
+        headers['x-selected-organization'] = currentOrganization.id
+      }
+      
+      const response = await fetch(`/api/drafts/${params.id}`, {
+        headers
+      })
       console.log('Response status:', response.status)
       console.log('Response headers:', response.headers)
       
       if (!response.ok) {
         const errorText = await response.text()
         console.error('API Error Response:', errorText)
-        throw new Error(`Failed to fetch content draft: ${response.status} ${response.statusText}`)
+        
+        if (response.status === 404) {
+          throw new Error('Content draft not found. It may have been deleted or you may not have permission to view it.')
+        } else if (response.status === 401) {
+          throw new Error('You are not authorized to view this content draft.')
+        } else if (response.status === 403) {
+          throw new Error('Access denied. You do not have permission to view this content draft.')
+        } else {
+          throw new Error(`Failed to fetch content draft: ${response.status} ${response.statusText}`)
+        }
       }
       
       const data = await response.json()
@@ -217,7 +236,15 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
       setContent(data.body || '')
     } catch (error) {
       console.error('Error fetching content draft:', error)
-      setError(error instanceof Error ? error.message : 'Error loading content draft')
+      const errorMessage = error instanceof Error ? error.message : 'Error loading content draft'
+      setError(errorMessage)
+      
+      // If it's a 404 error, redirect to content review list after a delay
+      if (errorMessage.includes('not found')) {
+        setTimeout(() => {
+          router.push('/content-review')
+        }, 3000)
+      }
     } finally {
       setLoading(false)
     }

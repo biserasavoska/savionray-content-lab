@@ -26,12 +26,20 @@ export async function GET(
     
     if (!orgContext) {
       console.error('Organization context failed for user:', session.user.email)
+      console.error('Available cookies:', request.cookies.getAll())
+      console.error('Available headers:', Object.fromEntries(request.headers.entries()))
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
     console.log('API Route Debug - Organization context:', orgContext.organizationId)
+    console.log('API Route Debug - Looking for draft ID:', params.id)
 
     // Fetch the content draft
+    console.log('API Route Debug - Querying database with:', {
+      id: params.id,
+      organizationId: orgContext.organizationId
+    })
+    
     const contentDraft = await prisma.contentDraft.findUnique({
       where: {
         id: params.id,
@@ -81,7 +89,16 @@ export async function GET(
       }
     })
 
+    console.log('API Route Debug - Database query result:', contentDraft ? 'Found' : 'Not found')
+
     if (!contentDraft) {
+      // Let's also check if the draft exists in any organization
+      const draftInAnyOrg = await prisma.contentDraft.findUnique({
+        where: { id: params.id },
+        select: { id: true, organizationId: true }
+      })
+      console.log('API Route Debug - Draft in any organization:', draftInAnyOrg)
+      
       return NextResponse.json({ error: 'Content draft not found' }, { status: 404 })
     }
 
