@@ -310,7 +310,7 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
                   body: draft.body || '',
                   contentType: draft.contentType,
                   status: draft.status,
-                  createdAt: draft.createdAt.toISOString(),
+                  createdAt: new Date(draft.createdAt).toISOString(),
                   createdBy: {
                               name: draft.User.name || '',
           email: draft.User.email

@@ -196,9 +196,6 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
     try {
       setLoading(true)
       setError('')
-      console.log('Fetching content draft with ID:', params.id)
-      console.log('Current organization:', currentOrganization?.id)
-      
       const headers: HeadersInit = {}
       if (currentOrganization?.id) {
         headers['x-selected-organization'] = currentOrganization.id
@@ -207,8 +204,6 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
       const response = await fetch(`/api/drafts/${params.id}`, {
         headers
       })
-      console.log('Response status:', response.status)
-      console.log('Response headers:', response.headers)
       
       if (!response.ok) {
         const errorText = await response.text()
@@ -226,7 +221,6 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
       }
       
       const data = await response.json()
-      console.log('Fetched content draft data:', data)
       
       if (!data || !data.id) {
         throw new Error('Invalid content draft data received')
