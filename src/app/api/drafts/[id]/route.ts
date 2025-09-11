@@ -16,11 +16,6 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Debug: Log cookies and headers
-    console.log('API Route Debug - Cookies:', request.cookies.getAll())
-    console.log('API Route Debug - Headers:', Object.fromEntries(request.headers.entries()))
-    console.log('API Route Debug - User:', session.user.email)
-
     // Get organization context - pass the actual request object
     const orgContext = await getOrganizationContext(undefined, request)
     
@@ -28,8 +23,6 @@ export async function GET(
       console.error('Organization context failed for user:', session.user.email)
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
-
-    console.log('API Route Debug - Organization context:', orgContext.organizationId)
 
     // Fetch the content draft
     const contentDraft = await prisma.contentDraft.findUnique({
