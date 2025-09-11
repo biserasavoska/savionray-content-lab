@@ -38,11 +38,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
     lg: 'px-3 py-1 text-sm'
   }
   
-  const displayText = children || status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')
+  const displayText = children || (status ? status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ') : 'Unknown')
   
   return (
     <span
-      className={`${baseClasses} ${statusClasses[status]} ${sizeClasses[size]} ${className || ''}`}
+      className={`${baseClasses} ${statusClasses[status] || statusClasses.draft} ${sizeClasses[size]} ${className || ''}`}
     >
       {displayText}
     </span>

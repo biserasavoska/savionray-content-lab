@@ -288,9 +288,14 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
       setGeneratedContent(data)
       setContent(data.postText || '')
       // Auto-save generated content
+      const autoSaveHeaders: HeadersInit = { 'Content-Type': 'application/json' }
+      if (currentOrganization?.id) {
+        autoSaveHeaders['x-selected-organization'] = currentOrganization.id
+      }
+      
       await fetch(`/api/drafts/${params.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: autoSaveHeaders,
         body: JSON.stringify({
           body: data.postText || '',
           metadata: {
@@ -337,9 +342,14 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
     }
     
     try {
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (currentOrganization?.id) {
+        headers['x-selected-organization'] = currentOrganization.id
+      }
+      
       const response = await fetch(`/api/drafts/${params.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           status: draftStatus,
