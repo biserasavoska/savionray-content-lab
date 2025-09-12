@@ -19,7 +19,7 @@ npm run dev
 # Test thoroughly on localhost:3000
 ```
 
-### Step 2: Deploy to Staging
+### Step 2: Deploy to Staging FIRST
 ```bash
 # Switch to develop branch
 git checkout develop
@@ -31,14 +31,16 @@ git merge fix/issue-description
 git push origin develop
 ```
 
-### Step 3: Validate Staging
+### Step 3: Validate Staging (CRITICAL STEP)
 - Monitor Railway dashboard for `disciplined-presence` project
 - Test all functionality on staging environment
 - Verify fixes work correctly
 - Check for any new errors in logs
+- **DO NOT PROCEED TO PRODUCTION UNTIL STAGING IS VALIDATED**
 
-### Step 4: Deploy to Production
+### Step 4: Deploy to Production (ONLY AFTER STAGING VALIDATION)
 ```bash
+# ONLY proceed if staging validation is successful
 # Switch to main branch
 git checkout main
 
@@ -70,6 +72,15 @@ git push origin main
 - **Auto-deploy**: ✅ Enabled
 - **URL**: `https://app.savionray.com`
 
+## ⚠️ CRITICAL: Staging-First Rule
+
+**NEVER deploy to production without validating staging first!**
+
+The staging environment (`disciplined-presence`) is your safety net. Always:
+1. Deploy to staging first
+2. Test thoroughly on staging
+3. Only deploy to production after staging validation
+
 ## 📋 Pre-Deployment Checklist
 
 ### Before Staging:
@@ -78,11 +89,12 @@ git push origin main
 - [ ] Code reviewed and committed
 - [ ] Branch merged to `develop`
 
-### Before Production:
+### Before Production (MANDATORY):
 - [ ] Staging deployment successful
 - [ ] All functionality tested on staging
 - [ ] No errors in staging logs
 - [ ] LogRocket shows clean sessions
+- [ ] **Staging validation completed and approved**
 - [ ] Ready for production release
 
 ## 🚨 Emergency Procedures
