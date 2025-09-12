@@ -146,7 +146,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   const [manualContent, setManualContent] = useState('')
   const [manualHashtags, setManualHashtags] = useState('')
   const [manualCallToAction, setManualCallToAction] = useState('')
-  const [isManualMode, setIsManualMode] = useState(false)
+  const [isManualMode, setIsManualMode] = useState(true)
   
   // Add reasoning options state
   const [includeReasoning, setIncludeReasoning] = useState(false)
@@ -516,7 +516,49 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
               Use the "Additional Context" field to add specific requirements or tone preferences.
             </div>
           </div>
-          
+
+          {/* Current Post Content Display */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-gray-900">Current Post Content</h3>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-gray-600">Live Editor</span>
+              </div>
+            </div>
+            <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm hover:border-gray-300 transition-colors">
+              <div className="p-1">
+                <ReactQuill
+                  value={content}
+                  onChange={setContent}
+                  placeholder="Your post content will appear here after generation or manual input..."
+                  style={{ 
+                    height: '200px',
+                    border: 'none'
+                  }}
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      ['link'],
+                      ['clean']
+                    ],
+                  }}
+                  theme="snow"
+                />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <p className="text-sm text-gray-500">
+                ✏️ Edit directly here or use AI generation/manual editor below
+              </p>
+              <div className="text-xs text-gray-400">
+                {content.length} characters
+              </div>
+            </div>
+          </div>
+
           <div className="mb-6">
             <ModelSelector
               selectedModel={selectedModel.id}
@@ -589,7 +631,10 @@ The AI will combine this with the idea context above to generate relevant conten
                 <Textarea
                   label="Post Text"
                   value={generatedContent.postText}
-                  onChange={(e) => setGeneratedContent(prev => prev ? { ...prev, postText: e.target.value } : null)}
+                  onChange={(e) => {
+                    setGeneratedContent(prev => prev ? { ...prev, postText: e.target.value } : null)
+                    setContent(e.target.value) // Also update main content display
+                  }}
                   rows={4}
                 />
               </div>
@@ -628,8 +673,8 @@ The AI will combine this with the idea context above to generate relevant conten
           )}
         </PageSection>
 
-        {/* Manual Content Creation Section */}
-        <PageSection title="Manual Content Creation" className="mb-6">
+        {/* Write Manually Section */}
+        <PageSection title="Write Manually" className="mb-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">

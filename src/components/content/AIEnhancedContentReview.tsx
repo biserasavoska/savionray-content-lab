@@ -81,8 +81,14 @@ export default function AIEnhancedContentReview({
 
       if (response.ok) {
         const analysis = await response.json()
-        setAiAnalysis(analysis.optimization)
-        generateInsights(analysis.optimization)
+        console.log('AI analysis response:', analysis)
+        
+        // Handle different response structures
+        const optimizationData = analysis.optimization || analysis
+        setAiAnalysis(optimizationData)
+        generateInsights(optimizationData)
+      } else {
+        console.error('AI analysis API error:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('AI analysis failed:', error)
@@ -94,15 +100,29 @@ export default function AIEnhancedContentReview({
   const generateInsights = (analysis: any) => {
     const newInsights: AIInsight[] = []
 
+    // Check if analysis exists and has the expected structure
+    if (!analysis || typeof analysis !== 'object') {
+      console.warn('AI analysis data is invalid or missing')
+      // Add a fallback insight when no analysis is available
+      newInsights.push({
+        type: 'suggestion',
+        title: 'AI Analysis Unavailable',
+        description: 'Unable to generate AI insights for this content. The content may be too short or the analysis service may be unavailable.',
+        impact: 'low'
+      })
+      setInsights(newInsights)
+      return
+    }
+
     // SEO Insights
-    if (analysis.seoScore < 70) {
+    if (analysis.seoScore !== undefined && analysis.seoScore < 70) {
       newInsights.push({
         type: 'warning',
         title: 'SEO Optimization Needed',
         description: `SEO score is ${analysis.seoScore}/100. Consider adding more keywords and improving meta descriptions.`,
         impact: 'high'
       })
-    } else if (analysis.seoScore >= 85) {
+    } else if (analysis.seoScore !== undefined && analysis.seoScore >= 85) {
       newInsights.push({
         type: 'positive',
         title: 'Excellent SEO',
@@ -112,7 +132,7 @@ export default function AIEnhancedContentReview({
     }
 
     // Readability Insights
-    if (analysis.readabilityScore < 60) {
+    if (analysis.readabilityScore !== undefined && analysis.readabilityScore < 60) {
       newInsights.push({
         type: 'warning',
         title: 'Readability Concerns',
@@ -122,7 +142,7 @@ export default function AIEnhancedContentReview({
     }
 
     // Engagement Insights
-    if (analysis.engagementScore >= 80) {
+    if (analysis.engagementScore !== undefined && analysis.engagementScore >= 80) {
       newInsights.push({
         type: 'positive',
         title: 'High Engagement Potential',
@@ -132,11 +152,11 @@ export default function AIEnhancedContentReview({
     }
 
     // Tone Insights
-    if (analysis.toneAnalysis) {
+    if (analysis.toneAnalysis && analysis.toneAnalysis.emotion) {
       newInsights.push({
         type: 'suggestion',
         title: `Tone: ${analysis.toneAnalysis.emotion}`,
-        description: `Content tone is ${analysis.toneAnalysis.emotion} (${Math.round(analysis.toneAnalysis.confidence * 100)}% confidence).`,
+        description: `Content tone is ${analysis.toneAnalysis.emotion} (${Math.round((analysis.toneAnalysis.confidence || 0) * 100)}% confidence).`,
         impact: 'medium'
       })
     }
@@ -193,10 +213,11 @@ export default function AIEnhancedContentReview({
           </h3>
         </CardHeader>
         <CardContent>
-          <div className="prose max-w-none">
-            <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-4 rounded-lg">
-              {content.body}
-            </pre>
+          <div className="prose max-w-none prose-sm">
+            <div 
+              className="bg-gray-50 p-4 rounded-lg border"
+              dangerouslySetInnerHTML={{ __html: content.body }}
+            />
           </div>
         </CardContent>
       </Card>
