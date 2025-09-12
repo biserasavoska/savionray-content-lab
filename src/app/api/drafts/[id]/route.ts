@@ -19,6 +19,9 @@ export async function GET(
     // Get organization context - pass the actual request object
     const orgContext = await getOrganizationContext(undefined, request)
     
+    console.log('API Debug - Organization context:', orgContext)
+    console.log('API Debug - Request headers:', Object.fromEntries(request.headers.entries()))
+    
     if (!orgContext) {
       console.error('Organization context failed for user:', session.user.email)
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
