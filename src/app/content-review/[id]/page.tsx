@@ -228,9 +228,12 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
       
       // Debug: Log the received data to understand the structure
       console.log('Received content draft data:', data)
-      console.log('Idea data:', data.idea)
-      console.log('Idea title:', data.idea?.title)
-      console.log('Idea description:', data.idea?.description)
+      console.log('Idea data (lowercase):', data.idea)
+      console.log('Idea data (uppercase):', data.Idea)
+      console.log('Idea title (lowercase):', data.idea?.title)
+      console.log('Idea title (uppercase):', data.Idea?.title)
+      console.log('Idea description (lowercase):', data.idea?.description)
+      console.log('Idea description (uppercase):', data.Idea?.description)
       
       setContentItem(data)
       setContent(data.body || '')
@@ -507,12 +510,13 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           <PageSection title="Debug Info (Development Only)" className="mb-6">
             <div className="text-xs text-yellow-700 space-y-1">
               <div><strong>Content Item ID:</strong> {contentItem.id}</div>
-              <div><strong>Has Idea Data:</strong> {contentItem.idea ? 'Yes' : 'No'}</div>
-              {contentItem.idea && (
+              <div><strong>Has Idea Data (lowercase):</strong> {contentItem.idea ? 'Yes' : 'No'}</div>
+              <div><strong>Has Idea Data (uppercase):</strong> {contentItem.Idea ? 'Yes' : 'No'}</div>
+              {(contentItem.idea || contentItem.Idea) && (
                 <>
-                  <div><strong>Idea ID:</strong> {contentItem.idea.id}</div>
-                  <div><strong>Idea Title:</strong> {contentItem.idea.title}</div>
-                  <div><strong>Idea Description:</strong> {contentItem.idea.description}</div>
+                  <div><strong>Idea ID:</strong> {contentItem.idea?.id || contentItem.Idea?.id}</div>
+                  <div><strong>Idea Title:</strong> {contentItem.idea?.title || contentItem.Idea?.title}</div>
+                  <div><strong>Idea Description:</strong> {contentItem.idea?.description || contentItem.Idea?.description}</div>
                 </>
               )}
               <div><strong>Content Type:</strong> {contentItem.contentType}</div>
@@ -529,11 +533,11 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
             <div className="space-y-2 text-sm">
               <div>
                 <span className="font-medium text-gray-600">Title:</span>
-                <span className="ml-2 text-gray-800">{contentItem.idea?.title || 'No title available'}</span>
+                <span className="ml-2 text-gray-800">{contentItem.idea?.title || contentItem.Idea?.title || 'No title available'}</span>
               </div>
               <div>
                 <span className="font-medium text-gray-600">Description:</span>
-                <span className="ml-2 text-gray-800">{contentItem.idea?.description || 'No description available'}</span>
+                <span className="ml-2 text-gray-800">{contentItem.idea?.description || contentItem.Idea?.description || 'No description available'}</span>
               </div>
               <div>
                 <span className="font-medium text-gray-600">Content Type:</span>
