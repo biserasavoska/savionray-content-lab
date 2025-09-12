@@ -97,60 +97,17 @@ type ContentItemWithDetails = {
     currentStage: string
     createdAt: string
     updatedAt: string
-    createdBy: {
-      id: string
-      name: string | null
-      email: string | null
-      role: string
-    }
-    assignedTo?: {
-      id: string
-      name: string | null
-      email: string | null
-    } | null
-    metadata: any
-    feedbacks?: Array<{
-      id: string
-      comment: string
-      createdAt: string
-      createdBy: {
-        id: string
-        name: string | null
-        email: string | null
-        role: string
-      }
-    }>
-    comments?: Array<{
-      id: string
-      comment: string
-      createdAt: string
-      createdBy: {
-        id: string
-        name: string | null
-        email: string | null
-        role: string
-      }
-    }>
-    media?: Array<{
-      id: string
-      url: string
-      filename: string
-      contentType: string
-      size: number
-    }>
-    stageHistory?: Array<{
-      id: string
-      fromStage: string
-      toStage: string
-      transitionedAt: string
-      transitionedBy: string
-      notes: string | null
-      user: {
-        id: string
-        name: string | null
-        email: string | null
-      }
-    }>
+  }
+  Idea?: {
+    id: string
+    title: string
+    description: string
+    body: string
+    contentType: string
+    status: string
+    currentStage: string
+    createdAt: string
+    updatedAt: string
   }
 }
 
