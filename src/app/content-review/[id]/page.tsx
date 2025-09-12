@@ -226,6 +226,12 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         throw new Error('Invalid content draft data received')
       }
       
+      // Debug: Log the received data to understand the structure
+      console.log('Received content draft data:', data)
+      console.log('Idea data:', data.idea)
+      console.log('Idea title:', data.idea?.title)
+      console.log('Idea description:', data.idea?.description)
+      
       setContentItem(data)
       setContent(data.body || '')
     } catch (error) {

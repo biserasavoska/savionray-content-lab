@@ -78,6 +78,15 @@ export async function GET(
       return NextResponse.json({ error: 'Content draft not found' }, { status: 404 })
     }
 
+    // Debug: Log the content draft data to understand what's being returned
+    console.log('Content draft found:', {
+      id: contentDraft.id,
+      ideaId: contentDraft.ideaId,
+      hasIdea: !!contentDraft.Idea,
+      ideaTitle: contentDraft.Idea?.title,
+      ideaDescription: contentDraft.Idea?.description
+    })
+
     return NextResponse.json(contentDraft)
   } catch (error) {
     console.error('Error fetching content draft:', error)
