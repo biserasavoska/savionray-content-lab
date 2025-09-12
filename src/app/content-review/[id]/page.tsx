@@ -254,8 +254,8 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
     setError('')
     try {
       console.log('Generating content for:', {
-        title: contentItem.idea?.title || 'Untitled',
-        description: contentItem.idea?.description || 'No description',
+        title: contentItem.idea?.title || contentItem.Idea?.title || 'Untitled',
+        description: contentItem.idea?.description || contentItem.Idea?.description || 'No description',
         model: selectedModel.id,
         additionalContext
       });
@@ -264,8 +264,8 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: contentItem.idea?.title || 'Untitled',
-          description: contentItem.idea?.description || 'No description',
+          title: contentItem.idea?.title || contentItem.Idea?.title || 'Untitled',
+          description: contentItem.idea?.description || contentItem.Idea?.description || 'No description',
           format: 'social',
           model: selectedModel.id,
           additionalContext,
