@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
+import dynamic from 'next/dynamic'
+
+// Dynamically import ReactQuill to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false })
+import 'react-quill/dist/quill.snow.css'
 
 import type { User } from '@/types/content'
 import { AVAILABLE_MODELS } from '@/lib/models'
@@ -136,6 +141,12 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
 
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null)
   const [content, setContent] = useState('')
+  
+  // Manual content creation state
+  const [manualContent, setManualContent] = useState('')
+  const [manualHashtags, setManualHashtags] = useState('')
+  const [manualCallToAction, setManualCallToAction] = useState('')
+  const [isManualMode, setIsManualMode] = useState(false)
   
   // Add reasoning options state
   const [includeReasoning, setIncludeReasoning] = useState(false)
@@ -615,6 +626,101 @@ The AI will combine this with the idea context above to generate relevant conten
               )}
             </div>
           )}
+        </PageSection>
+
+        {/* Manual Content Creation Section */}
+        <PageSection title="Manual Content Creation" className="mb-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                Write your content manually using the rich text editor below
+              </p>
+              <Button
+                onClick={() => setIsManualMode(!isManualMode)}
+                variant={isManualMode ? "default" : "outline"}
+                size="sm"
+              >
+                {isManualMode ? 'Hide Editor' : 'Show Editor'}
+              </Button>
+            </div>
+
+            {isManualMode && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Post Content
+                  </label>
+                  <div className="border border-gray-300 rounded-lg">
+                    <ReactQuill
+                      value={manualContent}
+                      onChange={setManualContent}
+                      placeholder="Write your post content here..."
+                      style={{ height: '200px' }}
+                      modules={{
+                        toolbar: [
+                          [{ 'header': [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                          ['link'],
+                          ['clean']
+                        ],
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Input
+                    label="Hashtags"
+                    type="text"
+                    value={manualHashtags}
+                    onChange={(e) => setManualHashtags(e.target.value)}
+                    placeholder="#hashtag1 #hashtag2 #hashtag3"
+                  />
+                </div>
+
+                <div>
+                  <Textarea
+                    label="Call to Action"
+                    value={manualCallToAction}
+                    onChange={(e) => setManualCallToAction(e.target.value)}
+                    rows={2}
+                    placeholder="Add a compelling call to action..."
+                  />
+                </div>
+
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={() => {
+                      setContent(manualContent)
+                      setGeneratedContent({
+                        postText: manualContent,
+                        hashtags: manualHashtags.split(' ').filter(tag => tag.startsWith('#')).map(tag => tag.substring(1)),
+                        callToAction: manualCallToAction
+                      })
+                      setSuccessMessage('Manual content applied successfully!')
+                      setTimeout(() => setSuccessMessage(''), 3000)
+                    }}
+                    variant="default"
+                    disabled={!manualContent.trim()}
+                  >
+                    Apply Manual Content
+                  </Button>
+                  
+                  <Button
+                    onClick={() => {
+                      setManualContent('')
+                      setManualHashtags('')
+                      setManualCallToAction('')
+                    }}
+                    variant="outline"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </PageSection>
 
         {/* Save Actions */}
