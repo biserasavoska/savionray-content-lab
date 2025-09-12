@@ -27,11 +27,11 @@ export async function GET(
       return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
     }
 
-    // Fetch the content draft - TEMPORARILY REMOVE ORG FILTERING FOR DEBUG
+    // Fetch the content draft
     const contentDraft = await prisma.contentDraft.findUnique({
       where: {
         id: params.id,
-        // organizationId: orgContext.organizationId  // TEMPORARILY DISABLED
+        organizationId: orgContext.organizationId
       },
       include: {
         Idea: {
