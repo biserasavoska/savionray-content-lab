@@ -292,7 +292,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-3">
-                      <h3 className="text-lg font-medium text-gray-900">
+                      <h3 className="text-xl font-bold text-gray-900">
                         {item.Idea?.title || 'Untitled Idea'}
                       </h3>
                       <StatusBadge status={item.status as any} />
@@ -306,20 +306,27 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                       )}
                     </div>
                     
-                    <p className="text-gray-600 mb-4">{item.Idea?.description || 'No description available'}</p>
-                    
-                    {/* AI Generated Content (Main Post Text) */}
-                    <div className="bg-green-50 rounded-md p-4 mb-4">
-                      <h4 className="text-sm font-semibold text-green-700 mb-2">AI Generated Content:</h4>
+                    {/* Description Section */}
+                    <div className="bg-blue-50 rounded-md p-4 mb-4">
+                      <h4 className="text-sm font-semibold text-blue-700 mb-2">Description:</h4>
                       <div className="text-sm text-gray-800 whitespace-pre-wrap">
-                        {item.body}
+                        {item.Idea?.description || 'No description available'}
                       </div>
                     </div>
+                    
+                    {/* Content (Main Post Text) */}
+                    <div className="bg-green-50 rounded-md p-4 mb-4">
+                      <h4 className="text-sm font-semibold text-green-700 mb-2">Content:</h4>
+                      <div 
+                        className="text-sm text-gray-800 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: item.body }}
+                      />
+                    </div>
 
-                    {/* Additional AI Details (if present) */}
+                    {/* Additional Details (if present) */}
                     {item.metadata && Object.keys(item.metadata).length > 0 && (
                       <div className="bg-blue-50 rounded-md p-4 mb-4">
-                        <h4 className="text-sm font-semibold text-blue-700 mb-2">Additional AI Details</h4>
+                        <h4 className="text-sm font-semibold text-blue-700 mb-2">Additional Details</h4>
                         <div className="space-y-2">
                           {/* Model Info */}
                           {item.metadata.model && (

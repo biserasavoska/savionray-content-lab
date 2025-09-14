@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 import { formatDate } from '../../../../lib/utils/date-helpers'
 import type { ContentDraft, Idea, User, Media } from '../../../../types/content'
+import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 
 import MediaUpload from './MediaUpload'
 
@@ -30,6 +31,7 @@ interface Feedback {
 
 export default function ReadyContentEditPage({ params }: { params: { id: string } }) {
   const { data: session } = useSession()
+  const { organization: currentOrganization } = useCurrentOrganization()
   const router = useRouter()
   const [content, setContent] = useState<ContentDraftWithDetails | null>(null)
   const [loading, setLoading] = useState(true)
@@ -43,13 +45,23 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
       return
     }
 
-    fetchContent()
-  }, [session, params.id])
+    if (currentOrganization) {
+      fetchContent()
+    }
+  }, [session, currentOrganization, params.id])
 
   const fetchContent = async () => {
+    if (!currentOrganization) {
+      setLoading(false)
+      return
+    }
+
     try {
       const response = await fetch(`/api/drafts/${params.id}`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
       })
       if (response.ok) {
         const data = await response.json()
@@ -68,7 +80,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
   }
 
   const handleSave = async () => {
-    if (!content) return
+    if (!content || !currentOrganization) return
 
     setSaving(true)
     try {
@@ -76,6 +88,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -102,7 +115,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
   }
 
   const handleStatusUpdate = async (newStatus: string) => {
-    if (!content) return
+    if (!content || !currentOrganization) return
 
     setSaving(true)
     try {
@@ -110,6 +123,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -257,18 +271,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
 
       {/* Content Editor */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-2">AI Generated Content</h2>
-        <p className="text-gray-600 mb-4">
-          Edit the AI-generated content below. You can modify the text, formatting, and structure as needed.
-        </p>
-        
-        {/* Current Content Preview */}
-        <div className="bg-green-50 rounded-md p-4 mb-4">
-          <h4 className="text-sm font-semibold text-green-700 mb-2">Current Content Preview:</h4>
-          <div className="text-sm text-gray-800 whitespace-pre-wrap max-h-40 overflow-y-auto">
-            {content.body || 'No content available'}
-          </div>
-        </div>
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Content</h2>
         
         <RichTextEditor
           content={body}
