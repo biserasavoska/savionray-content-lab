@@ -17,6 +17,8 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
   const [media, setMedia] = useState<Media[]>([])
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<Media | null>(null)
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     fetchMedia()
@@ -108,6 +110,21 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
     }
   }
 
+  const handleViewImage = (file: Media) => {
+    if (file.contentType.startsWith('image/')) {
+      setSelectedImage(file)
+      setShowModal(true)
+    } else {
+      // For non-images, open in new tab
+      window.open(file.url, '_blank')
+    }
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setSelectedImage(null)
+  }
+
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -161,7 +178,8 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
   const renderMediaThumbnail = (file: Media) => {
     if (file.contentType.startsWith('image/')) {
       return (
-        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+             onClick={() => handleViewImage(file)}>
           <img
             src={file.url}
             alt={file.filename}
@@ -286,17 +304,15 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
                   
                   {/* Actions */}
                   <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => handleViewImage(file)}
                       className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
                     >
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                       <span>View</span>
-                    </a>
+                    </button>
                     <Button
                       variant="destructive"
                       size="sm"
@@ -311,6 +327,55 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
                 </div>
               </Card>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {showModal && selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+             onClick={closeModal}>
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] p-4 m-4"
+               onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                {selectedImage.filename}
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex items-center justify-center">
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.filename}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                }}
+              />
+              <div className="hidden text-center text-gray-500">
+                <p>Failed to load image</p>
+                <a
+                  href={selectedImage.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Open in new tab
+                </a>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-gray-600 text-center">
+              <p>Size: {formatFileSize(selectedImage.size)}</p>
+              <p>Type: {selectedImage.contentType}</p>
+            </div>
           </div>
         </div>
       )}
