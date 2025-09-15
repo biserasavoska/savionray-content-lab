@@ -82,6 +82,8 @@ export async function POST(req: NextRequest) {
     console.log('🔍 DEBUG: Creating mock upload response...')
     const fileName = `${Date.now()}-${file.name}`
     console.log('🔍 DEBUG: File name:', fileName)
+    console.log('🔍 DEBUG: Organization ID from context:', orgContext.organizationId)
+    console.log('🔍 DEBUG: Content Draft ID:', contentDraftId)
     
     // TEMPORARY: Mock upload response to test the flow
     // Use a real placeholder service for image thumbnails
@@ -110,7 +112,12 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    console.log('✅ Media saved to database:', media.id)
+    console.log('✅ Media saved to database:', {
+      id: media.id,
+      filename: media.filename,
+      contentDraftId: media.contentDraftId,
+      organizationId: media.organizationId
+    })
     return NextResponse.json(media)
   } catch (error) {
     console.error('❌ Upload error:', error)
