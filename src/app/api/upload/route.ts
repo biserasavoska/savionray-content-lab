@@ -17,10 +17,13 @@ const s3Client = new S3Client({
 })
 
 export async function POST(req: NextRequest) {
+  console.log('🔍 DEBUG: Upload API called')
+  
   // 🚨 CRITICAL: Use session validation utility to get REAL user ID
   const validation = await validateSessionUser()
   
   if (!validation.success) {
+    console.log('❌ Session validation failed:', validation.error)
     return NextResponse.json(
       { error: validation.error },
       { status: validation.status || 401 }
@@ -38,18 +41,30 @@ export async function POST(req: NextRequest) {
   })
 
   try {
+    console.log('🔍 DEBUG: Getting organization context...')
     // Get organization context for multi-tenant isolation
     const orgContext = await requireOrganizationContext(undefined, req);
+    console.log('✅ Organization context:', { organizationId: orgContext.organizationId })
 
+    console.log('🔍 DEBUG: Parsing form data...')
     const formData = await req.formData()
     const file = formData.get('file') as File
     const contentDraftId = formData.get('contentDraftId') as string
 
+    console.log('🔍 DEBUG: Form data parsed:', { 
+      hasFile: !!file, 
+      fileName: file?.name, 
+      fileSize: file?.size,
+      contentDraftId 
+    })
+
     if (!file) {
+      console.log('❌ No file provided')
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
     if (!contentDraftId) {
+      console.log('❌ No content draft ID provided')
       return NextResponse.json({ error: 'Content draft ID is required' }, { status: 400 })
     }
 
@@ -64,7 +79,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File too large' }, { status: 400 })
     }
 
+    console.log('🔍 DEBUG: Creating S3 presigned post...')
     const fileName = `${Date.now()}-${file.name}`
+    console.log('🔍 DEBUG: File name:', fileName)
+    console.log('🔍 DEBUG: AWS S3 Bucket:', process.env.AWS_S3_BUCKET)
+    
     const { url, fields } = await createPresignedPost(s3Client, {
       Bucket: process.env.AWS_S3_BUCKET!,
       Key: fileName,
@@ -77,6 +96,7 @@ export async function POST(req: NextRequest) {
       },
       Expires: 600, // URL expires in 10 minutes
     })
+    console.log('✅ S3 presigned post created successfully')
 
     // Upload to S3
     const formDataForS3 = new FormData()
@@ -111,9 +131,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(media)
   } catch (error) {
-    console.error('Upload error:', error)
+    console.error('❌ Upload error:', error)
+    console.error('❌ Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    })
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { 
+        error: 'Failed to upload file',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     )
   }
