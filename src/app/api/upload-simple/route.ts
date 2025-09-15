@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       console.error('❌ AWS S3Client creation failed:', error)
       return NextResponse.json({ 
         error: 'AWS SDK import failed', 
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error)
       }, { status: 500 })
     }
     
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       console.error('❌ S3 connection test failed:', error)
       return NextResponse.json({ 
         error: 'S3 connection failed', 
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error)
       }, { status: 500 })
     }
     
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     console.error('❌ Simple upload test failed:', error)
     return NextResponse.json({ 
       error: 'Test failed', 
-      details: error.message 
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 })
   }
 }
