@@ -85,17 +85,27 @@ export async function POST(req: NextRequest) {
     console.log('🔍 DEBUG: Organization ID from context:', orgContext.organizationId)
     console.log('🔍 DEBUG: Content Draft ID:', contentDraftId)
     
-    // TEMPORARY: Mock upload response to test the flow
-    // Use a real placeholder service for image thumbnails
-    let mockFileUrl
-    if (file.type.startsWith('image/')) {
-      // Use placeholder.com for images - this will actually show a thumbnail
-      const dimensions = '300x200' // width x height
-      mockFileUrl = `https://via.placeholder.com/${dimensions}/4F46E5/FFFFFF?text=${encodeURIComponent(file.name)}`
-    } else {
-      // For non-images, use a generic placeholder
-      mockFileUrl = `https://via.placeholder.com/300x200/6B7280/FFFFFF?text=${encodeURIComponent(file.name.split('.')[0])}`
-    }
+            // TEMPORARY: Mock upload response to test the flow
+            // Use a more reliable placeholder service for image thumbnails
+            let mockFileUrl
+            if (file.type.startsWith('image/')) {
+              // Use picsum.photos for images - more reliable than placeholder.com
+              const width = 300
+              const height = 200
+              const randomId = Math.floor(Math.random() * 1000) // Random image ID
+              mockFileUrl = `https://picsum.photos/${width}/${height}?random=${randomId}`
+            } else {
+              // For non-images, use a data URI with a simple icon
+              const fileName = file.name.split('.')[0]
+              mockFileUrl = `data:image/svg+xml;base64,${btoa(`
+                <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="300" height="200" fill="#6B7280"/>
+                  <text x="150" y="100" text-anchor="middle" fill="white" font-family="Arial" font-size="16">
+                    ${fileName}
+                  </text>
+                </svg>
+              `)}`
+            }
     
     console.log('✅ Mock upload successful')
 
