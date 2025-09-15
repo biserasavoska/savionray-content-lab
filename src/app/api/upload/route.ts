@@ -84,7 +84,16 @@ export async function POST(req: NextRequest) {
     console.log('🔍 DEBUG: File name:', fileName)
     
     // TEMPORARY: Mock upload response to test the flow
-    const mockFileUrl = `https://mock-s3-bucket.s3.amazonaws.com/${fileName}`
+    // Use a real placeholder service for image thumbnails
+    let mockFileUrl
+    if (file.type.startsWith('image/')) {
+      // Use placeholder.com for images - this will actually show a thumbnail
+      const dimensions = '300x200' // width x height
+      mockFileUrl = `https://via.placeholder.com/${dimensions}/4F46E5/FFFFFF?text=${encodeURIComponent(file.name)}`
+    } else {
+      // For non-images, use a generic placeholder
+      mockFileUrl = `https://via.placeholder.com/300x200/6B7280/FFFFFF?text=${encodeURIComponent(file.name.split('.')[0])}`
+    }
     
     console.log('✅ Mock upload successful')
 
