@@ -79,40 +79,60 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'File too large' }, { status: 400 })
     }
 
-    console.log('🔍 DEBUG: Creating mock upload response...')
-    const fileName = `${Date.now()}-${file.name}`
-    console.log('🔍 DEBUG: File name:', fileName)
-    console.log('🔍 DEBUG: Organization ID from context:', orgContext.organizationId)
-    console.log('🔍 DEBUG: Content Draft ID:', contentDraftId)
-    
-            // TEMPORARY: Mock upload response to test the flow
-            // Use a more reliable placeholder service for image thumbnails
-            let mockFileUrl
-            if (file.type.startsWith('image/')) {
-              // Use picsum.photos for images - more reliable than placeholder.com
-              const width = 300
-              const height = 200
-              const randomId = Math.floor(Math.random() * 1000) // Random image ID
-              mockFileUrl = `https://picsum.photos/${width}/${height}?random=${randomId}`
-            } else {
-              // For non-images, use a data URI with a simple icon
-              const fileName = file.name.split('.')[0]
-              mockFileUrl = `data:image/svg+xml;base64,${btoa(`
-                <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="300" height="200" fill="#6B7280"/>
-                  <text x="150" y="100" text-anchor="middle" fill="white" font-family="Arial" font-size="16">
-                    ${fileName}
-                  </text>
-                </svg>
-              `)}`
+            console.log('🔍 DEBUG: Creating S3 upload...')
+            const fileName = `${Date.now()}-${file.name}`
+            console.log('🔍 DEBUG: File name:', fileName)
+            console.log('🔍 DEBUG: Organization ID from context:', orgContext.organizationId)
+            console.log('🔍 DEBUG: Content Draft ID:', contentDraftId)
+            
+            // Create S3 presigned post for file upload
+            const { S3Client, CreatePresignedPostCommand } = await import('@aws-sdk/s3-presigned-post')
+            
+            const s3Client = new S3Client({
+              region: process.env.AWS_REGION!,
+              credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+              },
+            })
+
+            const command = new CreatePresignedPostCommand({
+              Bucket: process.env.AWS_S3_BUCKET!,
+              Key: `uploads/${orgContext.organizationId}/${contentDraftId}/${fileName}`,
+              Conditions: [
+                ['content-length-range', 0, 5 * 1024 * 1024], // 5MB limit
+              ],
+              Fields: {
+                'Content-Type': file.type,
+              },
+            })
+
+            const { url, fields } = await s3Client.send(command)
+            console.log('✅ S3 presigned post created')
+
+            // Upload file to S3
+            const formData = new FormData()
+            Object.entries(fields).forEach(([key, value]) => {
+              formData.append(key, value as string)
+            })
+            formData.append('file', file)
+
+            const uploadResponse = await fetch(url, {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (!uploadResponse.ok) {
+              throw new Error(`S3 upload failed: ${uploadResponse.statusText}`)
             }
-    
-    console.log('✅ Mock upload successful')
+
+            const fileUrl = `${url}/${fields.key}`
+            console.log('✅ File uploaded to S3:', fileUrl)
 
     // Save media information to database - ✅ Use REAL user ID
     const media = await prisma.media.create({
       data: {
-        url: mockFileUrl,
+        url: fileUrl,
         filename: fileName,
         contentType: file.type,
         size: file.size,
