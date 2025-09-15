@@ -6,26 +6,39 @@ import type { Media } from '@/types/content'
 import { Card } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
+import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 
 interface MediaUploadProps {
   contentId: string
 }
 
 export default function MediaUpload({ contentId }: MediaUploadProps) {
+  const { organization: currentOrganization } = useCurrentOrganization()
   const [media, setMedia] = useState<Media[]>([])
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
 
   useEffect(() => {
     fetchMedia()
-  }, [contentId])
+  }, [contentId, currentOrganization])
 
   const fetchMedia = async () => {
+    if (!currentOrganization) return
+    
     try {
-      // Since we're working with ContentDrafts, we need to fetch media from the Media table
-      // We'll need to create a media API endpoint or fetch through the draft data
-      // For now, let's skip this and focus on the main issue
-      console.log('Media fetching not yet implemented for drafts')
+      const response = await fetch(`/api/media?contentDraftId=${contentId}`, {
+        credentials: 'include',
+        headers: {
+          'x-selected-organization': currentOrganization.id,
+        },
+      })
+      
+      if (response.ok) {
+        const mediaData = await response.json()
+        setMedia(mediaData)
+      } else {
+        console.error('Failed to fetch media')
+      }
     } catch (error) {
       console.error('Error fetching media:', error)
     }
@@ -62,11 +75,24 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
   }
 
   const handleDeleteMedia = async (mediaId: string) => {
+    if (!currentOrganization) return
+    
     try {
-      // Since we don't have a media API endpoint, we'll need to create one
-      // For now, let's just remove from local state
-      console.log('Media deletion not yet implemented for drafts')
-      setMedia(prev => prev.filter(m => m.id !== mediaId))
+      const response = await fetch('/api/media', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id,
+        },
+        body: JSON.stringify({ mediaId }),
+      })
+
+      if (response.ok) {
+        // Remove from local state
+        setMedia(prev => prev.filter(m => m.id !== mediaId))
+      } else {
+        throw new Error('Failed to delete media')
+      }
     } catch (error) {
       console.error('Error deleting media:', error)
       alert('Error deleting file. Please try again.')
@@ -120,6 +146,34 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
       <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
       </svg>
+    )
+  }
+
+  const renderMediaThumbnail = (file: Media) => {
+    if (file.contentType.startsWith('image/')) {
+      return (
+        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+          <img
+            src={file.url}
+            alt={file.filename}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to icon if image fails to load
+              e.currentTarget.style.display = 'none'
+              e.currentTarget.nextElementSibling?.classList.remove('hidden')
+            }}
+          />
+          <div className="hidden w-full h-full flex items-center justify-center">
+            {getFileTypeIcon(file.contentType)}
+          </div>
+        </div>
+      )
+    }
+    
+    return (
+      <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+        {getFileTypeIcon(file.contentType)}
+      </div>
     )
   }
 
@@ -196,34 +250,55 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
       {media.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">Attached Files</h3>
+            <h3 className="text-lg font-medium text-gray-900">Attached Media</h3>
             <Badge variant="secondary">{media.length} file{media.length !== 1 ? 's' : ''}</Badge>
           </div>
-          <div className="space-y-3">
+          
+          {/* Grid Layout for Media Thumbnails */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {media.map((file) => (
-              <Card key={file.id} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {getFileTypeIcon(file.contentType)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{file.filename}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
-                        <Badge variant="default" size="sm">
-                          {file.contentType.split('/')[1]?.toUpperCase() || 'FILE'}
-                        </Badge>
-                      </div>
+              <Card key={file.id} className="p-4 hover:shadow-md transition-shadow">
+                <div className="space-y-3">
+                  {/* Thumbnail */}
+                  {renderMediaThumbnail(file)}
+                  
+                  {/* File Info */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-900 truncate" title={file.filename}>
+                      {file.filename}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                      <Badge variant="default" size="sm">
+                        {file.contentType.split('/')[1]?.toUpperCase() || 'FILE'}
+                      </Badge>
                     </div>
                   </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteMedia(file.id)}
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </Button>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                    >
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      <span>View</span>
+                    </a>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteMedia(file.id)}
+                      className="h-6 px-2"
+                    >
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
