@@ -10,6 +10,7 @@ import { formatDate } from '../../lib/utils/date-helpers'
 
 import { DRAFT_STATUS, CONTENT_TYPE } from '@/lib/utils/enum-utils'
 import FeedbackList from '@/components/feedback/FeedbackList'
+import FeedbackForm from '@/components/feedback/FeedbackForm'
 import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
 import { PageContent, PageSection } from '@/components/ui/layout/PageLayout'
@@ -43,6 +44,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [updatedItems, setUpdatedItems] = useState<Set<string>>(new Set())
+  const [unifiedFeedback, setUnifiedFeedback] = useState<{ [key: string]: any[] }>({})
 
   // Fetch ready content data
   useEffect(() => {
@@ -159,16 +161,44 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
     }
   }
 
-  const toggleFeedbackForm = (itemId: string) => {
+  const toggleFeedbackForm = async (itemId: string) => {
+    const isOpening = !showFeedbackForm[itemId]
+    
     setShowFeedbackForm(prev => ({
       ...prev,
       [itemId]: !prev[itemId]
     }))
+
+    // Load unified feedback when opening the form
+    if (isOpening && !unifiedFeedback[itemId]) {
+      const feedback = await fetchUnifiedFeedback(itemId)
+      setUnifiedFeedback(prev => ({
+        ...prev,
+        [itemId]: feedback
+      }))
+    }
   }
 
-  const handleFeedbackSuccess = () => {
-    // Refresh the page to show updated feedback
-    window.location.reload()
+  const handleFeedbackSuccess = async (draftId: string) => {
+    // Fetch updated unified feedback for this draft
+    const feedback = await fetchUnifiedFeedback(draftId)
+    setUnifiedFeedback(prev => ({
+      ...prev,
+      [draftId]: feedback
+    }))
+  }
+
+  const fetchUnifiedFeedback = async (draftId: string) => {
+    try {
+      const response = await fetch(`/api/feedback/unified?draftId=${draftId}`)
+      if (response.ok) {
+        const data = await response.json()
+        return data
+      }
+    } catch (error) {
+      console.error('Error fetching unified feedback:', error)
+    }
+    return []
   }
 
   const truncateText = (text: string, maxLength: number = 150) => {
@@ -421,7 +451,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                         <span className="font-medium">Updated:</span> {formatDate(item.updatedAt)}
                       </div>
                       <div>
-                        <span className="font-medium">Feedback:</span> {item.Feedback?.length || 0} comments
+                        <span className="font-medium">Feedback:</span> {unifiedFeedback[item.id]?.length || item.Feedback?.length || 0} comments
                       </div>
                     </div>
 
@@ -510,40 +540,109 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                   </div>
                 </div>
 
-                {/* Feedback Section for Clients */}
-                {isClientUser && (
-                  <div className="mt-6 border-t pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-lg font-medium text-gray-900">Feedback</h4>
-                      <Button
-                        onClick={() => toggleFeedbackForm(item.id)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        {showFeedbackForm[item.id] ? 'Hide Feedback Form' : 'Give Feedback'}
-                      </Button>
-                    </div>
-
-                    {/* Feedback Form */}
-                    {showFeedbackForm[item.id] && (
-                      <div className="mb-6">
-                        <div className="bg-gray-50 p-4 rounded-md">
-                          <p className="text-sm text-gray-600 mb-2">
-                            Feedback form temporarily unavailable. Please use the main feedback system.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Feedback History */}
-                    {item.Feedback && item.Feedback.length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">Previous Feedback ({item.Feedback.length})</h5>
-                        <FeedbackList feedbacks={item.Feedback} />
-                      </div>
-                    )}
+                {/* Feedback Section */}
+                <div className="mt-6 border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-medium text-gray-900">Feedback</h4>
+                    <Button
+                      onClick={() => toggleFeedbackForm(item.id)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {showFeedbackForm[item.id] ? 'Hide Feedback Form' : 'Give Feedback'}
+                    </Button>
                   </div>
-                )}
+
+                  {/* Feedback Form */}
+                  {showFeedbackForm[item.id] && (
+                    <div className="mb-6">
+                      <div className="bg-gray-50 p-4 rounded-md">
+                          <FeedbackForm
+                            draftId={item.id}
+                            onSuccess={() => handleFeedbackSuccess(item.id)}
+                          />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Feedback History */}
+                  {(item.Feedback && item.Feedback.length > 0) || (unifiedFeedback[item.id] && unifiedFeedback[item.id].length > 0) ? (
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">
+                        All Feedback ({unifiedFeedback[item.id]?.length || item.Feedback?.length || 0})
+                      </h5>
+                      {unifiedFeedback[item.id] && unifiedFeedback[item.id].length > 0 ? (
+                        <div className="space-y-4">
+                          {unifiedFeedback[item.id].map((feedback, index) => (
+                            <div key={feedback.id || index} className="bg-white border rounded-lg p-4">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm font-medium text-gray-900">
+                                    {feedback.User?.name || feedback.User?.email || 'Unknown User'}
+                                  </span>
+                                  <span className={`px-2 py-1 text-xs rounded-full ${
+                                    feedback.source === 'idea' 
+                                      ? 'bg-blue-100 text-blue-800' 
+                                      : 'bg-green-100 text-green-800'
+                                  }`}>
+                                    {feedback.source === 'idea' ? 'Idea Stage' : 'Draft Stage'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  {feedback.rating > 0 && (
+                                    <div className="flex space-x-1">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <span
+                                          key={star}
+                                          className={`text-sm ${
+                                            star <= feedback.rating
+                                              ? 'text-yellow-400'
+                                              : 'text-gray-300'
+                                          }`}
+                                        >
+                                          ★
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(feedback.createdAt).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-4 mb-2">
+                                <span className="text-xs text-gray-600 capitalize">
+                                  {feedback.category}
+                                </span>
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  feedback.priority === 'high' 
+                                    ? 'bg-red-100 text-red-800'
+                                    : feedback.priority === 'medium'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-green-100 text-green-800'
+                                }`}>
+                                  {feedback.priority} priority
+                                </span>
+                                {feedback.actionable && (
+                                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                                    Action Required
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-700">{feedback.comment}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <FeedbackList feedbacks={item.Feedback} />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-gray-500">No feedback yet.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
