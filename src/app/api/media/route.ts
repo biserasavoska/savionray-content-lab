@@ -4,9 +4,12 @@ import { validateSessionUser } from '@/lib/utils/session-validation'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
 
 export async function GET(req: NextRequest) {
+  console.log('🔍 DEBUG: Media API called')
+  
   const validation = await validateSessionUser()
 
   if (!validation.success) {
+    console.log('❌ Session validation failed:', validation.error)
     return NextResponse.json(
       { error: validation.error },
       { status: validation.status || 401 }
@@ -14,9 +17,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    console.log('🔍 DEBUG: Getting organization context...')
     const orgContext = await requireOrganizationContext(undefined, req)
+    console.log('✅ Organization context:', { organizationId: orgContext.organizationId })
+    
     const url = new URL(req.url)
     const contentDraftId = url.searchParams.get('contentDraftId')
+    console.log('🔍 DEBUG: Content draft ID:', contentDraftId)
 
     if (!contentDraftId) {
       return NextResponse.json(
@@ -26,6 +33,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch media for the specific content draft
+    console.log('🔍 DEBUG: Fetching media from database...')
     const media = await prisma.media.findMany({
       where: {
         contentDraftId,
@@ -36,9 +44,10 @@ export async function GET(req: NextRequest) {
       },
     })
 
+    console.log('✅ Media found:', media.length, 'items')
     return NextResponse.json(media)
   } catch (error) {
-    console.error('Failed to fetch media:', error)
+    console.error('❌ Failed to fetch media:', error)
     return NextResponse.json(
       { error: 'Failed to fetch media' },
       { status: 500 }

@@ -23,7 +23,12 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
   }, [contentId, currentOrganization])
 
   const fetchMedia = async () => {
-    if (!currentOrganization) return
+    if (!currentOrganization) {
+      console.log('❌ No organization context available')
+      return
+    }
+    
+    console.log('🔍 DEBUG: Fetching media for content:', contentId, 'org:', currentOrganization.id)
     
     try {
       const response = await fetch(`/api/media?contentDraftId=${contentId}`, {
@@ -33,14 +38,18 @@ export default function MediaUpload({ contentId }: MediaUploadProps) {
         },
       })
       
+      console.log('🔍 DEBUG: Media API response status:', response.status)
+      
       if (response.ok) {
         const mediaData = await response.json()
+        console.log('✅ Media data received:', mediaData)
         setMedia(mediaData)
       } else {
-        console.error('Failed to fetch media')
+        const errorData = await response.json()
+        console.error('❌ Failed to fetch media:', errorData)
       }
     } catch (error) {
-      console.error('Error fetching media:', error)
+      console.error('❌ Error fetching media:', error)
     }
   }
 
