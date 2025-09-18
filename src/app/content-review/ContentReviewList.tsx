@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { SparklesIcon, LightBulbIcon, ChartBarIcon, CheckCircleIcon, XCircleIcon, UserIcon, DocumentTextIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { LightBulbIcon, ChartBarIcon, CheckCircleIcon, XCircleIcon, UserIcon, DocumentTextIcon, ClockIcon } from '@heroicons/react/24/outline'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 // Feedback type defined locally to avoid import issues
@@ -189,19 +189,6 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
 
   return (
     <div className="space-y-6">
-      {/* AI Review Enhancement Banner */}
-      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <SparklesIcon className="h-6 w-6 text-green-600" />
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">AI-Powered Content Creation</h3>
-              <p className="text-sm text-gray-600">Get AI insights, performance predictions, and optimization suggestions</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {drafts.map((draft) => (
         <div key={draft.id} className="bg-white shadow-lg rounded-lg p-6 border-l-4 border-l-blue-500 hover:shadow-xl transition-all duration-200">
           <div className="flex items-start justify-between">
