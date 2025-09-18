@@ -86,7 +86,8 @@ export async function POST(req: NextRequest) {
             console.log('🔍 DEBUG: Content Draft ID:', contentDraftId)
             
             // Create S3 presigned post for file upload
-            const { S3Client, CreatePresignedPostCommand } = await import('@aws-sdk/s3-presigned-post')
+            const { S3Client } = await import('@aws-sdk/client-s3')
+            const { createPresignedPost } = await import('@aws-sdk/s3-presigned-post')
             
             const s3Client = new S3Client({
               region: process.env.AWS_REGION!,
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
               },
             })
 
-            const command = new CreatePresignedPostCommand({
+            const { url, fields } = await createPresignedPost(s3Client, {
               Bucket: process.env.AWS_S3_BUCKET!,
               Key: `uploads/${orgContext.organizationId}/${contentDraftId}/${fileName}`,
               Conditions: [
@@ -106,20 +107,18 @@ export async function POST(req: NextRequest) {
                 'Content-Type': file.type,
               },
             })
-
-            const { url, fields } = await s3Client.send(command)
             console.log('✅ S3 presigned post created')
 
             // Upload file to S3
-            const formData = new FormData()
+            const uploadFormData = new FormData()
             Object.entries(fields).forEach(([key, value]) => {
-              formData.append(key, value as string)
+              uploadFormData.append(key, value as string)
             })
-            formData.append('file', file)
+            uploadFormData.append('file', file)
 
             const uploadResponse = await fetch(url, {
               method: 'POST',
-              body: formData,
+              body: uploadFormData,
             })
 
             if (!uploadResponse.ok) {

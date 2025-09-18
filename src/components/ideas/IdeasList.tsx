@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Badge from '@/components/ui/common/Badge'
 import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
-import { PlusIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
@@ -136,7 +136,7 @@ export default function IdeasList() {
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={fetchIdeas}>Try Again</Button>
+        <Button onClick={() => fetchIdeas()}>Try Again</Button>
       </div>
     )
   }
@@ -252,28 +252,27 @@ export default function IdeasList() {
             </Card>
           ))}
         </div>
-        
-        {/* Load More Button */}
-        {pagination.hasMore && (
-          <div className="mt-8 text-center">
-            <Button 
-              onClick={loadMore} 
-              disabled={loadingMore}
-              className="px-8 py-3"
-            >
-              {loadingMore ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Loading...
-                </>
-              ) : (
-                `Load More (${pagination.total - ideas.length} remaining)`
-              )}
-            </Button>
-          </div>
-        )}
+      )}
+      
+      {/* Load More Button */}
+      {pagination.hasMore && (
+        <div className="mt-8 text-center">
+          <Button 
+            onClick={loadMore} 
+            disabled={loadingMore}
+            className="px-8 py-3"
+          >
+            {loadingMore ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Loading...
+              </>
+            ) : (
+              `Load More (${pagination.total - ideas.length} remaining)`
+            )}
+          </Button>
+        </div>
       )}
     </div>
   )
 }
-
