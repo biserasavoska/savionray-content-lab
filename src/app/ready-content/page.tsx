@@ -26,10 +26,7 @@ export default async function ReadyContentPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Drafts</h1>
-        <p className="text-gray-600">
-          Content drafts created with AI for review and approval.
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900">Drafts</h1>
       </div>
       
       <ReadyContentList 
