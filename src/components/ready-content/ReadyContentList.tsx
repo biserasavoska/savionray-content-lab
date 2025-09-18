@@ -40,6 +40,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<ContentType | 'ALL'>('ALL')
+  const [selectedStatus, setSelectedStatus] = useState<string>('AWAITING_FEEDBACK')
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -85,6 +86,9 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
     if (selectedType !== 'ALL' && item.contentType !== selectedType) {
       return false
     }
+    if (selectedStatus !== 'ALL' && item.status !== selectedStatus) {
+      return false
+    }
     return true
   })
 
@@ -102,6 +106,25 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         return 'Email Campaign'
       default:
         return contentType.replace(/_/g, ' ')
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'DRAFT':
+        return 'Draft'
+      case 'AWAITING_FEEDBACK':
+        return 'Awaiting Feedback'
+      case 'AWAITING_REVISION':
+        return 'Awaiting Revision'
+      case 'APPROVED':
+        return 'Approved'
+      case 'REJECTED':
+        return 'Rejected'
+      case 'PUBLISHED':
+        return 'Published'
+      default:
+        return status.replace(/_/g, ' ')
     }
   }
 
@@ -297,18 +320,43 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value as ContentType | 'ALL')}
-                className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-              >
-                <option value="ALL">All Types</option>
-                {CONTENT_TYPE_OPTIONS.map(type => (
-                  <option key={type} value={type}>
-                    {type.replace(/_/g, ' ')}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label htmlFor="content-type-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                  Content Type
+                </label>
+                <select
+                  id="content-type-filter"
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value as ContentType | 'ALL')}
+                  className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                >
+                  <option value="ALL">All Types</option>
+                  {CONTENT_TYPE_OPTIONS.map(type => (
+                    <option key={type} value={type}>
+                      {type.replace(/_/g, ' ')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  id="status-filter"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="AWAITING_FEEDBACK">Awaiting Feedback</option>
+                  <option value="AWAITING_REVISION">Awaiting Revision</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="REJECTED">Rejected</option>
+                  <option value="PUBLISHED">Published</option>
+                </select>
+              </div>
             </div>
             <div className="text-sm text-gray-500">
               {filteredContent.length} of {content.length} items
