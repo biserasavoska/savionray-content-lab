@@ -72,8 +72,8 @@ export default function IdeasList() {
       
       if (append) {
         setIdeas(prev => {
-          const existingIds = new Set(prev.map(idea => idea.id))
-          const newIdeas = (data.ideas || []).filter(idea => !existingIds.has(idea.id))
+          const existingIds = new Set(prev.map((idea: Idea) => idea.id))
+          const newIdeas = (data.ideas || []).filter((idea: Idea) => !existingIds.has(idea.id))
           return [...prev, ...newIdeas]
         })
       } else {
