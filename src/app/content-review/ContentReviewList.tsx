@@ -260,7 +260,7 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
                  variant="outline"
                  size="sm"
                >
-                 <SparklesIcon className="h-4 w-4" />
+                 <LightBulbIcon className="h-4 w-4" />
                  <span>{showAIReview[draft.id] ? 'Hide AI Review' : 'AI Review'}</span>
                </Button>
 
