@@ -69,7 +69,11 @@ export default function IdeasList() {
       const data = await response.json()
       
       if (append) {
-        setIdeas(prev => [...prev, ...(data.ideas || [])])
+        setIdeas(prev => {
+          const existingIds = new Set(prev.map(idea => idea.id))
+          const newIdeas = (data.ideas || []).filter(idea => !existingIds.has(idea.id))
+          return [...prev, ...newIdeas]
+        })
       } else {
         setIdeas(data.ideas || [])
       }
@@ -89,11 +93,32 @@ export default function IdeasList() {
     }
   }
 
-  const loadMore = () => {
+  const loadMore = async () => {
     if (pagination.hasMore && !loadingMore) {
-      // Load all remaining ideas at once
-      const remainingCount = pagination.total - ideas.length
-      fetchIdeas(2, true, remainingCount) // Start from page 2, load all remaining
+      setLoadingMore(true)
+      try {
+        // Load all remaining ideas at once
+        const response = await fetch(`/api/ideas?page=1&limit=${pagination.total}`, {
+          headers: {
+            'x-selected-organization': currentOrganization!.id
+          }
+        })
+        if (!response.ok) {
+          throw new Error('Failed to fetch all ideas')
+        }
+        const data = await response.json()
+        
+        // Replace the current ideas with all ideas
+        setIdeas(data.ideas || [])
+        setPagination(prev => ({
+          ...prev,
+          hasMore: false // Hide the button after loading all
+        }))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch all ideas')
+      } finally {
+        setLoadingMore(false)
+      }
     }
   }
 
