@@ -27,9 +27,7 @@ export async function GET(request: NextRequest) {
     
     const where: any = {
       organizationId: context.organizationId,
-      Idea: {
-        status: IDEA_STATUS.APPROVED
-      },
+      // Remove Idea status restriction to show all drafts
     };
     
     // Filter by status if provided

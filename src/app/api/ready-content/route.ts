@@ -27,11 +27,19 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const skip = (page - 1) * limit
 
-    // Fetch content ready for review (awaiting feedback)
+    // Fetch content ready for review (all relevant statuses)
     const readyContent = await prisma.contentDraft.findMany({
       where: {
         organizationId: context.organizationId,
-        status: DRAFT_STATUS.AWAITING_FEEDBACK
+        status: {
+          in: [
+            DRAFT_STATUS.DRAFT,
+            DRAFT_STATUS.AWAITING_FEEDBACK,
+            DRAFT_STATUS.AWAITING_REVISION,
+            DRAFT_STATUS.APPROVED,
+            DRAFT_STATUS.REJECTED
+          ]
+        }
       },
       include: {
         Idea: {
@@ -91,7 +99,15 @@ export async function GET(request: NextRequest) {
     const totalCount = await prisma.contentDraft.count({
       where: {
         organizationId: context.organizationId,
-        status: DRAFT_STATUS.AWAITING_FEEDBACK
+        status: {
+          in: [
+            DRAFT_STATUS.DRAFT,
+            DRAFT_STATUS.AWAITING_FEEDBACK,
+            DRAFT_STATUS.AWAITING_REVISION,
+            DRAFT_STATUS.APPROVED,
+            DRAFT_STATUS.REJECTED
+          ]
+        }
       }
     })
 

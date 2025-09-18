@@ -11,6 +11,8 @@ import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
 import MediaUpload from './MediaUpload'
 
 import RichTextEditor from '@/components/editor/RichTextEditor'
+import Notification from '@/components/ui/Notification'
+import RevisionRequestForm from '@/components/forms/RevisionRequestForm'
 
 type ContentDraftWithDetails = ContentDraft & {
   idea: Idea & {
@@ -38,6 +40,11 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
   const [saving, setSaving] = useState(false)
   const [body, setBody] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [showRevisionForm, setShowRevisionForm] = useState(false)
+  const [notification, setNotification] = useState<{
+    type: 'success' | 'error' | 'info' | 'warning'
+    message: string
+  } | null>(null)
 
   useEffect(() => {
     if (!session) {
@@ -114,13 +121,13 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
     }
   }
 
-  const handleStatusUpdate = async (newStatus: string) => {
+  const handleStatusUpdate = async (newStatus: string, revisionNotes?: string) => {
     if (!content || !currentOrganization) return
 
     setSaving(true)
     try {
-      const response = await fetch(`/api/drafts/${params.id}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/drafts/${params.id}/status`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'x-selected-organization': currentOrganization.id
@@ -128,23 +135,48 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         credentials: 'include',
         body: JSON.stringify({
           status: newStatus,
+          revisionNotes: revisionNotes,
+          reason: newStatus === 'AWAITING_REVISION' ? 'Revision requested' : `Status changed to ${newStatus}`
         }),
       })
 
       if (response.ok) {
         // Update local state with proper typing
         setContent(prev => prev ? { ...prev, status: newStatus as any } : null)
-        alert(`Status updated to ${newStatus}!`)
-        router.push('/ready-content')
+        
+        // Show success notification
+        setNotification({
+          type: 'success',
+          message: `Status updated to ${newStatus}!`
+        })
+        
+        // Close revision form if open
+        setShowRevisionForm(false)
+        
+        // Delay redirect to show notification
+        setTimeout(() => {
+          router.push('/ready-content')
+        }, 2000)
       } else {
-        alert('Failed to update status. Please try again.')
+        const errorData = await response.json()
+        setNotification({
+          type: 'error',
+          message: errorData.error || 'Failed to update status. Please try again.'
+        })
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Error updating status. Please try again.')
+      setNotification({
+        type: 'error',
+        message: 'Error updating status. Please try again.'
+      })
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleRevisionRequest = (revisionNotes: string) => {
+    handleStatusUpdate('AWAITING_REVISION', revisionNotes)
   }
 
   const getStatusColor = (status: string) => {
@@ -203,7 +235,25 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      {/* Notification */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+      
+      {/* Revision Request Form */}
+      <RevisionRequestForm
+        isOpen={showRevisionForm}
+        onClose={() => setShowRevisionForm(false)}
+        onSubmit={handleRevisionRequest}
+        isSubmitting={saving}
+      />
+      
+      <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
@@ -316,11 +366,11 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
                 {saving ? 'Updating...' : 'Approve'}
               </button>
               <button
-                onClick={() => handleStatusUpdate('AWAITING_REVISION')}
+                onClick={() => setShowRevisionForm(true)}
                 disabled={saving}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? 'Updating...' : 'Request Revision'}
+                Request Revision
               </button>
             </>
           )}
@@ -337,5 +387,6 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         </div>
       </div>
     </div>
+    </>
   )
 } 
