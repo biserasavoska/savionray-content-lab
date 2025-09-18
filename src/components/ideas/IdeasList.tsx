@@ -32,6 +32,14 @@ export default function IdeasList() {
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasMore: false
+  })
+  const [loadingMore, setLoadingMore] = useState(false)
 
   useEffect(() => {
     if (currentOrganization) {
@@ -39,12 +47,17 @@ export default function IdeasList() {
     }
   }, [currentOrganization])
 
-  const fetchIdeas = async () => {
+  const fetchIdeas = async (page = 1, append = false) => {
     if (!currentOrganization) return
     
     try {
-      setLoading(true)
-      const response = await fetch('/api/ideas', {
+      if (append) {
+        setLoadingMore(true)
+      } else {
+        setLoading(true)
+      }
+      
+      const response = await fetch(`/api/ideas?page=${page}&limit=${pagination.limit}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
         }
@@ -53,11 +66,31 @@ export default function IdeasList() {
         throw new Error('Failed to fetch ideas')
       }
       const data = await response.json()
-      setIdeas(data.ideas || [])
+      
+      if (append) {
+        setIdeas(prev => [...prev, ...(data.ideas || [])])
+      } else {
+        setIdeas(data.ideas || [])
+      }
+      
+      setPagination({
+        page: data.pagination.page,
+        limit: data.pagination.limit,
+        total: data.pagination.total,
+        totalPages: data.pagination.totalPages,
+        hasMore: data.pagination.page < data.pagination.totalPages
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch ideas')
     } finally {
       setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  const loadMore = () => {
+    if (pagination.hasMore && !loadingMore) {
+      fetchIdeas(pagination.page + 1, true)
     }
   }
 
@@ -113,7 +146,12 @@ export default function IdeasList() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            {ideas.length} {ideas.length === 1 ? 'Idea' : 'Ideas'}
+            {pagination.total} {pagination.total === 1 ? 'Idea' : 'Ideas'}
+            {pagination.total > ideas.length && (
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                (showing {ideas.length})
+              </span>
+            )}
           </h2>
           <Badge variant="secondary">{ideas.filter(i => i.status === 'PENDING').length} Pending</Badge>
           <Badge variant="destructive">{ideas.filter(i => i.status === 'REJECTED').length} Rejected</Badge>
@@ -214,6 +252,26 @@ export default function IdeasList() {
             </Card>
           ))}
         </div>
+        
+        {/* Load More Button */}
+        {pagination.hasMore && (
+          <div className="mt-8 text-center">
+            <Button 
+              onClick={loadMore} 
+              disabled={loadingMore}
+              className="px-8 py-3"
+            >
+              {loadingMore ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Loading...
+                </>
+              ) : (
+                `Load More (${pagination.total - ideas.length} remaining)`
+              )}
+            </Button>
+          </div>
+        )}
       )}
     </div>
   )
