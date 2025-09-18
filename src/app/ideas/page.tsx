@@ -16,10 +16,6 @@ export default async function IdeasPage() {
 
   return (
     <PageLayout size="full">
-      <PageHeader
-        title="Content Ideas"
-      />
-      
       <PageContent>
         <IdeasList />
       </PageContent>

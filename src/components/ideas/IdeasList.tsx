@@ -173,44 +173,52 @@ export default function IdeasList() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {pagination.total} {pagination.total === 1 ? 'Idea' : 'Ideas'}
-            {pagination.total > ideas.length && (
-              <span className="text-sm font-normal text-gray-500 ml-2">
-                (showing {ideas.length})
-              </span>
-            )}
-          </h2>
-          <Badge variant="secondary">{ideas.filter(i => i.status === 'PENDING').length} Pending</Badge>
-          <Badge variant="destructive">{ideas.filter(i => i.status === 'REJECTED').length} Rejected</Badge>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Ideas</h1>
         
-        <div className="flex items-center space-x-4">
-          <div>
-            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              id="status-filter"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div>
+              <label htmlFor="content-type-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                Content Type
+              </label>
+              <select
+                id="content-type-filter"
+                className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                disabled
+              >
+                <option value="ALL">All Types</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                id="status-filter"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
           </div>
           
-          <Link href="/ideas/new">
-            <Button className="flex items-center space-x-2">
-              <PlusIcon className="h-4 w-4" />
-              <span>New Idea</span>
-            </Button>
-          </Link>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-500">
+              {ideas.length} of {pagination.total} items
+            </span>
+            <Link href="/ideas/new">
+              <Button className="flex items-center space-x-2">
+                <PlusIcon className="h-4 w-4" />
+                <span>New Idea</span>
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
