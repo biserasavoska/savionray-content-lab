@@ -34,7 +34,7 @@ export default function IdeasList() {
   const [error, setError] = useState('')
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
+    limit: 9,
     total: 0,
     totalPages: 0,
     hasMore: false
@@ -47,7 +47,7 @@ export default function IdeasList() {
     }
   }, [currentOrganization])
 
-  const fetchIdeas = async (page = 1, append = false) => {
+  const fetchIdeas = async (page = 1, append = false, customLimit?: number) => {
     if (!currentOrganization) return
     
     try {
@@ -57,7 +57,8 @@ export default function IdeasList() {
         setLoading(true)
       }
       
-      const response = await fetch(`/api/ideas?page=${page}&limit=${pagination.limit}`, {
+      const limit = customLimit || pagination.limit
+      const response = await fetch(`/api/ideas?page=${page}&limit=${limit}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
         }
@@ -78,7 +79,7 @@ export default function IdeasList() {
         limit: data.pagination.limit,
         total: data.pagination.total,
         totalPages: data.pagination.totalPages,
-        hasMore: data.pagination.page < data.pagination.totalPages
+        hasMore: append ? false : data.pagination.page < data.pagination.totalPages // Hide "Load More" after loading all
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch ideas')
@@ -90,7 +91,9 @@ export default function IdeasList() {
 
   const loadMore = () => {
     if (pagination.hasMore && !loadingMore) {
-      fetchIdeas(pagination.page + 1, true)
+      // Load all remaining ideas at once
+      const remainingCount = pagination.total - ideas.length
+      fetchIdeas(2, true, remainingCount) // Start from page 2, load all remaining
     }
   }
 
@@ -254,8 +257,8 @@ export default function IdeasList() {
         </div>
       )}
       
-      {/* Load More Button */}
-      {pagination.hasMore && (
+        {/* Load More Button */}
+        {pagination.hasMore && ideas.length < pagination.total && (
         <div className="mt-8 text-center">
           <Button 
             onClick={loadMore} 
@@ -267,9 +270,9 @@ export default function IdeasList() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 Loading...
               </>
-            ) : (
-              `Load More (${pagination.total - ideas.length} remaining)`
-            )}
+              ) : (
+                `Load All Remaining (${pagination.total - ideas.length} ideas)`
+              )}
           </Button>
         </div>
       )}
