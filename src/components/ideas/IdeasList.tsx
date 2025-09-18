@@ -40,12 +40,13 @@ export default function IdeasList() {
     hasMore: false
   })
   const [loadingMore, setLoadingMore] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState<string>('PENDING')
 
   useEffect(() => {
     if (currentOrganization) {
       fetchIdeas()
     }
-  }, [currentOrganization])
+  }, [currentOrganization, selectedStatus])
 
   const fetchIdeas = async (page = 1, append = false, customLimit?: number) => {
     if (!currentOrganization) return
@@ -58,7 +59,8 @@ export default function IdeasList() {
       }
       
       const limit = customLimit || pagination.limit
-      const response = await fetch(`/api/ideas?page=${page}&limit=${limit}`, {
+      const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : ''
+      const response = await fetch(`/api/ideas?page=${page}&limit=${limit}${statusParam}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
         }
@@ -185,12 +187,31 @@ export default function IdeasList() {
           <Badge variant="destructive">{ideas.filter(i => i.status === 'REJECTED').length} Rejected</Badge>
         </div>
         
-        <Link href="/ideas/new">
-          <Button className="flex items-center space-x-2">
-            <PlusIcon className="h-4 w-4" />
-            <span>New Idea</span>
-          </Button>
-        </Link>
+        <div className="flex items-center space-x-4">
+          <div>
+            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              id="status-filter"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+          
+          <Link href="/ideas/new">
+            <Button className="flex items-center space-x-2">
+              <PlusIcon className="h-4 w-4" />
+              <span>New Idea</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {ideas.length === 0 ? (

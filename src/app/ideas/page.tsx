@@ -18,7 +18,6 @@ export default async function IdeasPage() {
     <PageLayout size="full">
       <PageHeader
         title="Content Ideas"
-        description="Review and manage your pending and rejected content ideas. Approved ideas automatically move to Content Status for content creation."
       />
       
       <PageContent>
