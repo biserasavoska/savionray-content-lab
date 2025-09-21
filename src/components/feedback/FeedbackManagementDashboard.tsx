@@ -382,7 +382,7 @@ export default function FeedbackManagementDashboard() {
                           </Link>
                         )}
                         {feedback.contentDraftId && (
-                          <Link href={`/drafts/${feedback.contentDraftId}`}>
+                          <Link href={`/ready-content/${feedback.contentDraftId}`}>
                             <Button
                               variant="outline"
                               size="sm"
