@@ -21,12 +21,12 @@ interface DeliveryItem {
   id: string
   contentType: string
   quantity: number
-  dueDate: string
+  dueDate: Date
   priority: number
-  notes?: string
+  notes?: string | null
   status: string
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
   planId: string
   Idea: any[]
   ContentItem: any[]
@@ -35,24 +35,24 @@ interface DeliveryItem {
 interface DeliveryPlan {
   id: string
   name: string
-  description?: string
-  startDate: string
-  endDate: string
+  description?: string | null
+  startDate: Date
+  endDate: Date
   status: string
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
   clientId: string
-  targetMonth: string
+  targetMonth: Date
   isArchived: boolean
   organizationId: string
   client: {
-    name?: string
-    email?: string
+    name?: string | null
+    email?: string | null
   }
   items: DeliveryItem[]
   organization: {
     name: string
-    primaryColor: string
+    primaryColor: string | null
   }
 }
 
