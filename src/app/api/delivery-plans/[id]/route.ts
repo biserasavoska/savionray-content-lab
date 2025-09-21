@@ -11,6 +11,7 @@ interface UpdateDeliveryPlanData {
   startDate: string
   endDate: string
   targetMonth: string
+  organizationId: string
   items: Array<{
     id?: string
     contentType: string
@@ -60,6 +61,7 @@ export async function PUT(
           startDate: new Date(data.startDate),
           endDate: new Date(data.endDate),
           targetMonth: targetMonthDate,
+          organizationId: data.organizationId,
         },
       })
 

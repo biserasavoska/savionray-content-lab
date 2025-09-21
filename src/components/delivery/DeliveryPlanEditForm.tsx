@@ -57,6 +57,7 @@ interface FormData {
   startDate: string
   endDate: string
   targetMonth: string
+  organizationId: string
   items: DeliveryItem[]
 }
 
@@ -66,6 +67,7 @@ interface DeliveryPlanEditFormProps {
 
 export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps) {
   const router = useRouter()
+  const [organizations, setOrganizations] = useState<Array<{ id: string; name: string }>>([])
 
   const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
     initialData: {
@@ -74,6 +76,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
       startDate: new Date(plan.startDate).toISOString().split('T')[0], // Convert to YYYY-MM-DD format
       endDate: new Date(plan.endDate).toISOString().split('T')[0],
       targetMonth: new Date(plan.targetMonth).toISOString().substring(0, 7), // Convert to YYYY-MM format
+      organizationId: plan.organizationId,
       items: plan.items.map(item => ({
         id: item.id,
         contentType: item.contentType,
@@ -92,6 +95,10 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
       
       if (!data.targetMonth) {
         validationErrors.targetMonth = 'Target month is required'
+      }
+      
+      if (!data.organizationId) {
+        validationErrors.organizationId = 'Organization is required'
       }
       
       if (!data.startDate) {
@@ -172,6 +179,10 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
     updateFormData('items', newItems)
   }
 
+  const handleSelectChange = (index: number, field: keyof DeliveryItem, event: React.ChangeEvent<HTMLSelectElement>) => {
+    updateItem(index, field, event.target.value)
+  }
+
   const removeItem = (index: number) => {
     const newItems = formData.items.filter((_, i) => i !== index)
     updateFormData('items', newItems)
@@ -180,6 +191,23 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
   const handleFormSubmit = (e: React.FormEvent) => {
     handleSubmit(e)
   }
+
+  // Fetch organizations on component mount
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const response = await fetch('/api/admin/organizations/options')
+        if (response.ok) {
+          const data = await response.json()
+          setOrganizations(data.organizations || [])
+        }
+      } catch (error) {
+        console.error('Error fetching organizations:', error)
+      }
+    }
+    
+    fetchOrganizations()
+  }, [])
 
   return (
     <Card>
@@ -216,6 +244,21 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="organizationId" className="block text-sm font-medium text-gray-700 mb-2">
+              Organization <span className="text-red-500">*</span>
+            </label>
+            <Select
+              id="organizationId"
+              options={organizations.map(org => ({ value: org.id, label: org.name }))}
+              value={formData.organizationId}
+              onChange={(e) => updateFormData('organizationId', e.target.value)}
+            />
+            {errors.organizationId && (
+              <p className="mt-1 text-sm text-red-600">{errors.organizationId}</p>
             )}
           </div>
 
@@ -320,7 +363,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
                       id={`contentType-${index}`}
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
-                      onChange={(value) => updateItem(index, 'contentType', value as ContentType)}
+                      onChange={(event) => handleSelectChange(index, 'contentType', event)}
                     />
                   </div>
                   <div>
