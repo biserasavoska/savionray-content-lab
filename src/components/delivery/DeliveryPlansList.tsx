@@ -89,7 +89,10 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
   }, [currentOrganization, initialPlans, showArchived, selectedMonth])
 
   const fetchPlans = async () => {
-    if (!currentOrganization) return
+    if (!currentOrganization) {
+      console.log('No current organization available for fetching plans')
+      return
+    }
     
     try {
       setLoading(true)
@@ -103,6 +106,8 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
         params.append('month', format(selectedMonth, 'yyyy-MM'))
       }
       
+      console.log('Fetching delivery plans for organization:', currentOrganization.id)
+      
       const response = await fetch(`/api/delivery-plans?${params.toString()}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
@@ -110,12 +115,16 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
       })
       
       if (!response.ok) {
-        throw new Error('Failed to fetch delivery plans')
+        const errorText = await response.text()
+        console.error('API Error:', response.status, errorText)
+        throw new Error(`Failed to fetch delivery plans: ${response.status} ${errorText}`)
       }
       
       const data = await response.json()
+      console.log('Received delivery plans data:', data)
       setPlans(data.plans || [])
     } catch (err) {
+      console.error('Error fetching delivery plans:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch delivery plans')
     } finally {
       setLoading(false)
@@ -178,7 +187,7 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
 
   const months = Array.from(
     new Set(
-      plans.map((plan) => format(new Date(plan.targetMonth), 'MMMM yyyy'))
+      (plans || []).map((plan) => format(new Date(plan.targetMonth), 'MMMM yyyy'))
     )
   ).sort((a, b) => {
     const dateA = new Date(a)
@@ -219,7 +228,7 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
   }
 
   // Plans are now filtered server-side, so we can use them directly
-  const filteredPlans = plans
+  const filteredPlans = plans || []
 
   if (loading) {
     return (
