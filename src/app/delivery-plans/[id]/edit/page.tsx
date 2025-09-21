@@ -4,6 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 
 import { authOptions, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import DeliveryPlanEditForm from '@/components/delivery/DeliveryPlanEditForm'
 
 interface EditDeliveryPlanPageProps {
@@ -30,10 +31,17 @@ export default async function EditDeliveryPlanPage({ params }: EditDeliveryPlanP
     redirect('/ready-content')
   }
 
+  // Get organization context
+  const orgContext = await requireOrganizationContext(undefined, undefined)
+  if (!orgContext) {
+    redirect('/ready-content')
+  }
+
   try {
     const plan = await prisma.contentDeliveryPlan.findUnique({
       where: {
         id: params.id,
+        organizationId: orgContext.organizationId,
       },
       include: {
         client: {

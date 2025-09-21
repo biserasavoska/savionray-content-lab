@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 
 import { authOptions , isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import DeliveryPlansList from '@/components/delivery/DeliveryPlansList'
 
 export const metadata: Metadata = {
@@ -24,7 +25,16 @@ export default async function DeliveryPlansPage() {
     redirect('/ready-content')
   }
 
+  // Get organization context
+  const orgContext = await requireOrganizationContext(undefined, undefined)
+  if (!orgContext) {
+    redirect('/ready-content')
+  }
+
   const plans = await prisma.contentDeliveryPlan.findMany({
+    where: {
+      organizationId: orgContext.organizationId,
+    },
     include: {
       client: {
         select: {
