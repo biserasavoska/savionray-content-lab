@@ -50,6 +50,9 @@ export default function DeliveryPlanForm() {
     },
     onValidate: (data) => {
       console.log('Validating form data:', data)
+      // Temporarily disable validation for debugging
+      return null
+      
       const validationErrors: Record<string, string> = {}
       
       if (!data.name.trim()) {
@@ -356,12 +359,12 @@ export default function DeliveryPlanForm() {
             <Button
               type="submit"
               loading={loading}
-              disabled={formData.items.length === 0}
+              disabled={false}
               onClick={(e) => {
                 console.log('Create Plan button clicked!', { loading, itemsLength: formData.items.length, e })
               }}
             >
-              Create Plan
+              Create Plan (Debug)
             </Button>
           </div>
         </CardFooter>
