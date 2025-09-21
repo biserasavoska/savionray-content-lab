@@ -21,13 +21,11 @@ import {
   BuildingOfficeIcon,
   CreditCardIcon,
   EnvelopeIcon,
-  ChatBubbleLeftIcon,
-  SparklesIcon
+  ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 
 import OrganizationSwitcher from './OrganizationSwitcher'
 import ClientNavigationSwitcher from './ClientNavigationSwitcher'
-import AINavigationEnhancement from './AINavigationEnhancement'
 
 import { useInterface } from '@/hooks/useInterface'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
@@ -49,7 +47,6 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
   const pathname = usePathname()
   const interfaceContext = useInterface()
   const { currentOrganization } = useOrganization()
-  const [showAI, setShowAI] = useState(false)
 
   // Define navigation items for different roles
   const navigationItems: NavigationItem[] = [
@@ -65,7 +62,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     { name: 'Scheduled Posts', href: '/scheduled-posts', icon: CalendarIcon, roles: ['CREATIVE', 'ADMIN'] },
     
     // Content Status (Unified System)
-    { name: 'Content Status', href: '/content-review/unified', icon: SparklesIcon, roles: ['CREATIVE', 'ADMIN'] },
+    { name: 'Content Status', href: '/content-review/unified', icon: EyeIcon, roles: ['CREATIVE', 'ADMIN'] },
     
     // Other items
     { name: 'Feedback', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT', 'ADMIN'] },
@@ -77,8 +74,6 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon, roles: ['ADMIN'] },
     { name: 'Billing', href: '/billing', icon: CreditCardIcon, roles: ['ADMIN'] },
     
-    // Development/Test items
-    { name: 'Test Client Nav', href: '/test-client-navigation', icon: BuildingOfficeIcon, roles: ['CREATIVE', 'ADMIN'] },
   ]
 
   // Filter navigation items based on user role
@@ -151,29 +146,6 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
             })}
           </nav>
 
-          {/* AI Navigation Enhancement (hidden for clients) */}
-          {(interfaceContext.isCreative || interfaceContext.isAdmin) && (
-            <div className="px-4 py-4 border-t border-gray-200">
-              <button
-                onClick={() => setShowAI(!showAI)}
-                className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-              >
-                <SparklesIcon className="mr-3 h-5 w-5" />
-                AI Assistant
-                {showAI && (
-                  <span className="ml-auto inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                    Active
-                  </span>
-                )}
-              </button>
-              
-              {showAI && (
-                <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                  <AINavigationEnhancement />
-                </div>
-              )}
-            </div>
-          )}
 
           {/* User section */}
           {session && (
