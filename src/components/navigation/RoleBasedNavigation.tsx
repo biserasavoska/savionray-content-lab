@@ -25,7 +25,6 @@ import {
 } from '@heroicons/react/24/outline'
 
 import OrganizationSwitcher from './OrganizationSwitcher'
-import ClientNavigationSwitcher from './ClientNavigationSwitcher'
 
 import { useInterface } from '@/hooks/useInterface'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
@@ -150,29 +149,10 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
           {/* User section */}
           {session && (
             <div className="border-t border-gray-200 p-4">
-              {/* Client Navigation Switcher for Creative and Admin users */}
-              {(interfaceContext.isCreative || interfaceContext.isAdmin) && (
-                <div className="mb-4">
-                  <ClientNavigationSwitcher />
-                </div>
-              )}
-              
               {/* Organization Switcher for Admin users */}
               {interfaceContext.isAdmin && (
-                <div className="mb-4">
+                <div className="mb-4 flex justify-end">
                   <OrganizationSwitcher />
-                </div>
-              )}
-              
-              {/* Organization name label */}
-              {currentOrganization && (
-                <div className="mb-4 px-3 py-2 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <BuildingOfficeIcon className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-700">
-                      {currentOrganization.name}
-                    </span>
-                  </div>
                 </div>
               )}
               
