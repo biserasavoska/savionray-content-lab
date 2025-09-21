@@ -292,7 +292,7 @@ export default function DeliveryPlanForm() {
                     <Select
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
-                      onChange={(value) => updateItem(index, 'contentType', value as ContentType)}
+                      onChange={(e) => updateItem(index, 'contentType', e.target.value as ContentType)}
                     />
                   </div>
                   <div>

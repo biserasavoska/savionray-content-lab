@@ -29,7 +29,7 @@ interface DeliveryItem {
   updatedAt: Date
   planId: string
   Idea: any[]
-  ContentItem: any[]
+  ContentItem?: any[]
 }
 
 interface DeliveryPlan {
