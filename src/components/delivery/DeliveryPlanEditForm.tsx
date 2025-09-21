@@ -129,25 +129,21 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
         }))
       }
       
-      try {
-        const response = await fetch(`/api/delivery-plans/${plan.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(cleanData),
-        })
+      const response = await fetch(`/api/delivery-plans/${plan.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cleanData),
+      })
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(`Failed to update delivery plan: ${response.status} ${errorText}`)
-        }
-
-        const result = await response.json()
-        router.push(`/delivery-plans/${plan.id}`)
-      } catch (error) {
-        throw error
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Failed to update delivery plan: ${response.status} ${errorText}`)
       }
+
+      const result = await response.json()
+      router.push(`/delivery-plans/${plan.id}`)
     }
   })
 
