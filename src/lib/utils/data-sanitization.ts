@@ -36,6 +36,16 @@ export function sanitizeUser(user: User | null | undefined): SafeUser {
 export function sanitizeContentDraftData(draft: any): any {
   return {
     ...draft,
+    // Add title from associated Idea for dashboard display
+    title: draft.Idea?.title || 'Untitled',
+    // Add createdBy info from the draft creator
+    createdBy: {
+      id: draft.User?.id || '',
+      name: draft.User?.name || 'Unknown',
+      email: draft.User?.email || '',
+      role: draft.User?.role || 'USER',
+      image: draft.User?.image
+    },
     Idea: {
       ...draft.Idea,
       User: {
