@@ -342,6 +342,11 @@ export default function RichTextEditor({
   isCollaborating = false,
   onCursorChange
 }: RichTextEditorProps) {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -376,6 +381,7 @@ export default function RichTextEditor({
     ],
     content,
     editable: !disabled,
+    immediatelyRender: false, // Fix SSR hydration issues
     onUpdate: ({ editor }) => {
       const html = editor.getHTML()
       onContentChange(html)
@@ -402,8 +408,14 @@ export default function RichTextEditor({
     }
   }, [disabled, editor])
 
-  if (!editor) {
-    return <div className="p-4 border rounded-lg bg-gray-50">Loading editor...</div>
+  if (!isMounted || !editor) {
+    return (
+      <div className="border border-gray-300 rounded-md">
+        <div className="p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">
+          Loading editor...
+        </div>
+      </div>
+    )
   }
 
   return (
