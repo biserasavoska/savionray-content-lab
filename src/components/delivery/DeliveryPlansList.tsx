@@ -86,7 +86,7 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
     if (!initialPlans && currentOrganization) {
       fetchPlans()
     }
-  }, [currentOrganization, initialPlans])
+  }, [currentOrganization, initialPlans, showArchived, selectedMonth])
 
   const fetchPlans = async () => {
     if (!currentOrganization) return
@@ -95,7 +95,15 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
       setLoading(true)
       setError('')
       
-      const response = await fetch('/api/delivery-plans', {
+      const params = new URLSearchParams()
+      if (showArchived) {
+        params.append('showArchived', 'true')
+      }
+      if (selectedMonth) {
+        params.append('month', format(selectedMonth, 'yyyy-MM'))
+      }
+      
+      const response = await fetch(`/api/delivery-plans?${params.toString()}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
         }
@@ -210,15 +218,8 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
     }
   }
 
-  const filteredPlans = plans.filter(plan => {
-    if (!showArchived && plan.isArchived) {
-      return false
-    }
-    if (selectedMonth) {
-      return format(new Date(plan.targetMonth), 'MMMM yyyy') === format(selectedMonth, 'MMMM yyyy')
-    }
-    return true
-  })
+  // Plans are now filtered server-side, so we can use them directly
+  const filteredPlans = plans
 
   if (loading) {
     return (
