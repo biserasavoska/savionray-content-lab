@@ -71,14 +71,14 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
     initialData: {
       name: plan.name,
       description: plan.description || '',
-      startDate: plan.startDate.split('T')[0], // Convert to YYYY-MM-DD format
-      endDate: plan.endDate.split('T')[0],
-      targetMonth: plan.targetMonth.split('T')[0].substring(0, 7), // Convert to YYYY-MM format
+      startDate: new Date(plan.startDate).toISOString().split('T')[0], // Convert to YYYY-MM-DD format
+      endDate: new Date(plan.endDate).toISOString().split('T')[0],
+      targetMonth: new Date(plan.targetMonth).toISOString().substring(0, 7), // Convert to YYYY-MM format
       items: plan.items.map(item => ({
         id: item.id,
         contentType: item.contentType,
         quantity: item.quantity,
-        dueDate: item.dueDate.split('T')[0], // Convert to YYYY-MM-DD format
+        dueDate: new Date(item.dueDate).toISOString().split('T')[0], // Convert to YYYY-MM-DD format
         priority: item.priority,
         notes: item.notes || ''
       })),
