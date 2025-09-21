@@ -49,6 +49,7 @@ export default function DeliveryPlanForm() {
       items: [] as DeliveryItem[],
     },
     onValidate: (data) => {
+      console.log('Validating form data:', data)
       const validationErrors: Record<string, string> = {}
       
       if (!data.name.trim()) {
@@ -71,6 +72,7 @@ export default function DeliveryPlanForm() {
         validationErrors.items = 'At least one delivery item is required'
       }
       
+      console.log('Validation errors:', validationErrors)
       return Object.keys(validationErrors).length > 0 ? validationErrors : null
     },
     onSubmit: async (data) => {
