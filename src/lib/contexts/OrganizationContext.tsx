@@ -39,18 +39,26 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
   // Fetch user's organizations
   const fetchOrganizations = async () => {
-    if (!session?.user) return
+    if (!session?.user) {
+      console.log('No session user, skipping organization fetch')
+      return
+    }
 
     try {
+      console.log('Fetching organizations for user:', session.user.email)
       const response = await fetch('/api/organization/list')
       if (response.ok) {
         const data = await response.json()
+        console.log('Received organizations data:', data)
         setUserOrganizations(data.organizations || [])
         
         // If no current organization is set, use the first one
         if (!currentOrganization && data.organizations?.length > 0) {
+          console.log('Setting current organization to first available:', data.organizations[0])
           setCurrentOrganization(data.organizations[0])
         }
+      } else {
+        console.error('Failed to fetch organizations:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching organizations:', error)
@@ -92,8 +100,10 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     if (status === 'loading') return
 
     if (session?.user) {
+      console.log('Session user found, fetching organizations')
       fetchOrganizations()
     } else {
+      console.log('No session user, clearing organizations')
       setCurrentOrganization(null)
       setUserOrganizations([])
     }
