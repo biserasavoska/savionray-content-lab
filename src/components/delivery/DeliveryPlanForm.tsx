@@ -74,20 +74,32 @@ export default function DeliveryPlanForm() {
       return Object.keys(validationErrors).length > 0 ? validationErrors : null
     },
     onSubmit: async (data) => {
-      const response = await fetch('/api/delivery-plans', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
+      console.log('onSubmit called with data:', data)
+      
+      try {
+        const response = await fetch('/api/delivery-plans', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to create delivery plan')
+        console.log('API response status:', response.status)
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('API error response:', errorText)
+          throw new Error(`Failed to create delivery plan: ${response.status} ${errorText}`)
+        }
+
+        const result = await response.json()
+        console.log('API success response:', result)
+        router.push(`/delivery-plans/${result.id}`)
+      } catch (error) {
+        console.error('onSubmit error:', error)
+        throw error
       }
-
-      const result = await response.json()
-      router.push(`/delivery-plans/${result.id}`)
     }
   })
 
@@ -118,9 +130,14 @@ export default function DeliveryPlanForm() {
     updateFormData('items', newItems)
   }
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    console.log('Form submit event triggered!', e)
+    handleSubmit(e)
+  }
+
   return (
     <Card>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleFormSubmit}>
         <CardHeader>
           <h2 className="text-xl font-semibold">Create Delivery Plan</h2>
         </CardHeader>
@@ -325,6 +342,9 @@ export default function DeliveryPlanForm() {
               type="submit"
               loading={loading}
               disabled={formData.items.length === 0}
+              onClick={(e) => {
+                console.log('Create Plan button clicked!', { loading, itemsLength: formData.items.length, e })
+              }}
             >
               Create Plan
             </Button>
