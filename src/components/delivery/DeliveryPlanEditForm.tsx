@@ -30,7 +30,7 @@ interface DeliveryItem {
 interface DeliveryPlan {
   id: string
   name: string
-  description?: string
+  description?: string | null
   startDate: string
   endDate: string
   status: string
@@ -41,13 +41,13 @@ interface DeliveryPlan {
   isArchived: boolean
   organizationId: string
   client: {
-    name?: string
-    email?: string
+    name?: string | null
+    email?: string | null
   }
   items: DeliveryItem[]
   organization: {
     name: string
-    primaryColor: string
+    primaryColor: string | null
   }
 }
 
