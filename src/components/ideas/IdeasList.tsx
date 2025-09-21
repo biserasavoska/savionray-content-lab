@@ -311,8 +311,8 @@ export default function IdeasList() {
         </div>
       )}
       
-        {/* Load More Button */}
-        {pagination.hasMore && ideas.length < pagination.total && (
+      {/* Load More Button */}
+      {pagination.hasMore && ideas.length < pagination.total && (
         <div className="mt-8 text-center">
           <Button 
             onClick={loadMore} 
@@ -324,9 +324,9 @@ export default function IdeasList() {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 Loading...
               </>
-              ) : (
-                `Load All Remaining (${pagination.total - ideas.length} ideas)`
-              )}
+            ) : (
+              `Load All Remaining (${pagination.total - ideas.length} ideas)`
+            )}
           </Button>
         </div>
       )}
