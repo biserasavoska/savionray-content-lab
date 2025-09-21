@@ -132,6 +132,9 @@ export default function DeliveryPlanForm() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     console.log('Form submit event triggered!', e)
+    console.log('Current formData:', formData)
+    console.log('Current errors:', errors)
+    console.log('Current loading:', loading)
     handleSubmit(e)
   }
 
@@ -337,6 +340,16 @@ export default function DeliveryPlanForm() {
               onClick={() => router.back()}
             >
               Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                console.log('Test button clicked!')
+                alert('Test button works!')
+              }}
+            >
+              Test Button
             </Button>
             <Button
               type="submit"
