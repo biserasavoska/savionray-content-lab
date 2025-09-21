@@ -2,9 +2,7 @@ import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 
-import { authOptions , isAdmin } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { requireOrganizationContext } from '@/lib/utils/organization-context'
+import { authOptions, isAdmin } from '@/lib/auth'
 import DeliveryPlansList from '@/components/delivery/DeliveryPlansList'
 
 export const metadata: Metadata = {
@@ -25,38 +23,6 @@ export default async function DeliveryPlansPage() {
     redirect('/ready-content')
   }
 
-  // Get organization context
-  const orgContext = await requireOrganizationContext(undefined, undefined)
-  if (!orgContext) {
-    redirect('/ready-content')
-  }
-
-  const plans = await prisma.contentDeliveryPlan.findMany({
-    where: {
-      organizationId: orgContext.organizationId,
-    },
-    include: {
-      client: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-      items: {
-        include: {
-          Idea: {
-            include: {
-              ContentDraft: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      targetMonth: 'desc',
-    },
-  })
-
   return (
     <div className="py-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
@@ -71,7 +37,7 @@ export default async function DeliveryPlansPage() {
         </div>
 
         <div className="mt-8">
-          <DeliveryPlansList plans={plans} />
+          <DeliveryPlansList />
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext, createOrgFilter } from '@/lib/utils/organization-context'
 
@@ -108,7 +108,11 @@ export async function GET(req: NextRequest) {
 
     let where: any = {
       ...orgFilter, // Add organization filter
-      clientId: session.user.id,
+    }
+
+    // Only filter by clientId if user is not admin
+    if (!isAdmin(session)) {
+      where.clientId = session.user.id
     }
 
     if (month) {
@@ -135,6 +139,12 @@ export async function GET(req: NextRequest) {
     const plans = await prisma.contentDeliveryPlan.findMany({
       where,
       include: {
+        client: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
         items: {
           include: {
             Idea: {
@@ -160,7 +170,7 @@ export async function GET(req: NextRequest) {
       ],
     })
 
-    return NextResponse.json(plans)
+    return NextResponse.json({ plans })
   } catch (error) {
     console.error('Error fetching delivery plans:', error)
     return NextResponse.json(

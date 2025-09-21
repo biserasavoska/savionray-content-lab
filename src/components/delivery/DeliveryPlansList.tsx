@@ -2,47 +2,50 @@
 
 import { useRouter } from 'next/navigation'
 import { formatDistanceToNow, format } from 'date-fns'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
 
-interface DeliveryPlansListProps {
-  plans: Array<{
+interface DeliveryPlan {
+  id: string
+  name: string
+  description?: string | null
+  startDate: string | Date
+  endDate: string | Date
+  status: string
+  createdAt: string | Date
+  updatedAt: string | Date
+  clientId: string
+  targetMonth: string | Date
+  isArchived: boolean
+  items: Array<{
     id: string
-    name: string
-    description?: string | null
-    startDate: string | Date
-    endDate: string | Date
+    contentType: string
+    quantity: number
+    dueDate: string | Date
     status: string
+    priority: number
+    notes?: string | null
     createdAt: string | Date
     updatedAt: string | Date
-    clientId: string
-    targetMonth: string | Date
-    isArchived: boolean
-    items: Array<{
-      id: string
-      contentType: string
-      quantity: number
-      dueDate: string | Date
-      status: string
-      priority: number
-      notes?: string | null
-      createdAt: string | Date
-      updatedAt: string | Date
-      planId: string
-      Idea: Array<{
-        ContentDraft: Array<{
-          status: string
-        }>
+    planId: string
+    Idea: Array<{
+      ContentDraft: Array<{
+        status: string
       }>
     }>
-    client: {
-      name: string | null
-      email: string | null
-    }
   }>
+  client: {
+    name: string | null
+    email: string | null
+  }
+}
+
+interface DeliveryPlansListProps {
+  plans?: DeliveryPlan[] // Make optional for backward compatibility
 }
 
 const STATUS_BADGE_VARIANT = {
@@ -61,10 +64,47 @@ const ITEM_STATUS_BADGE_VARIANT = {
   DELIVERED: 'secondary',
 } as const
 
-export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
+export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlansListProps) {
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
+  const [plans, setPlans] = useState<DeliveryPlan[]>(initialPlans || [])
+  const [loading, setLoading] = useState(!initialPlans)
+  const [error, setError] = useState('')
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null)
   const [showArchived, setShowArchived] = useState(false)
+
+  // Fetch plans from API if not provided as props
+  useEffect(() => {
+    if (!initialPlans && currentOrganization) {
+      fetchPlans()
+    }
+  }, [currentOrganization, initialPlans])
+
+  const fetchPlans = async () => {
+    if (!currentOrganization) return
+    
+    try {
+      setLoading(true)
+      setError('')
+      
+      const response = await fetch('/api/delivery-plans', {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch delivery plans')
+      }
+      
+      const data = await response.json()
+      setPlans(data.plans || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch delivery plans')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const months = Array.from(
     new Set(
@@ -118,16 +158,38 @@ export default function DeliveryPlansList({ plans }: DeliveryPlansListProps) {
     return true
   })
 
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">Loading delivery plans...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-500">Error: {error}</p>
+        <Button
+          onClick={fetchPlans}
+          className="mt-4"
+        >
+          Try Again
+        </Button>
+      </div>
+    )
+  }
+
   if (filteredPlans.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">No delivery plans found.</p>
-        <button
+        <Button
           onClick={() => router.push('/delivery-plans/new')}
-          className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
+          className="mt-4"
         >
           Create New Plan
-        </button>
+        </Button>
       </div>
     )
   }
