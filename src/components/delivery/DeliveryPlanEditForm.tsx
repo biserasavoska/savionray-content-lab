@@ -18,6 +18,9 @@ const ContentType = {
 
 type ContentType = typeof ContentType[keyof typeof ContentType]
 
+type DeliveryPlanStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
+type DeliveryItemStatus = 'PENDING' | 'IN_PROGRESS' | 'REVIEW' | 'APPROVED' | 'DELIVERED'
+
 interface DeliveryItem {
   id?: string
   contentType: ContentType
@@ -31,20 +34,29 @@ interface DeliveryPlan {
   id: string
   name: string
   description?: string | null
-  startDate: string
-  endDate: string
+  startDate: Date
+  endDate: Date
   status: string
-  createdAt: string
-  updatedAt: string
+  createdAt: Date
+  updatedAt: Date
   clientId: string
-  targetMonth: string
+  targetMonth: Date
   isArchived: boolean
   organizationId: string
   client: {
     name?: string | null
     email?: string | null
   }
-  items: DeliveryItem[]
+  items: Array<{
+    id: string
+    contentType: ContentType
+    quantity: number
+    dueDate: Date
+    status: DeliveryItemStatus
+    priority: number
+    notes?: string | null
+    planId: string
+  }>
   organization: {
     name: string
     primaryColor: string | null
