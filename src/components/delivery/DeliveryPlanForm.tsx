@@ -37,7 +37,6 @@ interface FormData {
 
 export default function DeliveryPlanForm() {
   const router = useRouter()
-  const [items, setItems] = useState<DeliveryItem[]>([])
 
   // Use the new form hook
   const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
@@ -47,7 +46,7 @@ export default function DeliveryPlanForm() {
       startDate: '',
       endDate: '',
       targetMonth: '',
-      items: [],
+      items: [] as DeliveryItem[],
     },
     onValidate: (data) => {
       const validationErrors: Record<string, string> = {}
@@ -68,7 +67,7 @@ export default function DeliveryPlanForm() {
         validationErrors.endDate = 'End date is required'
       }
       
-      if (items.length === 0) {
+      if (data.items.length === 0) {
         validationErrors.items = 'At least one delivery item is required'
       }
       
@@ -80,10 +79,7 @@ export default function DeliveryPlanForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          items,
-        }),
+        body: JSON.stringify(data),
       })
 
       if (!response.ok) {
@@ -96,28 +92,30 @@ export default function DeliveryPlanForm() {
   })
 
   const addItem = () => {
-    setItems([
-      ...items,
+    const newItems = [
+      ...formData.items,
       {
         contentType: ContentType.BLOG_POST,
         quantity: 1,
         dueDate: '',
-        priority: items.length + 1,
+        priority: formData.items.length + 1,
       },
-    ])
+    ]
+    updateFormData('items', newItems)
   }
 
   const updateItem = (index: number, field: keyof DeliveryItem, value: any) => {
-    const newItems = [...items]
+    const newItems = [...formData.items]
     newItems[index] = {
       ...newItems[index],
       [field]: value,
     }
-    setItems(newItems)
+    updateFormData('items', newItems)
   }
 
   const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index))
+    const newItems = formData.items.filter((_, i) => i !== index)
+    updateFormData('items', newItems)
   }
 
   return (
@@ -237,7 +235,7 @@ export default function DeliveryPlanForm() {
           )}
 
           <div className="space-y-4">
-            {items.map((item, index) => (
+            {formData.items.map((item, index) => (
               <Card key={index} className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
@@ -306,7 +304,7 @@ export default function DeliveryPlanForm() {
                 </div>
               </Card>
             ))}
-            {items.length === 0 && (
+            {formData.items.length === 0 && (
               <p className="text-sm text-gray-500 text-center py-4">
                 No items yet. Click "Add Item" to create your first delivery item.
               </p>
@@ -326,7 +324,7 @@ export default function DeliveryPlanForm() {
             <Button
               type="submit"
               loading={loading}
-              disabled={items.length === 0}
+              disabled={formData.items.length === 0}
             >
               Create Plan
             </Button>
