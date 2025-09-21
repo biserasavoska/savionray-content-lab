@@ -317,6 +317,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
                       Content Type <span className="text-red-500">*</span>
                     </label>
                     <Select
+                      id={`contentType-${index}`}
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
                       onChange={(value) => updateItem(index, 'contentType', value as ContentType)}
@@ -327,6 +328,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
                       Quantity <span className="text-red-500">*</span>
                     </label>
                     <Input
+                      id={`quantity-${index}`}
                       type="number"
                       min="1"
                       value={item.quantity}
@@ -338,6 +340,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
                       Due Date <span className="text-red-500">*</span>
                     </label>
                     <Input
+                      id={`dueDate-${index}`}
                       type="date"
                       value={item.dueDate}
                       onChange={(e) => updateItem(index, 'dueDate', e.target.value)}
@@ -348,6 +351,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
                       Priority <span className="text-red-500">*</span>
                     </label>
                     <Input
+                      id={`priority-${index}`}
                       type="number"
                       min="1"
                       value={item.priority}
@@ -360,6 +364,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
                     Notes
                   </label>
                   <Textarea
+                    id={`notes-${index}`}
                     value={item.notes || ''}
                     onChange={(e) => updateItem(index, 'notes', e.target.value)}
                     rows={2}
