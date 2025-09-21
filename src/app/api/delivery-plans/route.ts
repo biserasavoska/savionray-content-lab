@@ -157,6 +157,16 @@ export async function GET(req: NextRequest) {
                 },
               },
             },
+            ContentItem: {
+              select: {
+                id: true,
+                status: true,
+                currentStage: true,
+                publishedAt: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
           },
         },
       },

@@ -37,6 +37,14 @@ interface DeliveryPlan {
         status: string
       }>
     }>
+    ContentItem: Array<{
+      id: string
+      status: string
+      currentStage: string
+      publishedAt: string | Date | null
+      createdAt: string | Date
+      updatedAt: string | Date
+    }>
   }>
   client: {
     name: string | null
@@ -103,6 +111,60 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
       setError(err instanceof Error ? err.message : 'Failed to fetch delivery plans')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Comprehensive progress calculation
+  const calculateItemProgress = (item: DeliveryPlan['items'][0]) => {
+    const totalQuantity = item.quantity
+    const contentItems = item.ContentItem || []
+    
+    // Count different stages of completion
+    const completed = contentItems.filter(ci => 
+      ci.status === 'PUBLISHED' || ci.publishedAt !== null
+    ).length
+    
+    const inReview = contentItems.filter(ci => 
+      ci.status === 'CONTENT_REVIEW' || ci.currentStage === 'CONTENT_REVIEW'
+    ).length
+    
+    const approved = contentItems.filter(ci => 
+      ci.status === 'APPROVED'
+    ).length
+    
+    const inProgress = contentItems.filter(ci => 
+      ci.status === 'IDEA' || ci.currentStage === 'IDEA'
+    ).length
+    
+    // Calculate progress based on published content
+    const progress = totalQuantity > 0 ? (completed / totalQuantity) * 100 : 0
+    
+    return {
+      completed,
+      inReview,
+      approved,
+      inProgress,
+      total: totalQuantity,
+      progress: Math.round(progress),
+      status: completed >= totalQuantity ? 'COMPLETED' : 
+              completed > 0 ? 'IN_PROGRESS' : 
+              inReview > 0 ? 'REVIEW' : 'PENDING'
+    }
+  }
+
+  const calculatePlanProgress = (plan: DeliveryPlan) => {
+    const totalItems = plan.items.length
+    const completedItems = plan.items.filter(item => {
+      const itemProgress = calculateItemProgress(item)
+      return itemProgress.completed >= itemProgress.total
+    }).length
+    
+    const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
+    
+    return {
+      completed: completedItems,
+      total: totalItems,
+      progress: Math.round(progress)
     }
   }
 
@@ -225,11 +287,7 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
       <div className="space-y-6">
         {filteredPlans.map((plan) => {
           const badgeVariant = STATUS_BADGE_VARIANT[plan.status as keyof typeof STATUS_BADGE_VARIANT] || 'default'
-          const totalItems = plan.items.length
-          const completedItems = plan.items.filter(
-            (item) => item.status === 'DELIVERED'
-          ).length
-          const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
+          const planProgress = calculatePlanProgress(plan)
 
           return (
             <Card key={plan.id} className="overflow-hidden">
@@ -259,14 +317,14 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
                 </div>
                 <div className="mt-4">
                   <div className="flex justify-between text-sm text-gray-500">
-                    <span>Progress ({completedItems}/{totalItems} items)</span>
-                    <span>{Math.round(progress)}%</span>
+                    <span>Progress ({planProgress.completed}/{planProgress.total} items completed)</span>
+                    <span>{planProgress.progress}%</span>
                   </div>
                   <div className="mt-1 relative">
                     <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
                       <div
-                        style={{ width: `${progress}%` }}
-                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
+                        style={{ width: `${planProgress.progress}%` }}
+                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"
                       />
                     </div>
                   </div>
@@ -289,11 +347,8 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
                 <h4 className="text-sm font-medium text-gray-900">Delivery Items</h4>
                 <div className="mt-2 divide-y divide-gray-200">
                   {plan.items.map((item) => {
-                    const itemBadgeVariant = ITEM_STATUS_BADGE_VARIANT[item.status as keyof typeof ITEM_STATUS_BADGE_VARIANT] || 'default'
-                    const completedIdeas = item.Idea.filter((idea) => 
-                      idea.ContentDraft[0]?.status === 'APPROVED'
-                    ).length
-                    const itemProgress = item.quantity > 0 ? (completedIdeas / item.quantity) * 100 : 0
+                    const itemProgress = calculateItemProgress(item)
+                    const itemBadgeVariant = ITEM_STATUS_BADGE_VARIANT[itemProgress.status as keyof typeof ITEM_STATUS_BADGE_VARIANT] || 'default'
                     return (
                       <div key={item.id} className="py-3">
                         <div className="flex items-center justify-between">
@@ -309,16 +364,22 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
                         </div>
                         <div className="mt-2">
                           <div className="flex justify-between text-sm text-gray-500">
-                            <span>Progress ({completedIdeas}/{item.quantity})</span>
-                            <span>{Math.round(itemProgress)}%</span>
+                            <span>Progress ({itemProgress.completed}/{itemProgress.total} published)</span>
+                            <span>{itemProgress.progress}%</span>
                           </div>
                           <div className="mt-1 relative">
                             <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
                               <div
-                                style={{ width: `${itemProgress}%` }}
-                                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500"
+                                style={{ width: `${itemProgress.progress}%` }}
+                                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"
                               />
                             </div>
+                          </div>
+                          {/* Detailed breakdown */}
+                          <div className="mt-2 text-xs text-gray-400">
+                            {itemProgress.inReview > 0 && <span className="mr-3">📝 {itemProgress.inReview} in review</span>}
+                            {itemProgress.approved > 0 && <span className="mr-3">✅ {itemProgress.approved} approved</span>}
+                            {itemProgress.inProgress > 0 && <span className="mr-3">🔄 {itemProgress.inProgress} in progress</span>}
                           </div>
                         </div>
                       </div>
