@@ -49,10 +49,6 @@ export default function DeliveryPlanForm() {
       items: [] as DeliveryItem[],
     },
     onValidate: (data) => {
-      console.log('Validating form data:', data)
-      // Temporarily disable validation for debugging
-      return null
-      
       const validationErrors: Record<string, string> = {}
       
       if (!data.name.trim()) {
@@ -75,7 +71,6 @@ export default function DeliveryPlanForm() {
         validationErrors.items = 'At least one delivery item is required'
       }
       
-      console.log('Validation errors:', validationErrors)
       return Object.keys(validationErrors).length > 0 ? validationErrors : null
     },
     onSubmit: async (data) => {
@@ -136,13 +131,10 @@ export default function DeliveryPlanForm() {
   }
 
   const updateItem = (index: number, field: keyof DeliveryItem, value: any) => {
-    console.log('updateItem called:', { index, field, value, valueType: typeof value })
-    
     // Ensure we only store primitive values
     let cleanValue = value
     if (value && typeof value === 'object' && value.value) {
       cleanValue = value.value
-      console.log('Extracted value from object:', cleanValue)
     }
     
     const newItems = [...formData.items]
@@ -159,10 +151,6 @@ export default function DeliveryPlanForm() {
   }
 
   const handleFormSubmit = (e: React.FormEvent) => {
-    console.log('Form submit event triggered!', e)
-    console.log('Current formData:', formData)
-    console.log('Current errors:', errors)
-    console.log('Current loading:', loading)
     handleSubmit(e)
   }
 
@@ -304,10 +292,7 @@ export default function DeliveryPlanForm() {
                     <Select
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
-                      onChange={(value) => {
-                        console.log('Select onChange value:', value, typeof value)
-                        updateItem(index, 'contentType', value as ContentType)
-                      }}
+                      onChange={(value) => updateItem(index, 'contentType', value as ContentType)}
                     />
                   </div>
                   <div>
@@ -373,24 +358,11 @@ export default function DeliveryPlanForm() {
               Cancel
             </Button>
             <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                console.log('Test button clicked!')
-                alert('Test button works!')
-              }}
-            >
-              Test Button
-            </Button>
-            <Button
               type="submit"
               loading={loading}
-              disabled={false}
-              onClick={(e) => {
-                console.log('Create Plan button clicked!', { loading, itemsLength: formData.items.length, e })
-              }}
+              disabled={formData.items.length === 0}
             >
-              Create Plan (Debug)
+              Create Plan
             </Button>
           </div>
         </CardFooter>

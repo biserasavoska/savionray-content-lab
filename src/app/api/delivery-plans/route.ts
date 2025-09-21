@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
               notes: item.notes,
               status: 'PENDING' as DeliveryItemStatus,
               planId: createdPlan.id,
-              organizationId: orgContext.organizationId, // Add organization isolation
+              // Note: organizationId is inherited from the plan, not stored on items
             },
           })
         )
