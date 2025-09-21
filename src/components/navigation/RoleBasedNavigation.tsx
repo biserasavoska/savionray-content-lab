@@ -151,7 +151,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
             <div className="border-t border-gray-200 p-4">
               {/* Organization Switcher for Admin users */}
               {interfaceContext.isAdmin && (
-                <div className="mb-4 flex justify-end">
+                <div className="mb-4 flex justify-end relative">
                   <OrganizationSwitcher />
                 </div>
               )}
