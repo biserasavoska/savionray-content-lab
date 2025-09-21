@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { formatDistanceToNow } from 'date-fns'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import { 
   StarIcon, 
   ChatBubbleLeftIcon, 
@@ -49,6 +50,7 @@ interface FeedbackStats {
 
 export default function FeedbackManagementDashboard() {
   const { data: session } = useSession()
+  const { currentOrganization } = useOrganization()
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [stats, setStats] = useState<FeedbackStats>({
     total: 0,
@@ -67,17 +69,23 @@ export default function FeedbackManagementDashboard() {
   })
 
   useEffect(() => {
-    if (session?.user) {
+    if (session?.user && currentOrganization) {
       fetchFeedbacks()
     }
-  }, [session?.user])
+  }, [session?.user, currentOrganization])
 
   const fetchFeedbacks = async () => {
+    if (!currentOrganization) return
+    
     try {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/feedback/management')
+      const response = await fetch('/api/feedback/management', {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }

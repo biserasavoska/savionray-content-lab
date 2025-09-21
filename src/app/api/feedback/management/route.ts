@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireOrganizationContext } from '@/lib/utils/organization-context'
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,49 +16,33 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user's organizations
-    const userOrganizations = await prisma.organizationUser.findMany({
-      where: {
-        userId: session.user.id,
-        isActive: true,
-      },
-      include: {
-        organization: true,
-      },
-    })
-
-    if (userOrganizations.length === 0) {
-      return NextResponse.json({
-        feedbacks: [],
-        stats: {
-          total: 0,
-          averageRating: 0,
-          actionable: 0,
-          highPriority: 0,
-          byCategory: {}
-        }
-      })
+    // Check for organization in headers first (from client selection)
+    const selectedOrgId = request.headers.get('x-selected-organization');
+    console.log('Feedback Management API - Selected org from header:', selectedOrgId);
+    
+    const context = await requireOrganizationContext(selectedOrgId || undefined, request);
+    if (!context) {
+      return NextResponse.json({ error: 'Organization context required' }, { status: 400 })
     }
+    
+    console.log('Feedback Management API - Organization context:', {
+      organizationId: context.organizationId,
+      userId: context.userId,
+      userEmail: context.userEmail
+    });
 
-    // Get organization IDs the user has access to
-    const organizationIds = userOrganizations.map(ou => ou.organizationId)
-
-    // Fetch feedbacks for all organizations the user has access to - includes both Ideas and ContentDrafts
+    // Fetch feedbacks for the selected organization - includes both Ideas and ContentDrafts
     const feedbacks = await prisma.feedback.findMany({
       where: {
         OR: [
           {
             ContentDraft: {
-              organizationId: {
-                in: organizationIds
-              }
+              organizationId: context.organizationId
             }
           },
           {
             Idea: {
-              organizationId: {
-                in: organizationIds
-              }
+              organizationId: context.organizationId
             }
           }
         ]
