@@ -13,7 +13,7 @@ interface Feedback {
   createdAt: Date
   User: Pick<User, 'name' | 'email'>
 }
-import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS } from '@/lib/utils/enum-utils'
+import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS, CONTENT_TYPE } from '@/lib/utils/enum-utils'
 // EnhancedFeedbackForm removed - using simple feedback form instead
 import FeedbackList from '@/components/feedback/FeedbackList'
 import AIEnhancedContentReview from '@/components/content/AIEnhancedContentReview'
@@ -67,6 +67,19 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
   const [showAIReview, setShowAIReview] = useState<{ [key: string]: boolean }>({})
   const [isClient, setIsClient] = useState(false)
+  const [selectedType, setSelectedType] = useState<string>('ALL')
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
+
+  // Filter drafts based on selected filters
+  const filteredDrafts = drafts.filter(draft => {
+    if (selectedType !== 'ALL' && draft.contentType !== selectedType) {
+      return false
+    }
+    if (selectedStatus !== 'ALL' && draft.status !== selectedStatus) {
+      return false
+    }
+    return true
+  })
 
   // Fetch content drafts based on organization
   useEffect(() => {
@@ -149,6 +162,44 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
     window.location.reload()
   }
 
+  const getContentTypeLabel = (contentType: string) => {
+    switch (contentType) {
+      case 'SOCIAL_MEDIA_POST':
+        return 'Social Media Post'
+      case 'BLOG_POST':
+        return 'Blog Post'
+      case 'NEWSLETTER':
+        return 'Newsletter'
+      case 'EMAIL_CAMPAIGN':
+        return 'Email Campaign'
+      case 'WEBSITE_COPY':
+        return 'Website Copy'
+      default:
+        return contentType.replace(/_/g, ' ')
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'DRAFT':
+        return 'Draft'
+      case 'AWAITING_FEEDBACK':
+        return 'Awaiting Feedback'
+      case 'AWAITING_REVISION':
+        return 'Awaiting Revision'
+      case 'APPROVED':
+        return 'Approved'
+      case 'REJECTED':
+        return 'Rejected'
+      case 'PUBLISHED':
+        return 'Published'
+      default:
+        return status.replace(/_/g, ' ')
+    }
+  }
+
+  const CONTENT_TYPE_OPTIONS = Object.values(CONTENT_TYPE)
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -189,7 +240,62 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
 
   return (
     <div className="space-y-6">
-      {drafts.map((draft) => (
+      {/* Header with Filters */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <div>
+            <label htmlFor="content-type-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Content Type
+            </label>
+            <select
+              id="content-type-filter"
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+            >
+              <option value="ALL">All Types</option>
+              {CONTENT_TYPE_OPTIONS.map(type => (
+                <option key={type} value={type}>
+                  {getContentTypeLabel(type)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              id="status-filter"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="DRAFT">Draft</option>
+              <option value="AWAITING_FEEDBACK">Awaiting Feedback</option>
+              <option value="AWAITING_REVISION">Awaiting Revision</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="PUBLISHED">Published</option>
+            </select>
+          </div>
+        </div>
+        <div className="text-sm text-gray-500">
+          {filteredDrafts.length} of {drafts.length} items
+        </div>
+      </div>
+
+      {/* Content List */}
+      {filteredDrafts.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No content matches your filters</h3>
+          <p className="text-gray-600 mb-4">
+            Try adjusting your filter criteria to see more content.
+          </p>
+        </div>
+      ) : (
+        filteredDrafts.map((draft) => (
         <div key={draft.id} className="bg-white shadow-lg rounded-lg p-6 border-l-4 border-l-blue-500 hover:shadow-xl transition-all duration-200">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -346,7 +452,8 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
             </div>
           )}
         </div>
-      ))}
+      ))
+      )}
     </div>
   )
 }
