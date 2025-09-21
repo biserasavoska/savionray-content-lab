@@ -92,12 +92,15 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
+    console.log('Delivery Plans API: No session user found')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
+    console.log('Delivery Plans API: Getting organization context')
     // Get organization context for multi-tenant isolation
     const orgContext = await requireOrganizationContext(undefined, req);
+    console.log('Delivery Plans API: Organization context:', orgContext)
 
     const url = new URL(req.url)
     const month = url.searchParams.get('month') // Format: YYYY-MM
@@ -180,9 +183,10 @@ export async function GET(req: NextRequest) {
       ],
     })
 
+    console.log('Delivery Plans API: Returning plans:', plans.length)
     return NextResponse.json({ plans })
   } catch (error) {
-    console.error('Error fetching delivery plans:', error)
+    console.error('Delivery Plans API: Error fetching delivery plans:', error)
     return NextResponse.json(
       { error: 'Failed to fetch delivery plans' },
       { status: 500 }
