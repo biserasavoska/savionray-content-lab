@@ -81,13 +81,27 @@ export default function DeliveryPlanForm() {
     onSubmit: async (data) => {
       console.log('onSubmit called with data:', data)
       
+      // Clean the data to remove any circular references
+      const cleanData = {
+        ...data,
+        items: data.items.map(item => ({
+          contentType: item.contentType,
+          quantity: item.quantity,
+          dueDate: item.dueDate,
+          priority: item.priority,
+          notes: item.notes
+        }))
+      }
+      
+      console.log('Cleaned data for submission:', cleanData)
+      
       try {
         const response = await fetch('/api/delivery-plans', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(cleanData),
         })
 
         console.log('API response status:', response.status)
@@ -122,10 +136,19 @@ export default function DeliveryPlanForm() {
   }
 
   const updateItem = (index: number, field: keyof DeliveryItem, value: any) => {
+    console.log('updateItem called:', { index, field, value, valueType: typeof value })
+    
+    // Ensure we only store primitive values
+    let cleanValue = value
+    if (value && typeof value === 'object' && value.value) {
+      cleanValue = value.value
+      console.log('Extracted value from object:', cleanValue)
+    }
+    
     const newItems = [...formData.items]
     newItems[index] = {
       ...newItems[index],
-      [field]: value,
+      [field]: cleanValue,
     }
     updateFormData('items', newItems)
   }
@@ -281,7 +304,10 @@ export default function DeliveryPlanForm() {
                     <Select
                       options={Object.values(ContentType).map((type) => ({ value: type, label: type.replace(/_/g, ' ') }))}
                       value={item.contentType}
-                      onChange={(value) => updateItem(index, 'contentType', value as unknown as ContentType)}
+                      onChange={(value) => {
+                        console.log('Select onChange value:', value, typeof value)
+                        updateItem(index, 'contentType', value as ContentType)
+                      }}
                     />
                   </div>
                   <div>
