@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
-import RichTextEditor from '@/components/ui/RichTextEditor'
+import RichTextEditor from '@/components/editor/RichTextEditor'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { isAdmin } from '@/lib/auth'
@@ -151,12 +151,11 @@ export default function NewIdeaPage() {
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
               </label>
-              <RichTextEditor
-                content={formData.description}
-                onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
-                placeholder="Describe your content idea in detail..."
-                className="min-h-[200px]"
-              />
+        <RichTextEditor
+          content={formData.description}
+          onContentChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+          placeholder="Describe your content idea in detail..."
+        />
             </div>
 
             {/* Organization Selection for Admin Users */}
