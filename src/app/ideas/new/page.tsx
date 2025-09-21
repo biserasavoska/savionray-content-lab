@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
+import RichTextEditor from '@/components/ui/RichTextEditor'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { isAdmin } from '@/lib/auth'
@@ -59,7 +60,10 @@ export default function NewIdeaPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.title.trim() || !formData.description.trim()) {
+    // Check if title is filled and description has content (strip HTML tags for validation)
+    const descriptionText = formData.description.replace(/<[^>]*>/g, '').trim()
+    
+    if (!formData.title.trim() || !descriptionText) {
       alert('Please fill in all required fields')
       return
     }
@@ -147,15 +151,11 @@ export default function NewIdeaPage() {
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
               </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Describe your content idea in detail"
-                required
+              <RichTextEditor
+                content={formData.description}
+                onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+                placeholder="Describe your content idea in detail..."
+                className="min-h-[200px]"
               />
             </div>
 
