@@ -34,8 +34,8 @@ import {
   AlignRight,
   AlignJustify
 } from 'lucide-react'
-import { Button } from '@/components/ui/common/Button'
-import { useState } from 'react'
+import Button from '@/components/ui/common/Button'
+import { useState, useEffect } from 'react'
 
 interface RichTextEditorProps {
   content: string
@@ -54,6 +54,11 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const editor = useEditor({
     extensions: [
@@ -92,6 +97,7 @@ export default function RichTextEditor({
       onChange(editor.getHTML())
     },
     editable: !disabled,
+    immediatelyRender: false, // Fix SSR hydration issues
   })
 
   const addLink = () => {
@@ -117,8 +123,14 @@ export default function RichTextEditor({
     editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
   }
 
-  if (!editor) {
-    return null
+  if (!isMounted || !editor) {
+    return (
+      <div className={`border border-gray-300 rounded-md ${className}`}>
+        <div className="p-4 min-h-[200px] flex items-center justify-center text-gray-500">
+          Loading editor...
+        </div>
+      </div>
+    )
   }
 
   return (
