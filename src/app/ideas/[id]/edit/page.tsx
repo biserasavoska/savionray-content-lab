@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { ArrowLeftIcon, PencilIcon } from '@heroicons/react/24/outline'
+import SimpleRichTextEditor from '@/components/ui/SimpleRichTextEditor'
 
 interface Idea {
   id: string
@@ -214,15 +215,11 @@ export default function EditIdeaPage() {
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
               </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Describe your content idea"
+              <SimpleRichTextEditor
+                content={formData.description}
+                onContentChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+                placeholder="Describe your content idea in detail..."
+                className="min-h-[200px]"
               />
             </div>
 
