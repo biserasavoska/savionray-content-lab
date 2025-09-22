@@ -70,27 +70,29 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
 
   return (
     <div className={`${className}`}>
-      <style jsx global>{`
-        .ql-editor {
-          color: #1f2937 !important;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-        .ql-editor.ql-blank::before {
-          color: #9ca3af !important;
-          font-style: normal;
-        }
-        .ql-toolbar {
-          border-top: 1px solid #d1d5db;
-          border-left: 1px solid #d1d5db;
-          border-right: 1px solid #d1d5db;
-        }
-        .ql-container {
-          border-bottom: 1px solid #d1d5db;
-          border-left: 1px solid #d1d5db;
-          border-right: 1px solid #d1d5db;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .ql-editor {
+            color: #1f2937 !important;
+            font-size: 14px;
+            line-height: 1.5;
+          }
+          .ql-editor.ql-blank::before {
+            color: #9ca3af !important;
+            font-style: normal;
+          }
+          .ql-toolbar {
+            border-top: 1px solid #d1d5db;
+            border-left: 1px solid #d1d5db;
+            border-right: 1px solid #d1d5db;
+          }
+          .ql-container {
+            border-bottom: 1px solid #d1d5db;
+            border-left: 1px solid #d1d5db;
+            border-right: 1px solid #d1d5db;
+          }
+        `
+      }} />
       <ReactQuill
         theme="snow"
         value={content}
