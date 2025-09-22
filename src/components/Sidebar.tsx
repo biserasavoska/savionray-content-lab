@@ -71,6 +71,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 width={120}
                 height={32}
                 className="h-8 w-auto"
+                style={{ width: 'auto', height: 'auto' }}
               />
             </Link>
             <button
