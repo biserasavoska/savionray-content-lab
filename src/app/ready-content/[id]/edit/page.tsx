@@ -39,6 +39,7 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [body, setBody] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState('')
   const [showRevisionForm, setShowRevisionForm] = useState(false)
   const [notification, setNotification] = useState<{
