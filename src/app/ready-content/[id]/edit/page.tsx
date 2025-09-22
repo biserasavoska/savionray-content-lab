@@ -63,6 +63,15 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
       return
     }
 
+    // Check if the ID looks like a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(params.id)) {
+      console.error('Invalid content ID format:', params.id)
+      setError('Invalid content ID. Please check the URL and try again.')
+      setLoading(false)
+      return
+    }
+
     try {
       const response = await fetch(`/api/drafts/${params.id}`, {
         credentials: 'include',
@@ -74,13 +83,15 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
         const data = await response.json()
         setContent(data)
         setBody(data.body)
+      } else if (response.status === 404) {
+        setError('Content not found. It may have been deleted or you may not have permission to view it.')
       } else {
         console.error('Failed to fetch content draft')
-        router.push('/ready-content')
+        setError('Failed to load content. Please try again.')
       }
     } catch (error) {
       console.error('Error fetching content draft:', error)
-      router.push('/ready-content')
+      setError('Failed to load content. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -212,6 +223,23 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2 mb-8"></div>
           <div className="h-64 bg-gray-200 rounded mb-4"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Content</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => router.push('/ready-content')}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+          >
+            Back to Drafts
+          </button>
         </div>
       </div>
     )
