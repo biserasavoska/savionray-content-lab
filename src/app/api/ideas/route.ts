@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const status = searchParams.get('status');
+    const contentType = searchParams.get('contentType');
     
     const skip = (page - 1) * limit;
     
@@ -28,16 +29,17 @@ export async function GET(request: NextRequest) {
       organizationId: context.organizationId,
     };
     
-    // Filter out approved ideas by default - they move to Content Status
-    if (status) {
+    // Apply status filter
+    if (status && status !== 'ALL') {
       where.status = status;
-    } else {
-      // Default filter: exclude approved ideas
-      // Users can still see approved ideas by explicitly filtering: ?status=APPROVED
-      where.status = {
-        not: 'APPROVED'
-      };
     }
+    // If status is 'ALL' or not provided, show all statuses (no status filter)
+    
+    // Apply content type filter
+    if (contentType && contentType !== 'ALL') {
+      where.contentType = contentType;
+    }
+    // If contentType is 'ALL' or not provided, show all content types (no content type filter)
     
     const [ideas, total] = await Promise.all([
       prisma.idea.findMany({

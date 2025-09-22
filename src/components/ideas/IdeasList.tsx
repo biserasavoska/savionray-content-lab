@@ -40,13 +40,14 @@ export default function IdeasList() {
     hasMore: false
   })
   const [loadingMore, setLoadingMore] = useState(false)
-  const [selectedStatus, setSelectedStatus] = useState<string>('PENDING')
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
+  const [selectedContentType, setSelectedContentType] = useState<string>('ALL')
 
   useEffect(() => {
     if (currentOrganization) {
       fetchIdeas()
     }
-  }, [currentOrganization, selectedStatus])
+  }, [currentOrganization, selectedStatus, selectedContentType])
 
   const fetchIdeas = async (page = 1, append = false, customLimit?: number) => {
     if (!currentOrganization) return
@@ -60,7 +61,8 @@ export default function IdeasList() {
       
       const limit = customLimit || pagination.limit
       const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : ''
-      const response = await fetch(`/api/ideas?page=${page}&limit=${limit}${statusParam}`, {
+      const contentTypeParam = selectedContentType !== 'ALL' ? `&contentType=${selectedContentType}` : ''
+      const response = await fetch(`/api/ideas?page=${page}&limit=${limit}${statusParam}${contentTypeParam}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
         }
@@ -100,7 +102,9 @@ export default function IdeasList() {
       setLoadingMore(true)
       try {
         // Load all remaining ideas at once
-        const response = await fetch(`/api/ideas?page=1&limit=${pagination.total}`, {
+        const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : ''
+        const contentTypeParam = selectedContentType !== 'ALL' ? `&contentType=${selectedContentType}` : ''
+        const response = await fetch(`/api/ideas?page=1&limit=${pagination.total}${statusParam}${contentTypeParam}`, {
           headers: {
             'x-selected-organization': currentOrganization!.id
           }
@@ -140,17 +144,36 @@ export default function IdeasList() {
   }
 
   const getContentTypeColor = (contentType: string) => {
-    switch (contentType?.toLowerCase()) {
-      case 'social-media':
+    switch (contentType) {
+      case 'SOCIAL_MEDIA_POST':
         return 'bg-blue-100 text-blue-800'
-      case 'blog':
+      case 'NEWSLETTER':
         return 'bg-green-100 text-green-800'
-      case 'email':
+      case 'BLOG_POST':
         return 'bg-purple-100 text-purple-800'
-      case 'video':
+      case 'WEBSITE_COPY':
+        return 'bg-orange-100 text-orange-800'
+      case 'EMAIL_CAMPAIGN':
         return 'bg-red-100 text-red-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getContentTypeLabel = (contentType: string) => {
+    switch (contentType) {
+      case 'SOCIAL_MEDIA_POST':
+        return 'Social Media Post'
+      case 'NEWSLETTER':
+        return 'Newsletter'
+      case 'BLOG_POST':
+        return 'Blog Post'
+      case 'WEBSITE_COPY':
+        return 'Website Copy'
+      case 'EMAIL_CAMPAIGN':
+        return 'Email Campaign'
+      default:
+        return contentType || 'Unknown'
     }
   }
 
@@ -184,10 +207,16 @@ export default function IdeasList() {
               </label>
               <select
                 id="content-type-filter"
+                value={selectedContentType}
+                onChange={(e) => setSelectedContentType(e.target.value)}
                 className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                disabled
               >
                 <option value="ALL">All Types</option>
+                <option value="SOCIAL_MEDIA_POST">Social Media Post</option>
+                <option value="NEWSLETTER">Newsletter</option>
+                <option value="BLOG_POST">Blog Post</option>
+                <option value="WEBSITE_COPY">Website Copy</option>
+                <option value="EMAIL_CAMPAIGN">Email Campaign</option>
               </select>
             </div>
             <div>
@@ -253,7 +282,7 @@ export default function IdeasList() {
                 
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getContentTypeColor(idea.contentType)}`}>
-                    {idea.contentType || 'Unknown'}
+                    {getContentTypeLabel(idea.contentType)}
                   </span>
                   {idea.mediaType && (
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
