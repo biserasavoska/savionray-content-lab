@@ -101,7 +101,7 @@ export default function DraftsList({ drafts, ideaId, onDelete }: DraftsListProps
       <div className="text-center py-12">
         <p className="text-gray-500">No drafts yet.</p>
         <button
-          onClick={() => router.push(`/ideas/${ideaId}/drafts/new`)}
+          onClick={() => router.push(`/ready-content/${ideaId}/edit`)}
           className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
         >
           Create First Draft
