@@ -57,7 +57,7 @@ export default function ContentReviewPanel({
   const { data: session } = useSession()
   const interfaceContext = useInterface()
   const [feedback, setFeedback] = useState<ContentFeedback>({
-    overallRating: 5,
+    overallRating: 0,
     feedback: '',
     suggestions: [],
     approved: false,
@@ -230,7 +230,7 @@ export default function ContentReviewPanel({
         {/* Overall Rating */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Overall Rating
+            Overall Rating <span className="text-gray-500 font-normal">- Optional</span>
           </label>
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4, 5].map((rating) => (
@@ -247,9 +247,24 @@ export default function ContentReviewPanel({
                 {rating}
               </button>
             ))}
-            <span className="ml-2 text-sm text-gray-600">
-              {feedback.overallRating}/5 stars
-            </span>
+            {feedback.overallRating > 0 ? (
+              <span className="ml-2 text-sm text-gray-600">
+                {feedback.overallRating}/5 stars
+              </span>
+            ) : (
+              <span className="ml-2 text-sm text-gray-500">
+                No rating selected
+              </span>
+            )}
+            {feedback.overallRating > 0 && (
+              <button
+                type="button"
+                onClick={() => handleRatingChange(0)}
+                className="ml-2 text-sm text-gray-500 hover:text-gray-700 underline"
+              >
+                Clear rating
+              </button>
+            )}
           </div>
         </div>
 

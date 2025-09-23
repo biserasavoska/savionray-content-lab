@@ -31,7 +31,8 @@ export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFor
         validationErrors.comment = 'Feedback comment is required'
       }
       
-      if (data.rating < 1 || data.rating > 5) {
+      // Rating is optional - only validate if provided
+      if (data.rating > 0 && (data.rating < 1 || data.rating > 5)) {
         validationErrors.rating = 'Rating must be between 1 and 5'
       }
       
@@ -69,24 +70,36 @@ export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFor
       {/* Rating */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Rating (1-5 stars)
+          Rating (1-5 stars) <span className="text-gray-500 font-normal">- Optional</span>
         </label>
-        <div className="flex space-x-1">
-          {[1, 2, 3, 4, 5].map((star) => (
+        <div className="flex items-center space-x-2">
+          <div className="flex space-x-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => updateFormData('rating', star)}
+                className={`text-2xl ${
+                  star <= formData.rating
+                    ? 'text-yellow-400'
+                    : 'text-gray-300'
+                } hover:text-yellow-400 transition-colors`}
+                disabled={loading}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          {formData.rating > 0 && (
             <button
-              key={star}
               type="button"
-              onClick={() => updateFormData('rating', star)}
-              className={`text-2xl ${
-                star <= formData.rating
-                  ? 'text-yellow-400'
-                  : 'text-gray-300'
-              } hover:text-yellow-400 transition-colors`}
+              onClick={() => updateFormData('rating', 0)}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
               disabled={loading}
             >
-              ★
+              Clear rating
             </button>
-          ))}
+          )}
         </div>
         {errors.rating && (
           <p className="mt-1 text-sm text-red-600">{errors.rating}</p>
