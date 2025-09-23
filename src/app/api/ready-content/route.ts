@@ -90,6 +90,11 @@ export async function GET(request: NextRequest) {
           }
         },
         {
+          Idea: {
+            createdAt: 'asc'
+          }
+        },
+        {
           status: 'asc'
         },
         {
