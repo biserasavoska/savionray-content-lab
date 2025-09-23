@@ -64,9 +64,10 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
       return
     }
 
-    // Check if the ID looks like a valid UUID
+    // Check if the ID looks like a valid UUID or cuid
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    if (!uuidRegex.test(params.id)) {
+    const cuidRegex = /^c[a-z0-9]{24}$/i
+    if (!uuidRegex.test(params.id) && !cuidRegex.test(params.id)) {
       console.error('Invalid content ID format:', params.id)
       setError('Invalid content ID. Please check the URL and try again.')
       setLoading(false)
