@@ -85,6 +85,11 @@ export async function GET(request: NextRequest) {
       },
       orderBy: [
         {
+          Idea: {
+            publishingDateTime: 'asc'
+          }
+        },
+        {
           status: 'asc'
         },
         {
