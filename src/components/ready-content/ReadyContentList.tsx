@@ -26,6 +26,8 @@ interface ReadyContentListProps {
 export default function ReadyContentList({ isCreativeUser, isClientUser }: ReadyContentListProps) {
   const { data: session } = useSession()
   const { currentOrganization } = useOrganization()
+  
+  console.log('ReadyContentList render - currentOrganization:', currentOrganization)
   const [content, setContent] = useState<(Omit<ContentDraft, 'status'> & {
     status: string
     Idea: Idea & {
@@ -60,10 +62,12 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   useEffect(() => {
     const fetchContent = async () => {
       if (!currentOrganization) {
+        console.log('No current organization, skipping fetch')
         setLoading(false)
         return
       }
 
+      console.log('Fetching content for organization:', currentOrganization.id)
       try {
         setLoading(true)
         setError(null)
@@ -75,11 +79,14 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         })
         
         if (!response.ok) {
-          throw new Error('Failed to fetch ready content')
+          const errorText = await response.text()
+          console.error('API Error:', response.status, errorText)
+          throw new Error(`Failed to fetch ready content: ${response.status} ${errorText}`)
         }
         
         const data = await response.json()
         console.log('Initial load - pagination data:', data.pagination)
+        console.log('Initial load - content length:', data.content?.length)
         setContent(data.content || [])
         setPagination(data.pagination || pagination)
       } catch (err) {
