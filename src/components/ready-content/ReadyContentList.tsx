@@ -46,8 +46,17 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [updatedItems, setUpdatedItems] = useState<Set<string>>(new Set())
   const [unifiedFeedback, setUnifiedFeedback] = useState<{ [key: string]: any[] }>({})
+  
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 4, // Show 4 items initially
+    total: 0,
+    totalPages: 0
+  })
+  const [loadingMore, setLoadingMore] = useState(false)
 
-  // Fetch ready content data
+  // Fetch ready content data (initial load only)
   useEffect(() => {
     const fetchContent = async () => {
       if (!currentOrganization) {
@@ -59,7 +68,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         setLoading(true)
         setError(null)
         
-        const response = await fetch('/api/ready-content', {
+        const response = await fetch(`/api/ready-content?page=1&limit=4`, {
           headers: {
             'x-selected-organization': currentOrganization.id
           }
@@ -70,7 +79,9 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         }
         
         const data = await response.json()
+        console.log('Initial load - pagination data:', data.pagination)
         setContent(data.content || [])
+        setPagination(data.pagination || pagination)
       } catch (err) {
         console.error('Error fetching ready content:', err)
         setError('Failed to load ready content')
@@ -231,6 +242,39 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
 
   const CONTENT_TYPE_OPTIONS: ContentType[] = ['NEWSLETTER', 'BLOG_POST', 'SOCIAL_MEDIA_POST', 'EMAIL_CAMPAIGN', 'WEBSITE_COPY']
 
+  // Load more content (load all remaining at once)
+  const loadMore = async () => {
+    if (loadingMore || content.length >= pagination.total) return
+
+    setLoadingMore(true)
+    try {
+      // Load all remaining content at once
+      const response = await fetch(`/api/ready-content?page=1&limit=${pagination.total}`, {
+        headers: {
+          'x-selected-organization': currentOrganization?.id || ''
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Load more - pagination data:', data.pagination)
+        console.log('Load more - content length:', data.content?.length)
+        // Replace the current content with all content
+        setContent(data.content || [])
+        setPagination(prev => ({
+          ...prev,
+          page: data.pagination.page,
+          total: data.pagination.total,
+          totalPages: data.pagination.totalPages
+        }))
+      }
+    } catch (error) {
+      console.error('Error loading more content:', error)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
   // Loading state
   if (loading) {
     return (
@@ -359,7 +403,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
               </div>
             </div>
             <div className="text-sm text-gray-500">
-              {filteredContent.length} of {content.length} items
+              {filteredContent.length} of {pagination.total} items
             </div>
           </div>
 
@@ -694,6 +738,30 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
               </div>
             ))}
           </div>
+
+          {/* Load More Button */}
+          {content.length < pagination.total && (
+            <div className="text-center mt-8">
+              <Button
+                onClick={loadMore}
+                disabled={loadingMore}
+                variant="outline"
+                size="lg"
+              >
+                {loadingMore ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Loading...
+                  </>
+                ) : (
+                  `Load All (${pagination.total - content.length} remaining)`
+                )}
+              </Button>
+            </div>
+          )}
         </PageSection>
     </PageContent>
   )
