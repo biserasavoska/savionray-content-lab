@@ -42,7 +42,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<ContentType | 'ALL'>('ALL')
-  const [selectedStatus, setSelectedStatus] = useState<string>('AWAITING_FEEDBACK')
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -108,6 +108,14 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
       return false
     }
     return true
+  })
+  
+  console.log('Filtering debug:', {
+    totalContent: content.length,
+    filteredContent: filteredContent.length,
+    selectedStatus,
+    selectedType,
+    contentStatuses: content.map(item => item.status)
   })
 
   const getContentTypeLabel = (contentType: string) => {
