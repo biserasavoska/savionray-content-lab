@@ -51,7 +51,7 @@ export function setThemeDataAttributes(): void {
  * Initialize theme detection
  * Call this early in the app lifecycle
  */
-export function initializeThemeDetection(): void {
+export function initializeThemeDetection(): () => void {
   // Set initial state
   setThemeDataAttributes();
 
