@@ -10,6 +10,7 @@ import TopNavigation from './TopNavigation'
 import LogRocketProvider from './LogRocketProvider'
 
 import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
+import { initializeThemeDetection } from '@/lib/utils/theme-detection'
 
 export default function RootClientWrapper({
   children,
@@ -24,6 +25,12 @@ export default function RootClientWrapper({
 
   useEffect(() => {
     setMounted(true)
+    
+    // Initialize theme detection to handle special browser/OS environments
+    const cleanup = initializeThemeDetection()
+    
+    // Cleanup on unmount
+    return cleanup
   }, [])
 
   // Hide sidebar on auth pages
@@ -35,7 +42,7 @@ export default function RootClientWrapper({
       <SessionProvider session={session}>
         <OrganizationProvider>
           <LogRocketProvider>
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-bg text-fg">
               {children}
             </div>
           </LogRocketProvider>
@@ -48,7 +55,7 @@ export default function RootClientWrapper({
     <SessionProvider session={session}>
       <OrganizationProvider>
         <LogRocketProvider>
-          <div className="min-h-screen bg-gray-50 flex flex-row">
+          <div className="min-h-screen bg-bg text-fg flex flex-row">
             {/* Role-based Sidebar (hidden on auth pages) */}
             {!isAuthPage && (
               <RoleBasedNavigation isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
