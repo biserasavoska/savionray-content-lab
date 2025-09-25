@@ -35,16 +35,6 @@ export default function LogRocketProvider({ children }: LogRocketProviderProps) 
               }
               return response
             }
-          },
-          // Add retry configuration to handle network issues
-          retry: {
-            maxRetries: 3,
-            retryDelay: 1000
-          },
-          // Disable automatic session recording on network errors
-          shouldCaptureConsoleLog: () => {
-            // Only capture console logs if network is stable
-            return navigator.onLine
           }
         })
         
