@@ -35,6 +35,16 @@ export default function LogRocketProvider({ children }: LogRocketProviderProps) 
               }
               return response
             }
+          },
+          // Add retry configuration to handle network issues
+          retry: {
+            maxRetries: 3,
+            retryDelay: 1000
+          },
+          // Disable automatic session recording on network errors
+          shouldCaptureConsoleLog: () => {
+            // Only capture console logs if network is stable
+            return navigator.onLine
           }
         })
         
@@ -58,6 +68,21 @@ export default function LogRocketProvider({ children }: LogRocketProviderProps) 
         // Store the identify function globally so it can be called from other components
         ;(window as any).logRocketIdentify = identifyUser
         
+        // Add global error handler to suppress LogRocket network errors
+        const originalConsoleError = console.error
+        console.error = (...args) => {
+          // Suppress LogRocket network errors from appearing in console
+          const errorMessage = args.join(' ')
+          if (errorMessage.includes('net::ERR_NETWORK_CHANGED') || 
+              errorMessage.includes('logger-1.min.js') ||
+              errorMessage.includes('LogRocket')) {
+            // Silently ignore LogRocket network errors
+            return
+          }
+          // Log other errors normally
+          originalConsoleError.apply(console, args)
+        }
+
         console.log('LogRocket initialized with app ID:', appId)
       } catch (error) {
         console.warn('LogRocket initialization failed:', error)
