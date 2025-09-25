@@ -73,7 +73,7 @@ export default function LogRocketProvider({ children }: LogRocketProviderProps) 
           originalConsoleError.apply(console, args)
         }
 
-        console.log('LogRocket initialized with app ID:', appId)
+        console.log('LogRocket initialized successfully with app ID:', appId)
       } catch (error) {
         console.warn('LogRocket initialization failed:', error)
         // Continue without LogRocket if it fails
