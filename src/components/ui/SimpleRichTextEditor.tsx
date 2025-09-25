@@ -106,7 +106,6 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
           minHeight: '200px',
           backgroundColor: 'white'
         }}
-        onError={() => setHasError(true)}
       />
     </div>
   )
