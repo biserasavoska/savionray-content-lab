@@ -35,14 +35,7 @@ export default function LogRocketProvider({ children }: LogRocketProviderProps) 
               }
               return response
             }
-          },
-          // Add timeout for better network handling
-          timeout: 10000, // 10 second timeout
-          // Disable LogRocket in development if network issues persist
-          ...(process.env.NODE_ENV === 'development' && {
-            // Keep enabled but with better error handling
-            disabled: false
-          })
+          }
         })
         
         // Optional: Identify users for better session tracking
