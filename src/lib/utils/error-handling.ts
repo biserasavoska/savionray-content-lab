@@ -2,6 +2,18 @@
  * Error handling utilities for better development experience
  */
 
+export enum ErrorType {
+  VALIDATION = 'VALIDATION',
+  AUTHENTICATION = 'AUTHENTICATION',
+  AUTHORIZATION = 'AUTHORIZATION',
+  NOT_FOUND = 'NOT_FOUND',
+  CONFLICT = 'CONFLICT',
+  DATABASE = 'DATABASE',
+  EXTERNAL_API = 'EXTERNAL_API',
+  RATE_LIMIT = 'RATE_LIMIT',
+  INTERNAL = 'INTERNAL'
+}
+
 /**
  * Suppress known browser extension errors from console
  */
@@ -85,4 +97,4 @@ export const initializeErrorHandling = () => {
     suppressExtensionErrors()
     handleUnhandledRejections()
   }
-}
+} 
