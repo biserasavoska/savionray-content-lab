@@ -52,10 +52,28 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         console.log('Received organizations data:', data)
         setUserOrganizations(data.organizations || [])
         
-        // If no current organization is set, use the first one
+        // If no current organization is set, prioritize SavionRay for admin users
         if (!currentOrganization && data.organizations?.length > 0) {
-          console.log('Setting current organization to first available:', data.organizations[0])
-          setCurrentOrganization(data.organizations[0])
+          let defaultOrg = data.organizations[0] // Fallback to first organization
+          
+          // For admin users, prioritize SavionRay organization
+          if (session?.user?.role === 'ADMIN') {
+            const savionRayOrg = data.organizations.find(org => 
+              org.name.toLowerCase().includes('savion') || 
+              org.name.toLowerCase().includes('savionray') ||
+              org.slug === 'savionray'
+            )
+            if (savionRayOrg) {
+              defaultOrg = savionRayOrg
+              console.log('Admin user: Setting SavionRay as default organization:', savionRayOrg)
+            } else {
+              console.log('Admin user: SavionRay not found, using first available:', data.organizations[0])
+            }
+          } else {
+            console.log('Non-admin user: Setting current organization to first available:', data.organizations[0])
+          }
+          
+          setCurrentOrganization(defaultOrg)
         }
       } else {
         console.error('Failed to fetch organizations:', response.status, response.statusText)
@@ -117,11 +135,30 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       if (savedOrganizationId) {
         const savedOrganization = userOrganizations.find(org => org.id === savedOrganizationId)
         if (savedOrganization) {
-          setCurrentOrganization(savedOrganization)
+          // For admin users, check if the saved organization is SavionRay
+          if (session?.user?.role === 'ADMIN') {
+            const savionRayOrg = userOrganizations.find(org => 
+              org.name.toLowerCase().includes('savion') || 
+              org.name.toLowerCase().includes('savionray') ||
+              org.slug === 'savionray'
+            )
+            
+            // If admin user has SavionRay available, prioritize it over saved organization
+            if (savionRayOrg && savedOrganization.id !== savionRayOrg.id) {
+              console.log('Admin user: Prioritizing SavionRay over saved organization:', savedOrganization.name)
+              setCurrentOrganization(savionRayOrg)
+              // Update localStorage to reflect the admin preference
+              localStorage.setItem('selectedOrganizationId', savionRayOrg.id)
+            } else {
+              setCurrentOrganization(savedOrganization)
+            }
+          } else {
+            setCurrentOrganization(savedOrganization)
+          }
         }
       }
     }
-  }, [userOrganizations])
+  }, [userOrganizations, session?.user?.role])
 
   const value: OrganizationContextType = {
     currentOrganization,

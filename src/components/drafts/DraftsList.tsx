@@ -96,12 +96,43 @@ export default function DraftsList({ drafts, ideaId, onDelete }: DraftsListProps
     }
   }
 
+  const createFirstDraft = async () => {
+    try {
+      // Create a new draft for this idea
+      const response = await fetch('/api/drafts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ideaId: ideaId,
+          body: '', // Empty body to be filled
+          contentType: 'SOCIAL_MEDIA_POST', // Default content type
+          metadata: {}
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create draft')
+      }
+
+      const newDraft = await response.json()
+      
+      // Navigate to edit the newly created draft
+      router.push(`/ready-content/${newDraft.id}/edit`)
+    } catch (error) {
+      console.error('Error creating draft:', error)
+      // Fallback: navigate to the old route (this will show an error but won't crash)
+      router.push(`/ready-content/${ideaId}/edit`)
+    }
+  }
+
   if (drafts.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">No drafts yet.</p>
         <button
-          onClick={() => router.push(`/ready-content/${ideaId}/edit`)}
+          onClick={createFirstDraft}
           className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700"
         >
           Create First Draft

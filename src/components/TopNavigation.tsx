@@ -1,12 +1,16 @@
 'use client'
 
 import { Bars3Icon } from '@heroicons/react/24/outline'
+import ClientNavigationSwitcher from './navigation/ClientNavigationSwitcher'
+import { useInterface } from '@/hooks/useInterface'
 
 interface TopNavigationProps {
   setIsSidebarOpen: (open: boolean) => void
 }
 
 export default function TopNavigation({ setIsSidebarOpen }: TopNavigationProps) {
+  const interfaceContext = useInterface()
+  
   return (
     <div className="sticky top-0 z-30 bg-white border-b border-gray-200 lg:hidden">
       <div className="flex items-center justify-between h-16 px-4">
@@ -23,7 +27,12 @@ export default function TopNavigation({ setIsSidebarOpen }: TopNavigationProps) 
           </h1>
         </div>
         
-        <div className="w-10" /> {/* Spacer for centering */}
+        {/* Client Navigation Switcher for Creative and Admin users */}
+        <div className="flex items-center">
+          {(interfaceContext.isCreative || interfaceContext.isAdmin) && (
+            <ClientNavigationSwitcher />
+          )}
+        </div>
       </div>
     </div>
   )

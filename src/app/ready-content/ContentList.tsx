@@ -134,12 +134,49 @@ export default function ContentList({ ideas }: ContentListProps) {
               </div>
 
               <div className="flex flex-col space-y-3 ml-6">
-                <Link
-                  href={`/ready-content/${idea.id}/edit`}
-                  className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full"
-                >
-                  {latestDraft ? 'Edit Draft' : 'Create Draft'}
-                </Link>
+                {latestDraft ? (
+                  <Link
+                    href={`/ready-content/${latestDraft.id}/edit`}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full"
+                  >
+                    Edit Draft
+                  </Link>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        // Create a new draft for this idea
+                        const response = await fetch('/api/drafts', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            ideaId: idea.id,
+                            body: '', // Empty body to be filled
+                            contentType: 'SOCIAL_MEDIA_POST', // Default content type
+                            metadata: {}
+                          }),
+                        })
+
+                        if (!response.ok) {
+                          throw new Error('Failed to create draft')
+                        }
+
+                        const newDraft = await response.json()
+                        
+                        // Navigate to edit the newly created draft
+                        window.location.href = `/ready-content/${newDraft.id}/edit`
+                      } catch (error) {
+                        console.error('Error creating draft:', error)
+                        alert('Failed to create draft. Please try again.')
+                      }
+                    }}
+                    className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full"
+                  >
+                    Create Draft
+                  </button>
+                )}
                 
                 {latestDraft && (
                   <button

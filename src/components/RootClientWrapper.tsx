@@ -7,10 +7,12 @@ import { usePathname } from 'next/navigation'
 
 import RoleBasedNavigation from './navigation/RoleBasedNavigation'
 import TopNavigation from './TopNavigation'
+import DesktopTopNavigation from './DesktopTopNavigation'
 import LogRocketProvider from './LogRocketProvider'
 
 import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
 import { initializeThemeDetection } from '@/lib/utils/theme-detection'
+import { initializeErrorHandling } from '@/lib/utils/error-handling'
 
 export default function RootClientWrapper({
   children,
@@ -28,6 +30,9 @@ export default function RootClientWrapper({
     
     // Initialize theme detection to handle special browser/OS environments
     const cleanup = initializeThemeDetection()
+    
+    // Initialize error handling for development
+    initializeErrorHandling()
     
     // Cleanup on unmount
     return cleanup
@@ -64,6 +69,8 @@ export default function RootClientWrapper({
             <div className="flex-1 flex flex-col min-h-screen">
               {/* Top navigation for mobile */}
               {!isAuthPage && <TopNavigation setIsSidebarOpen={setIsSidebarOpen} />}
+              {/* Desktop top navigation */}
+              {!isAuthPage && <DesktopTopNavigation />}
               {/* Main page content */}
               <main className="flex-1">
                 {children}

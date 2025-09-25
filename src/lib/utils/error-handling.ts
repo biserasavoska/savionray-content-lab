@@ -1,355 +1,88 @@
 /**
- * ERROR HANDLING UTILITIES
- * 
- * Centralized error handling for consistent error management across the application.
- * Provides error types, logging, and response helpers.
+ * Error handling utilities for better development experience
  */
 
-// ============================================================================
-// ERROR TYPES
-// ============================================================================
+/**
+ * Suppress known browser extension errors from console
+ */
+export const suppressExtensionErrors = () => {
+  if (typeof window === 'undefined') return
 
-export enum ErrorType {
-  VALIDATION = 'VALIDATION',
-  AUTHENTICATION = 'AUTHENTICATION',
-  AUTHORIZATION = 'AUTHORIZATION',
-  NOT_FOUND = 'NOT_FOUND',
-  CONFLICT = 'CONFLICT',
-  DATABASE = 'DATABASE',
-  EXTERNAL_API = 'EXTERNAL_API',
-  INTERNAL = 'INTERNAL',
-  RATE_LIMIT = 'RATE_LIMIT'
-}
+  const originalConsoleError = console.error
+  const originalConsoleWarn = console.warn
 
-export enum ErrorSeverity {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
-}
-
-export interface AppError {
-  type: ErrorType
-  message: string
-  code: string
-  severity: ErrorSeverity
-  details?: Record<string, any>
-  timestamp: Date
-  userId?: string
-  requestId?: string
-}
-
-export interface ErrorResponse {
-  success: false
-  error: {
-    type: ErrorType
-    message: string
-    code: string
-    details?: Record<string, any>
-  }
-  timestamp: string
-  requestId?: string
-}
-
-// ============================================================================
-// ERROR CREATION HELPERS
-// ============================================================================
-
-export function createError(
-  type: ErrorType,
-  message: string,
-  code: string,
-  severity: ErrorSeverity = ErrorSeverity.MEDIUM,
-  details?: Record<string, any>
-): AppError {
-  return {
-    type,
-    message,
-    code,
-    severity,
-    details,
-    timestamp: new Date()
-  }
-}
-
-export function createValidationError(
-  field: string,
-  message: string,
-  details?: Record<string, any>
-): AppError {
-  return createError(
-    ErrorType.VALIDATION,
-    `Validation error for ${field}: ${message}`,
-    'VALIDATION_ERROR',
-    ErrorSeverity.LOW,
-    { field, ...details }
-  )
-}
-
-export function createAuthenticationError(
-  message: string = 'Authentication required',
-  details?: Record<string, any>
-): AppError {
-  return createError(
-    ErrorType.AUTHENTICATION,
-    message,
-    'AUTHENTICATION_ERROR',
-    ErrorSeverity.MEDIUM,
-    details
-  )
-}
-
-export function createAuthorizationError(
-  message: string = 'Insufficient permissions',
-  details?: Record<string, any>
-): AppError {
-  return createError(
-    ErrorType.AUTHORIZATION,
-    message,
-    'AUTHORIZATION_ERROR',
-    ErrorSeverity.MEDIUM,
-    details
-  )
-}
-
-export function createNotFoundError(
-  resource: string,
-  id?: string,
-  details?: Record<string, any>
-): AppError {
-  const message = id 
-    ? `${resource} with id ${id} not found`
-    : `${resource} not found`
-  
-  return createError(
-    ErrorType.NOT_FOUND,
-    message,
-    'NOT_FOUND_ERROR',
-    ErrorSeverity.LOW,
-    { resource, id, ...details }
-  )
-}
-
-export function createDatabaseError(
-  message: string,
-  details?: Record<string, any>
-): AppError {
-  return createError(
-    ErrorType.DATABASE,
-    message,
-    'DATABASE_ERROR',
-    ErrorSeverity.HIGH,
-    details
-  )
-}
-
-export function createInternalError(
-  message: string = 'Internal server error',
-  details?: Record<string, any>
-): AppError {
-  return createError(
-    ErrorType.INTERNAL,
-    message,
-    'INTERNAL_ERROR',
-    ErrorSeverity.CRITICAL,
-    details
-  )
-}
-
-import { logger } from './logger'
-
-// ============================================================================
-// ERROR LOGGING
-// ============================================================================
-
-export function logError(error: AppError, context?: Record<string, any>): void {
-  // Convert AppError to standard Error for logging
-  const errorObj = new Error(error.message)
-  errorObj.name = error.type
-  ;(errorObj as any).code = error.code
-
-  // Log based on severity
-  switch (error.severity) {
-    case ErrorSeverity.LOW:
-      logger.warn(error.message, { ...error, ...context })
-      break
-    case ErrorSeverity.MEDIUM:
-      logger.error(error.message, errorObj, { ...error, ...context })
-      break
-    case ErrorSeverity.HIGH:
-    case ErrorSeverity.CRITICAL:
-      logger.critical(error.message, errorObj, { ...error, ...context })
-      break
-  }
-}
-
-// ============================================================================
-// API RESPONSE HELPERS
-// ============================================================================
-
-export function createErrorResponse(
-  error: AppError,
-  requestId?: string
-): ErrorResponse {
-  return {
-    success: false,
-    error: {
-      type: error.type,
-      message: error.message,
-      code: error.code,
-      details: error.details
-    },
-    timestamp: error.timestamp.toISOString(),
-    requestId
-  }
-}
-
-export function getHttpStatusFromErrorType(type: ErrorType): number {
-  switch (type) {
-    case ErrorType.VALIDATION:
-      return 400
-    case ErrorType.AUTHENTICATION:
-      return 401
-    case ErrorType.AUTHORIZATION:
-      return 403
-    case ErrorType.NOT_FOUND:
-      return 404
-    case ErrorType.CONFLICT:
-      return 409
-    case ErrorType.RATE_LIMIT:
-      return 429
-    case ErrorType.DATABASE:
-    case ErrorType.EXTERNAL_API:
-    case ErrorType.INTERNAL:
-    default:
-      return 500
-  }
-}
-
-// ============================================================================
-// API ROUTE ERROR HANDLING
-// ============================================================================
-
-export async function handleApiError(
-  error: unknown,
-  requestId?: string
-): Promise<{ status: number; body: ErrorResponse }> {
-  let appError: AppError
-
-  // Convert different error types to AppError
-  if (isAppError(error)) {
-    appError = error
-  } else if (error instanceof Error) {
-    appError = createInternalError(error.message, { originalError: error.stack })
-  } else {
-    appError = createInternalError('Unknown error occurred')
-  }
-
-  // Add request context
-  appError.requestId = requestId
-
-  // Log the error
-  logError(appError)
-
-  // Create response
-  const status = getHttpStatusFromErrorType(appError.type)
-  const body = createErrorResponse(appError, requestId)
-
-  return { status, body }
-}
-
-export function isAppError(error: unknown): error is AppError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'type' in error &&
-    'message' in error &&
-    'code' in error &&
-    'severity' in error &&
-    'timestamp' in error
-  )
-}
-
-// ============================================================================
-// VALIDATION HELPERS
-// ============================================================================
-
-export function validateRequired(
-  value: any,
-  fieldName: string
-): AppError | null {
-  if (value === null || value === undefined || value === '') {
-    return createValidationError(fieldName, `${fieldName} is required`)
-  }
-  return null
-}
-
-export function validateString(
-  value: any,
-  fieldName: string,
-  minLength?: number,
-  maxLength?: number
-): AppError | null {
-  if (typeof value !== 'string') {
-    return createValidationError(fieldName, `${fieldName} must be a string`)
-  }
-
-  if (minLength && value.length < minLength) {
-    return createValidationError(fieldName, `${fieldName} must be at least ${minLength} characters`)
-  }
-
-  if (maxLength && value.length > maxLength) {
-    return createValidationError(fieldName, `${fieldName} must be no more than ${maxLength} characters`)
-  }
-
-  return null
-}
-
-export function validateEmail(value: any, fieldName: string): AppError | null {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  
-  if (typeof value !== 'string' || !emailRegex.test(value)) {
-    return createValidationError(fieldName, `${fieldName} must be a valid email address`)
-  }
-
-  return null
-}
-
-export function validateId(value: any, fieldName: string): AppError | null {
-  if (!value || typeof value !== 'string' || value.trim() === '') {
-    return createValidationError(fieldName, `${fieldName} must be a valid ID`)
-  }
-
-  return null
-}
-
-// ============================================================================
-// BULK VALIDATION
-// ============================================================================
-
-export function validateObject(
-  obj: Record<string, any>,
-  validations: Record<string, (value: any, fieldName: string) => AppError | null>
-): { isValid: boolean; errors: AppError[] } {
-  const errors: AppError[] = []
-
-  for (const [fieldName, validationFn] of Object.entries(validations)) {
-    const error = validationFn(obj[fieldName], fieldName)
-    if (error) {
-      errors.push(error)
+  console.error = (...args) => {
+    const errorMessage = args.join(' ')
+    
+    // Suppress known browser extension errors
+    if (
+      errorMessage.includes('content-script.js') ||
+      errorMessage.includes('extension') ||
+      errorMessage.includes('chrome-extension://') ||
+      errorMessage.includes('moz-extension://') ||
+      errorMessage.includes('safari-extension://')
+    ) {
+      // Silently ignore browser extension errors
+      return
     }
+    
+    // Log other errors normally
+    originalConsoleError.apply(console, args)
   }
 
-  return {
-    isValid: errors.length === 0,
-    errors
+  console.warn = (...args) => {
+    const warningMessage = args.join(' ')
+    
+    // Suppress known browser extension warnings
+    if (
+      warningMessage.includes('content-script.js') ||
+      warningMessage.includes('extension') ||
+      warningMessage.includes('chrome-extension://') ||
+      warningMessage.includes('moz-extension://') ||
+      warningMessage.includes('safari-extension://')
+    ) {
+      // Silently ignore browser extension warnings
+      return
+    }
+    
+    // Log other warnings normally
+    originalConsoleWarn.apply(console, args)
   }
 }
 
-// ============================================================================
-// REQUEST ID GENERATION
-// ============================================================================
+/**
+ * Handle unhandled promise rejections
+ */
+export const handleUnhandledRejections = () => {
+  if (typeof window === 'undefined') return
 
-export function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-} 
+  window.addEventListener('unhandledrejection', (event) => {
+    const error = event.reason
+    
+    // Check if it's a browser extension error
+    if (
+      error?.message?.includes('content-script') ||
+      error?.message?.includes('extension') ||
+      error?.stack?.includes('chrome-extension://') ||
+      error?.stack?.includes('moz-extension://') ||
+      error?.stack?.includes('safari-extension://')
+    ) {
+      // Prevent the error from appearing in console
+      event.preventDefault()
+      return
+    }
+    
+    // Log other unhandled rejections normally
+    console.error('Unhandled promise rejection:', error)
+  })
+}
+
+/**
+ * Initialize error handling for development
+ */
+export const initializeErrorHandling = () => {
+  if (process.env.NODE_ENV === 'development') {
+    suppressExtensionErrors()
+    handleUnhandledRejections()
+  }
+}

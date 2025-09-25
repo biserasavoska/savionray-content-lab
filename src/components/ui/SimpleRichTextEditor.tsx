@@ -1,20 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
-
-// Dynamically import ReactQuill to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { 
-  ssr: false,
-  loading: () => (
-    <div className="border border-gray-300 rounded-md">
-      <div className="p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">
-        Loading editor...
-      </div>
-    </div>
-  )
-})
-
+import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 
 interface SimpleRichTextEditorProps {
@@ -33,6 +20,7 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
   className = ''
 }) => {
   const [isMounted, setIsMounted] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
@@ -63,6 +51,19 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
       <div className={`border border-gray-300 rounded-md ${className}`}>
         <div className="p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">
           Loading editor...
+        </div>
+      </div>
+    )
+  }
+
+  if (hasError) {
+    return (
+      <div className={`border border-gray-300 rounded-md ${className}`}>
+        <div className="p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">
+          <div className="text-center">
+            <p className="text-red-600 mb-2">Editor failed to load</p>
+            <p className="text-sm">Please refresh the page or try again</p>
+          </div>
         </div>
       </div>
     )
@@ -105,6 +106,7 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
           minHeight: '200px',
           backgroundColor: 'white'
         }}
+        onError={() => setHasError(true)}
       />
     </div>
   )

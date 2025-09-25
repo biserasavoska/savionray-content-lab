@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
-import dynamic from 'next/dynamic'
-
-// Dynamically import ReactQuill to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false })
+import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 
 import type { User } from '@/types/content'
