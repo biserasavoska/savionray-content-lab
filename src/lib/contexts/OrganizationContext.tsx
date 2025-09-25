@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react'
 import { useSession } from 'next-auth/react'
 
 interface Organization {
@@ -36,6 +36,9 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const [currentOrganization, setCurrentOrganization] = useState<Organization | null>(null)
   const [userOrganizations, setUserOrganizations] = useState<Organization[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  // Create a stable reference for user role to prevent useEffect dependency array size changes
+  const userRole = useMemo(() => session?.user?.role, [session?.user?.role])
 
   // Fetch user's organizations
   const fetchOrganizations = async () => {
@@ -58,7 +61,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           
           // For admin users, prioritize SavionRay organization
           if (session?.user?.role === 'ADMIN') {
-            const savionRayOrg = data.organizations.find(org => 
+            const savionRayOrg = data.organizations.find((org: Organization) => 
               org.name.toLowerCase().includes('savion') || 
               org.name.toLowerCase().includes('savionray') ||
               org.slug === 'savionray'
@@ -136,8 +139,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         const savedOrganization = userOrganizations.find(org => org.id === savedOrganizationId)
         if (savedOrganization) {
           // For admin users, check if the saved organization is SavionRay
-          if (session?.user?.role === 'ADMIN') {
-            const savionRayOrg = userOrganizations.find(org => 
+          if (userRole === 'ADMIN') {
+            const savionRayOrg = userOrganizations.find((org: Organization) => 
               org.name.toLowerCase().includes('savion') || 
               org.name.toLowerCase().includes('savionray') ||
               org.slug === 'savionray'
@@ -158,7 +161,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-  }, [userOrganizations, session?.user?.role])
+  }, [userOrganizations, userRole])
 
   const value: OrganizationContextType = {
     currentOrganization,
