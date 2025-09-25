@@ -181,7 +181,7 @@ export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFor
         <Button
           type="submit"
           loading={loading}
-          disabled={!formData.comment.trim() || formData.rating < 1}
+          disabled={!formData.comment.trim()}
         >
           Submit Feedback
         </Button>
