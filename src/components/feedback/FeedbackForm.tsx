@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { useSession } from 'next-auth/react'
 
 import { Textarea } from '@/components/ui/common/FormField'
@@ -14,6 +15,7 @@ interface FeedbackFormProps {
 
 export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFormProps) {
   const { data: session } = useSession()
+  const commentTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Use the new form hook
   const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
@@ -65,8 +67,40 @@ export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFor
     }
   })
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // If comment is empty, focus the textarea to guide the user
+    if (!formData.comment.trim()) {
+      commentTextareaRef.current?.focus()
+      return
+    }
+    
+    // Otherwise, proceed with normal form submission
+    handleSubmit(e)
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
+      {/* Comment - Moved to top */}
+      <div>
+        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
+          Feedback Comment
+        </label>
+        <Textarea
+          ref={commentTextareaRef}
+          id="comment"
+          value={formData.comment}
+          onChange={(e) => updateFormData('comment', e.target.value)}
+          rows={4}
+          placeholder="Enter your detailed feedback here..."
+          disabled={loading}
+        />
+        {errors.comment && (
+          <p className="mt-1 text-sm text-red-600">{errors.comment}</p>
+        )}
+      </div>
+
       {/* Rating */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -159,29 +193,10 @@ export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFor
         </label>
       </div>
 
-      {/* Comment */}
-      <div>
-        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-2">
-          Feedback Comment
-        </label>
-        <Textarea
-          id="comment"
-          value={formData.comment}
-          onChange={(e) => updateFormData('comment', e.target.value)}
-          rows={4}
-          placeholder="Enter your detailed feedback here..."
-          disabled={loading}
-        />
-        {errors.comment && (
-          <p className="mt-1 text-sm text-red-600">{errors.comment}</p>
-        )}
-      </div>
-
       <div className="flex justify-end">
         <Button
           type="submit"
           loading={loading}
-          disabled={!formData.comment.trim()}
         >
           Submit Feedback
         </Button>
