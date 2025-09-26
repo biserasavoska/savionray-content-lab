@@ -23,22 +23,13 @@ export default function Navigation() {
 
   // Determine if we should show the organization switcher
   const shouldShowOrganizationSwitcher = () => {
-    console.log('Navigation - shouldShowOrganizationSwitcher called:', {
-      isClient: interfaceContext.isClient,
-      isAdmin: interfaceContext.isAdmin,
-      userRole: interfaceContext.userRole,
-      currentOrganization: currentOrganization?.name
-    })
-    
     // Never show for client users
     if (interfaceContext.isClient) {
-      console.log('Navigation - Hiding for client user')
       return false
     }
     
     // Only show for admin users
     if (!interfaceContext.isAdmin) {
-      console.log('Navigation - Hiding for non-admin user')
       return false
     }
     
@@ -48,17 +39,10 @@ export default function Navigation() {
                          currentOrganization.name.toLowerCase().includes('savionray') ||
                          currentOrganization.slug === 'savionray'
       
-      console.log('Navigation - Organization check:', {
-        organizationName: currentOrganization.name,
-        isSavionRay,
-        slug: currentOrganization.slug
-      })
-      
       // Only show if viewing SavionRay organization (admin's own organization)
       return isSavionRay
     }
     
-    console.log('Navigation - Default: hiding')
     return false // Don't show by default for any user type
   }
 
@@ -100,8 +84,8 @@ export default function Navigation() {
                 </svg>
               </button>
 
-              {/* User Profile */}
-              {session ? (
+              {/* User Profile - Only for admin and creative users */}
+              {session && (interfaceContext.isAdmin || interfaceContext.isCreative) ? (
                 <div className="relative group">
                   <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100">
                     <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
@@ -139,6 +123,14 @@ export default function Navigation() {
                     </button>
                   </div>
                 </div>
+              ) : session ? (
+                // Client users - only show sign out button
+                <button
+                  onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                  className="text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Sign out
+                </button>
               ) : (
                 <Link
                   href="/auth/signin"
