@@ -37,6 +37,38 @@ export function createAuthorizationError(message: string = 'Access denied') {
 }
 
 /**
+ * Create database error
+ */
+export function createDatabaseError(message: string = 'Database error occurred') {
+  return {
+    type: ErrorType.DATABASE,
+    message,
+    code: 'DATABASE_ERROR'
+  }
+}
+
+/**
+ * Log error with context
+ */
+export function logError(error: any, context?: string) {
+  const errorMessage = error?.message || error?.toString() || 'Unknown error'
+  const contextPrefix = context ? `[${context}] ` : ''
+  
+  console.error(`${contextPrefix}Error:`, errorMessage)
+  
+  if (error?.stack) {
+    console.error('Stack trace:', error.stack)
+  }
+  
+  return {
+    type: ErrorType.INTERNAL,
+    message: errorMessage,
+    code: 'LOGGED_ERROR',
+    context
+  }
+}
+
+/**
  * Suppress known browser extension errors from console
  */
 export const suppressExtensionErrors = () => {
