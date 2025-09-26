@@ -10,6 +10,11 @@ export default function DesktopTopNavigation() {
   
   // Determine if we should show the organization switcher
   const shouldShowOrganizationSwitcher = () => {
+    // Never show for client users
+    if (interfaceContext.isClient) {
+      return false
+    }
+    
     // Only show for admin users
     if (!interfaceContext.isAdmin) {
       return false
@@ -25,7 +30,7 @@ export default function DesktopTopNavigation() {
       return isSavionRay
     }
     
-    return true // Show by default if no organization context
+    return false // Don't show by default for any user type
   }
   
   return (
