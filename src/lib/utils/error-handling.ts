@@ -39,11 +39,12 @@ export function createAuthorizationError(message: string = 'Access denied') {
 /**
  * Create database error
  */
-export function createDatabaseError(message: string = 'Database error occurred') {
+export function createDatabaseError(message: string = 'Database error occurred', details?: any) {
   return {
     type: ErrorType.DATABASE,
     message,
-    code: 'DATABASE_ERROR'
+    code: 'DATABASE_ERROR',
+    details
   }
 }
 
