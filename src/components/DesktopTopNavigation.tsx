@@ -10,13 +10,22 @@ export default function DesktopTopNavigation() {
   
   // Determine if we should show the organization switcher
   const shouldShowOrganizationSwitcher = () => {
+    console.log('DesktopTopNavigation - shouldShowOrganizationSwitcher called:', {
+      isClient: interfaceContext.isClient,
+      isAdmin: interfaceContext.isAdmin,
+      userRole: interfaceContext.userRole,
+      currentOrganization: currentOrganization?.name
+    })
+    
     // Never show for client users
     if (interfaceContext.isClient) {
+      console.log('DesktopTopNavigation - Hiding for client user')
       return false
     }
     
     // Only show for admin users
     if (!interfaceContext.isAdmin) {
+      console.log('DesktopTopNavigation - Hiding for non-admin user')
       return false
     }
     
@@ -26,10 +35,17 @@ export default function DesktopTopNavigation() {
                          currentOrganization.name.toLowerCase().includes('savionray') ||
                          currentOrganization.slug === 'savionray'
       
+      console.log('DesktopTopNavigation - Organization check:', {
+        organizationName: currentOrganization.name,
+        isSavionRay,
+        slug: currentOrganization.slug
+      })
+      
       // Only show if viewing SavionRay organization (admin's own organization)
       return isSavionRay
     }
     
+    console.log('DesktopTopNavigation - Default: hiding')
     return false // Don't show by default for any user type
   }
   
