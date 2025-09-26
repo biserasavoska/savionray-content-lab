@@ -24,8 +24,6 @@ import {
   ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 
-import OrganizationSwitcher from './OrganizationSwitcher'
-
 import { useInterface } from '@/hooks/useInterface'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
@@ -151,13 +149,6 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
           {/* User section */}
           {session && (
             <div className="border-t border-gray-200 p-4">
-              {/* Organization Switcher for Admin users */}
-              {interfaceContext.isAdmin && (
-                <div className="mb-4 relative">
-                  <OrganizationSwitcher />
-                </div>
-              )}
-              
               <div className="flex items-center space-x-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-sm font-medium text-blue-700">

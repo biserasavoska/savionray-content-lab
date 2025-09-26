@@ -1,6 +1,7 @@
 'use client'
 
 import ClientNavigationSwitcher from './navigation/ClientNavigationSwitcher'
+import OrganizationSwitcher from './navigation/OrganizationSwitcher'
 import { useInterface } from '@/hooks/useInterface'
 
 export default function DesktopTopNavigation() {
@@ -16,8 +17,14 @@ export default function DesktopTopNavigation() {
           </h1>
         </div>
         
-        {/* Right side - Client Navigation Switcher for Creative and Admin users */}
-        <div className="flex items-center">
+        {/* Right side - Organization Switcher for Admin users */}
+        <div className="flex items-center space-x-4">
+          {/* Organization Switcher for Admin users */}
+          {interfaceContext.isAdmin && (
+            <OrganizationSwitcher />
+          )}
+          
+          {/* Client Navigation Switcher for Creative and Admin users */}
           {(interfaceContext.isCreative || interfaceContext.isAdmin) && (
             <ClientNavigationSwitcher />
           )}
