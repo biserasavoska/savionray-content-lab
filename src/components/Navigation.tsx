@@ -6,15 +6,44 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 
 import OrganizationSwitcher from './navigation/OrganizationSwitcher'
+import { useInterface } from '@/hooks/useInterface'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 import { isAdmin, isClient, isCreative } from '@/lib/auth'
 
 export default function Navigation() {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const interfaceContext = useInterface()
+  const { currentOrganization } = useOrganization()
 
   const isActive = (path: string) => {
     return pathname.startsWith(path) ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-900'
+  }
+
+  // Determine if we should show the organization switcher
+  const shouldShowOrganizationSwitcher = () => {
+    // Never show for client users
+    if (interfaceContext.isClient) {
+      return false
+    }
+    
+    // Only show for admin users
+    if (!interfaceContext.isAdmin) {
+      return false
+    }
+    
+    // Hide when admin user is viewing as a client organization (not SavionRay)
+    if (currentOrganization) {
+      const isSavionRay = currentOrganization.name.toLowerCase().includes('savion') || 
+                         currentOrganization.name.toLowerCase().includes('savionray') ||
+                         currentOrganization.slug === 'savionray'
+      
+      // Only show if viewing SavionRay organization (admin's own organization)
+      return isSavionRay
+    }
+    
+    return false // Don't show by default for any user type
   }
 
   return (
@@ -40,8 +69,8 @@ export default function Navigation() {
 
             {/* Right side navigation items */}
             <div className="flex items-center space-x-4">
-              {/* Organization Switcher */}
-              {session && (
+              {/* Organization Switcher - Only for admin users viewing SavionRay */}
+              {session && shouldShowOrganizationSwitcher() && (
                 <div className="w-64">
                   <OrganizationSwitcher />
                 </div>
