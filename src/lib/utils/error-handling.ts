@@ -28,11 +28,12 @@ export function createAuthenticationError(message: string = 'Authentication requ
 /**
  * Create authorization error
  */
-export function createAuthorizationError(message: string = 'Access denied') {
+export function createAuthorizationError(message: string = 'Access denied', details?: any) {
   return {
     type: ErrorType.AUTHORIZATION,
     message,
-    code: 'ACCESS_DENIED'
+    code: 'ACCESS_DENIED',
+    details
   }
 }
 

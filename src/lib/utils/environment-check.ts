@@ -5,7 +5,7 @@
 
 export const isDevelopment = process.env.NODE_ENV === 'development'
 export const isProduction = process.env.NODE_ENV === 'production'
-export const isStaging = process.env.NODE_ENV === 'staging' || process.env.VERCEL_ENV === 'preview'
+export const isStaging = process.env.VERCEL_ENV === 'preview' || process.env.RAILWAY_ENVIRONMENT === 'staging'
 
 /**
  * Check if we're running in a server-side environment
