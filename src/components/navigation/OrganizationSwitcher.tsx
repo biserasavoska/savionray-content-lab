@@ -47,8 +47,9 @@ export default function OrganizationSwitcher() {
       setCurrentOrganization(organization)
       setIsOpen(false)
       
-      // Refresh the current page to update context
-      router.refresh()
+      // Use a more gentle approach that doesn't break development server
+      // Instead of router.refresh(), we'll let the context update naturally
+      // The organization context will trigger re-renders of components that depend on it
     } catch (error) {
       console.error('Failed to switch organization:', error)
     } finally {
