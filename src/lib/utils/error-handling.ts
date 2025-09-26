@@ -15,6 +15,28 @@ export enum ErrorType {
 }
 
 /**
+ * Create authentication error
+ */
+export function createAuthenticationError(message: string = 'Authentication required') {
+  return {
+    type: ErrorType.AUTHENTICATION,
+    message,
+    code: 'AUTH_REQUIRED'
+  }
+}
+
+/**
+ * Create authorization error
+ */
+export function createAuthorizationError(message: string = 'Access denied') {
+  return {
+    type: ErrorType.AUTHORIZATION,
+    message,
+    code: 'ACCESS_DENIED'
+  }
+}
+
+/**
  * Suppress known browser extension errors from console
  */
 export const suppressExtensionErrors = () => {
