@@ -8,13 +8,13 @@ export default function DesktopTopNavigation() {
   const interfaceContext = useInterface()
   const { currentOrganization } = useOrganization()
   
+  // Hide the entire top navigation bar for client users
+  if (interfaceContext.isClient) {
+    return null
+  }
+  
   // Determine if we should show the organization switcher
   const shouldShowOrganizationSwitcher = () => {
-    // Never show for client users
-    if (interfaceContext.isClient) {
-      return false
-    }
-    
     // Only show for admin users
     if (!interfaceContext.isAdmin) {
       return false
