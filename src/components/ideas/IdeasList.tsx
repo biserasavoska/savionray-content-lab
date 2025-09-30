@@ -42,12 +42,16 @@ export default function IdeasList() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
   const [selectedContentType, setSelectedContentType] = useState<string>('ALL')
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL')
+  const [availablePeriods, setAvailablePeriods] = useState<Array<{ value: string; label: string; count: number }>>([])
+  const [latestPeriod, setLatestPeriod] = useState<string | null>(null)
 
   useEffect(() => {
     if (currentOrganization) {
       fetchIdeas()
+      fetchAvailablePeriods()
     }
-  }, [currentOrganization, selectedStatus, selectedContentType])
+  }, [currentOrganization, selectedStatus, selectedContentType, selectedPeriod])
 
   const fetchIdeas = async (page = 1, append = false, customLimit?: number) => {
     if (!currentOrganization) return
@@ -62,7 +66,8 @@ export default function IdeasList() {
       const limit = customLimit || pagination.limit
       const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : ''
       const contentTypeParam = selectedContentType !== 'ALL' ? `&contentType=${selectedContentType}` : ''
-      const response = await fetch(`/api/ideas?page=${page}&limit=${limit}${statusParam}${contentTypeParam}`, {
+      const periodParam = selectedPeriod !== 'ALL' ? `&period=${selectedPeriod}` : ''
+      const response = await fetch(`/api/ideas?page=${page}&limit=${limit}${statusParam}${contentTypeParam}${periodParam}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
         }
@@ -104,7 +109,8 @@ export default function IdeasList() {
         // Load all remaining ideas at once
         const statusParam = selectedStatus !== 'ALL' ? `&status=${selectedStatus}` : ''
         const contentTypeParam = selectedContentType !== 'ALL' ? `&contentType=${selectedContentType}` : ''
-        const response = await fetch(`/api/ideas?page=1&limit=${pagination.total}${statusParam}${contentTypeParam}`, {
+        const periodParam = selectedPeriod !== 'ALL' ? `&period=${selectedPeriod}` : ''
+        const response = await fetch(`/api/ideas?page=1&limit=${pagination.total}${statusParam}${contentTypeParam}${periodParam}`, {
           headers: {
             'x-selected-organization': currentOrganization!.id
           }
@@ -125,6 +131,33 @@ export default function IdeasList() {
       } finally {
         setLoadingMore(false)
       }
+    }
+  }
+
+  const fetchAvailablePeriods = async () => {
+    if (!currentOrganization) return
+    
+    try {
+      const response = await fetch('/api/ideas/periods', {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch available periods')
+      }
+      
+      const data = await response.json()
+      setAvailablePeriods(data.periods || [])
+      setLatestPeriod(data.latestPeriod)
+      
+      // Set the default period to the latest period if not already set
+      if (data.latestPeriod && selectedPeriod === 'ALL') {
+        setSelectedPeriod(data.latestPeriod)
+      }
+    } catch (err) {
+      console.error('Error fetching available periods:', err)
     }
   }
 
@@ -233,6 +266,24 @@ export default function IdeasList() {
                 <option value="PENDING">Pending</option>
                 <option value="APPROVED">Approved</option>
                 <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="period-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                Period
+              </label>
+              <select
+                id="period-filter"
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+              >
+                <option value="ALL">All Periods</option>
+                {availablePeriods.map((period) => (
+                  <option key={period.value} value={period.value}>
+                    {period.label} ({period.count})
+                  </option>
+                ))}
               </select>
             </div>
           </div>

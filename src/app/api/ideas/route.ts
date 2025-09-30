@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const status = searchParams.get('status');
     const contentType = searchParams.get('contentType');
+    const period = searchParams.get('period'); // Format: "2025-10" for October 2025
     
     const skip = (page - 1) * limit;
     
@@ -40,6 +41,22 @@ export async function GET(request: NextRequest) {
       where.contentType = contentType;
     }
     // If contentType is 'ALL' or not provided, show all content types (no content type filter)
+    
+    // Apply period filter (filter by publishingDateTime month/year)
+    if (period && period !== 'ALL') {
+      // Parse period format "2025-10" to get year and month
+      const [year, month] = period.split('-').map(Number);
+      if (year && month) {
+        const startOfMonth = new Date(year, month - 1, 1); // month is 0-indexed in Date constructor
+        const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999); // Last day of the month
+        
+        where.publishingDateTime = {
+          gte: startOfMonth,
+          lte: endOfMonth
+        };
+      }
+    }
+    // If period is 'ALL' or not provided, show all periods (no period filter)
     
     const [ideas, total] = await Promise.all([
       prisma.idea.findMany({
