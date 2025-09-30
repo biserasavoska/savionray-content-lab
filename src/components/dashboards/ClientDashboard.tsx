@@ -551,7 +551,7 @@ export default function ClientDashboard() {
                   </div>
                   <div className="flex items-center space-x-3">
                     {getStatusBadge(item.status)}
-                    <Link href={`/approved/${item.id}`}>
+                    <Link href={`/ready-content/${item.id}`}>
                       <Button variant="outline" size="sm">
                       View
                         <ArrowRightIcon className="h-4 w-4 ml-1" />
