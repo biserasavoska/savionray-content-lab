@@ -69,6 +69,8 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
   const [isClient, setIsClient] = useState(false)
   const [selectedType, setSelectedType] = useState<string>('ALL')
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL')
+  const [availablePeriods, setAvailablePeriods] = useState<string[]>([])
 
   // Filter drafts based on selected filters
   const filteredDrafts = drafts.filter(draft => {
@@ -85,6 +87,7 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
   useEffect(() => {
     if (currentOrganization) {
       fetchDrafts()
+      fetchPeriods()
     }
   }, [currentOrganization])
 
@@ -93,7 +96,12 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
     
     try {
       setLoading(true)
-      const response = await fetch('/api/content-drafts', {
+      const params = new URLSearchParams()
+      if (selectedPeriod !== 'ALL') {
+        params.append('period', selectedPeriod)
+      }
+      
+      const response = await fetch(`/api/content-drafts?${params.toString()}`, {
         headers: {
           'x-selected-organization': currentOrganization.id
         }
@@ -109,6 +117,36 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
       setLoading(false)
     }
   }
+
+  const fetchPeriods = async () => {
+    if (!currentOrganization) return
+    
+    try {
+      const response = await fetch('/api/content-drafts/periods', {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setAvailablePeriods(data.periods || [])
+        
+        // Set default period to the most recent one
+        if (data.periods && data.periods.length > 0 && selectedPeriod === 'ALL') {
+          setSelectedPeriod(data.periods[0])
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch periods:', err)
+    }
+  }
+
+  // Refetch drafts when period changes
+  useEffect(() => {
+    if (currentOrganization && selectedPeriod !== 'ALL') {
+      fetchDrafts()
+    }
+  }, [selectedPeriod])
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -278,6 +316,24 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
               <option value="APPROVED">Approved</option>
               <option value="REJECTED">Rejected</option>
               <option value="PUBLISHED">Published</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="period-filter" className="block text-sm font-medium text-gray-700 mb-1">
+              Period
+            </label>
+            <select
+              id="period-filter"
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+            >
+              <option value="ALL">All Periods</option>
+              {availablePeriods.map(period => (
+                <option key={period} value={period}>
+                  {period}
+                </option>
+              ))}
             </select>
           </div>
         </div>

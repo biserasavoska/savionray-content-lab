@@ -25,22 +25,45 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '10')
     const page = parseInt(searchParams.get('page') || '1')
+    const period = searchParams.get('period') // Format: "October" or "October 2024"
     const skip = (page - 1) * limit
+
+    // Build where clause
+    const where: any = {
+      organizationId: context.organizationId,
+      status: {
+        in: [
+          DRAFT_STATUS.DRAFT,
+          DRAFT_STATUS.AWAITING_FEEDBACK,
+          DRAFT_STATUS.AWAITING_REVISION,
+          DRAFT_STATUS.APPROVED,
+          DRAFT_STATUS.REJECTED
+        ]
+      }
+    };
+
+    // Apply period filter if provided
+    if (period && period !== 'ALL') {
+      const currentYear = new Date().getFullYear();
+      const parts = period.split(' ');
+      const monthName = parts[0];
+      const year = parts.length > 1 ? parseInt(parts[1]) : currentYear;
+      
+      // Create date range for the month
+      const startDate = new Date(year, new Date(`${monthName} 1, ${year}`).getMonth(), 1);
+      const endDate = new Date(year, new Date(`${monthName} 1, ${year}`).getMonth() + 1, 0, 23, 59, 59);
+      
+      where.Idea = {
+        publishingDateTime: {
+          gte: startDate,
+          lte: endDate
+        }
+      };
+    }
 
     // Fetch content ready for review (all relevant statuses)
     const readyContent = await prisma.contentDraft.findMany({
-      where: {
-        organizationId: context.organizationId,
-        status: {
-          in: [
-            DRAFT_STATUS.DRAFT,
-            DRAFT_STATUS.AWAITING_FEEDBACK,
-            DRAFT_STATUS.AWAITING_REVISION,
-            DRAFT_STATUS.APPROVED,
-            DRAFT_STATUS.REJECTED
-          ]
-        }
-      },
+      where,
       include: {
         Idea: {
           include: {
@@ -107,18 +130,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count for pagination
     const totalCount = await prisma.contentDraft.count({
-      where: {
-        organizationId: context.organizationId,
-        status: {
-          in: [
-            DRAFT_STATUS.DRAFT,
-            DRAFT_STATUS.AWAITING_FEEDBACK,
-            DRAFT_STATUS.AWAITING_REVISION,
-            DRAFT_STATUS.APPROVED,
-            DRAFT_STATUS.REJECTED
-          ]
-        }
-      }
+      where
     })
 
     // Sanitize the data

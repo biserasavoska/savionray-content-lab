@@ -43,6 +43,8 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   const [error, setError] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<ContentType | 'ALL'>('ALL')
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL')
+  const [availablePeriods, setAvailablePeriods] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState<string | null>(null)
   const [showFeedbackForm, setShowFeedbackForm] = useState<{ [key: string]: boolean }>({})
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -72,7 +74,14 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         setLoading(true)
         setError(null)
         
-        const response = await fetch(`/api/ready-content?page=1&limit=4`, {
+        const params = new URLSearchParams()
+        params.append('page', '1')
+        params.append('limit', '4')
+        if (selectedPeriod !== 'ALL') {
+          params.append('period', selectedPeriod)
+        }
+        
+        const response = await fetch(`/api/ready-content?${params.toString()}`, {
           headers: {
             'x-selected-organization': currentOrganization.id
           }
@@ -98,7 +107,74 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
     }
 
     fetchContent()
+    fetchPeriods()
   }, [currentOrganization])
+
+  // Fetch available periods
+  const fetchPeriods = async () => {
+    if (!currentOrganization) return
+    
+    try {
+      const response = await fetch('/api/ready-content/periods', {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setAvailablePeriods(data.periods || [])
+        
+        // Set default period to the most recent one
+        if (data.periods && data.periods.length > 0 && selectedPeriod === 'ALL') {
+          setSelectedPeriod(data.periods[0])
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch periods:', err)
+    }
+  }
+
+  // Refetch content when period changes
+  useEffect(() => {
+    if (currentOrganization && selectedPeriod !== 'ALL') {
+      const fetchContent = async () => {
+        try {
+          setLoading(true)
+          setError(null)
+          
+          const params = new URLSearchParams()
+          params.append('page', '1')
+          params.append('limit', '4')
+          if (selectedPeriod !== 'ALL') {
+            params.append('period', selectedPeriod)
+          }
+          
+          const response = await fetch(`/api/ready-content?${params.toString()}`, {
+            headers: {
+              'x-selected-organization': currentOrganization.id
+            }
+          })
+          
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error('API Error:', response.status, errorText)
+            throw new Error(`Failed to fetch ready content: ${response.status} ${errorText}`)
+          }
+          
+          const data = await response.json()
+          setContent(data.content || [])
+          setPagination(data.pagination || pagination)
+        } catch (err) {
+          console.error('Error fetching ready content:', err)
+          setError('Failed to load ready content')
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      fetchContent()
+    }
+  }, [selectedPeriod])
 
   const filteredContent = content.filter(item => {
     if (selectedType !== 'ALL' && item.contentType !== selectedType) {
@@ -264,7 +340,14 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
     setLoadingMore(true)
     try {
       // Load all remaining content at once
-      const response = await fetch(`/api/ready-content?page=1&limit=${pagination.total}`, {
+      const params = new URLSearchParams()
+      params.append('page', '1')
+      params.append('limit', pagination.total.toString())
+      if (selectedPeriod !== 'ALL') {
+        params.append('period', selectedPeriod)
+      }
+      
+      const response = await fetch(`/api/ready-content?${params.toString()}`, {
         headers: {
           'x-selected-organization': currentOrganization?.id || ''
         }
@@ -414,6 +497,24 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                   <option value="APPROVED">Approved</option>
                   <option value="REJECTED">Rejected</option>
                   <option value="PUBLISHED">Published</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="period-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                  Period
+                </label>
+                <select
+                  id="period-filter"
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value)}
+                  className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
+                >
+                  <option value="ALL">All Periods</option>
+                  {availablePeriods.map(period => (
+                    <option key={period} value={period}>
+                      {period}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
