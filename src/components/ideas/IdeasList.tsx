@@ -40,7 +40,7 @@ export default function IdeasList() {
     hasMore: false
   })
   const [loadingMore, setLoadingMore] = useState(false)
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
+  const [selectedStatus, setSelectedStatus] = useState<string>('PENDING')
   const [selectedContentType, setSelectedContentType] = useState<string>('ALL')
   const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL')
   const [availablePeriods, setAvailablePeriods] = useState<Array<{ value: string; label: string; count: number }>>([])
