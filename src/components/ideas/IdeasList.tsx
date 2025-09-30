@@ -45,6 +45,7 @@ export default function IdeasList() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL')
   const [availablePeriods, setAvailablePeriods] = useState<Array<{ value: string; label: string; count: number }>>([])
   const [latestPeriod, setLatestPeriod] = useState<string | null>(null)
+  const [hasSetInitialPeriod, setHasSetInitialPeriod] = useState(false)
 
   useEffect(() => {
     if (currentOrganization) {
@@ -152,9 +153,11 @@ export default function IdeasList() {
       setAvailablePeriods(data.periods || [])
       setLatestPeriod(data.latestPeriod)
       
-      // Set the default period to the latest period if not already set
-      if (data.latestPeriod && selectedPeriod === 'ALL') {
+      // Only set the default period to the latest period if this is the initial load
+      // and we haven't set an initial period yet
+      if (data.latestPeriod && !hasSetInitialPeriod) {
         setSelectedPeriod(data.latestPeriod)
+        setHasSetInitialPeriod(true)
       }
     } catch (err) {
       console.error('Error fetching available periods:', err)
@@ -281,7 +284,7 @@ export default function IdeasList() {
                 <option value="ALL">All Periods</option>
                 {availablePeriods.map((period) => (
                   <option key={period.value} value={period.value}>
-                    {period.label} ({period.count})
+                    {period.label}
                   </option>
                 ))}
               </select>

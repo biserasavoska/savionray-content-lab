@@ -66,9 +66,15 @@ export async function GET(request: NextRequest) {
         'July', 'August', 'September', 'October', 'November', 'December'
       ];
 
+      // Only show year if it's not the current year
+      const currentYear = new Date().getFullYear();
+      const label = year === currentYear 
+        ? monthNames[month - 1] 
+        : `${monthNames[month - 1]} ${year}`;
+
       periodDetails.push({
         value: period,
-        label: `${monthNames[month - 1]} ${year}`,
+        label,
         count
       });
     }
