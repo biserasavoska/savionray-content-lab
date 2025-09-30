@@ -33,17 +33,9 @@ export default function Navigation() {
       return false
     }
     
-    // Hide when admin user is viewing as a client organization (not SavionRay)
-    if (currentOrganization) {
-      const isSavionRay = currentOrganization.name.toLowerCase().includes('savion') || 
-                         currentOrganization.name.toLowerCase().includes('savionray') ||
-                         currentOrganization.slug === 'savionray'
-      
-      // Only show if viewing SavionRay organization (admin's own organization)
-      return isSavionRay
-    }
-    
-    return false // Don't show by default for any user type
+    // Admin users should always be able to switch organizations
+    // regardless of which client they're currently viewing
+    return true
   }
 
   return (
@@ -69,7 +61,7 @@ export default function Navigation() {
 
             {/* Right side navigation items */}
             <div className="flex items-center space-x-4">
-              {/* Organization Switcher - Only for admin users viewing SavionRay */}
+              {/* Organization Switcher - Always visible for admin users */}
               {session && shouldShowOrganizationSwitcher() && (
                 <div className="w-64">
                   <OrganizationSwitcher />
