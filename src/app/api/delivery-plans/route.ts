@@ -81,8 +81,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(plan)
   } catch (error) {
     console.error('Error creating delivery plan:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Detailed error:', errorMessage)
     return NextResponse.json(
-      { error: 'Failed to create delivery plan' },
+      { 
+        error: 'Failed to create delivery plan',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }
