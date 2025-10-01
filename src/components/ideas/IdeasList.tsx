@@ -160,9 +160,9 @@ export default function IdeasList() {
       setAvailablePeriods(data.periods || [])
       setLatestPeriod(data.latestPeriod)
       
-      // Only set the default period to the latest period if this is the initial load
-      // and we haven't set an initial period yet
-      if (data.latestPeriod && !hasSetInitialPeriod) {
+      // Always set the default period to the latest period on initial load
+      // selectedPeriod will be 'ALL' on first load, so we can check that
+      if (data.latestPeriod && selectedPeriod === 'ALL' && !hasSetInitialPeriod) {
         setSelectedPeriod(data.latestPeriod)
         setHasSetInitialPeriod(true)
       }
