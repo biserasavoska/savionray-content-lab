@@ -46,7 +46,7 @@ export async function GET(
     // 1. Same content type
     // 2. Publishing date within the plan's target month
     // 3. Not already assigned to any delivery item
-    // 4. Status is PENDING or IN_PROGRESS
+    // 4. Status is PENDING
     const suggestions = await prisma.idea.findMany({
       where: {
         organizationId: orgContext.organizationId,
@@ -56,9 +56,7 @@ export async function GET(
           gte: startDate,
           lte: endDate,
         },
-        status: {
-          in: ['PENDING', 'IN_PROGRESS'],
-        },
+        status: 'PENDING',
       },
       include: {
         User: {

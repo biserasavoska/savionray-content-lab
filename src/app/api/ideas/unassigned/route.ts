@@ -22,9 +22,7 @@ export async function GET(req: NextRequest) {
     let where: any = {
       organizationId: orgContext.organizationId,
       deliveryItemId: null, // Only unassigned ideas
-      status: {
-        in: ['PENDING', 'IN_PROGRESS'],
-      },
+      status: 'PENDING',
     };
 
     // Apply content type filter
