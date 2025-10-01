@@ -7,6 +7,7 @@ import { Input, Textarea, Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import { useFormData } from '@/components/ui/common/hooks'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 const ContentType = {
   NEWSLETTER: 'NEWSLETTER',
@@ -79,6 +80,7 @@ interface DeliveryPlanEditFormProps {
 
 export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps) {
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
   const [organizations, setOrganizations] = useState<Array<{ id: string; name: string }>>([])
 
   const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
@@ -141,10 +143,15 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
         }))
       }
       
+      if (!currentOrganization?.id) {
+        throw new Error('No organization selected. Please select an organization before updating the delivery plan.')
+      }
+
       const response = await fetch(`/api/delivery-plans/${plan.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id,
         },
         body: JSON.stringify(cleanData),
       })
@@ -155,7 +162,7 @@ export default function DeliveryPlanEditForm({ plan }: DeliveryPlanEditFormProps
       }
 
       const result = await response.json()
-      router.push(`/delivery-plans/${plan.id}`)
+      router.push(`/delivery-plans/${plan.id}?org=${currentOrganization.id}`)
     }
   })
 
