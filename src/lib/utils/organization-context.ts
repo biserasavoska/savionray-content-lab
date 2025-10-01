@@ -82,15 +82,14 @@ export async function getOrganizationContext(
       }
       
       // Fall back to the first active organization if no selected organization found
-      if (!organizationUser) {
+      if (!organizationUser && user.organizationUsers.length > 0) {
         organizationUser = user.organizationUsers[0];
-        if (organizationUser) {
-          logger.info(`Using first organization: ${organizationUser.organization.name}`, {
-            userId: user.id,
-            userEmail: session.user.email,
-            organizationId: organizationUser.organizationId
-          });
-        }
+        logger.warn(`No organization selected, falling back to first organization: ${organizationUser.organization.name}`, {
+          userId: user.id,
+          userEmail: session.user.email,
+          organizationId: organizationUser.organizationId,
+          availableOrganizations: user.organizationUsers.length
+        });
       }
     }
     

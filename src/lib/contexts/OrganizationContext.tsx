@@ -138,27 +138,15 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       if (savedOrganizationId) {
         const savedOrganization = userOrganizations.find(org => org.id === savedOrganizationId)
         if (savedOrganization) {
-          // For admin users, check if the saved organization is SavionRay
-          if (userRole === 'ADMIN') {
-            const savionRayOrg = userOrganizations.find((org: Organization) => 
-              org.name.toLowerCase().includes('savion') || 
-              org.name.toLowerCase().includes('savionray') ||
-              org.slug === 'savionray'
-            )
-            
-            // If admin user has SavionRay available, prioritize it over saved organization
-            if (savionRayOrg && savedOrganization.id !== savionRayOrg.id) {
-              console.log('Admin user: Prioritizing SavionRay over saved organization:', savedOrganization.name)
-              setCurrentOrganization(savionRayOrg)
-              // Update localStorage to reflect the admin preference
-              localStorage.setItem('selectedOrganizationId', savionRayOrg.id)
-            } else {
-              setCurrentOrganization(savedOrganization)
-            }
-          } else {
-            setCurrentOrganization(savedOrganization)
-          }
+          // Always respect the user's saved organization selection
+          setCurrentOrganization(savedOrganization)
+        } else {
+          // If saved org not found, default to first organization
+          setCurrentOrganization(userOrganizations[0])
         }
+      } else {
+        // No saved organization, use the first one
+        setCurrentOrganization(userOrganizations[0])
       }
     }
   }, [userOrganizations, userRole])
