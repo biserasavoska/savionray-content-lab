@@ -54,6 +54,13 @@ export default async function DeliveryPlanPage({ params }: DeliveryPlanPageProps
           include: {
             Idea: {
               include: {
+                User: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
                 ContentDraft: true,
               },
             },
