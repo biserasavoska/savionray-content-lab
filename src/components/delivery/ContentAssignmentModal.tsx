@@ -77,22 +77,10 @@ export default function ContentAssignmentModal({
       )
       if (suggestionsRes.ok) {
         const data = await suggestionsRes.json()
+        // Use suggestions as both suggestions and available ideas
+        // They already match the plan's organization, content type, and period
         setSuggestions(data.suggestions || [])
-      }
-
-      // Fetch all unassigned ideas for the period
-      const targetMonth = new Date(plan.targetMonth)
-      const currentYear = new Date().getFullYear()
-      const year = targetMonth.getFullYear()
-      const monthName = targetMonth.toLocaleDateString('en-US', { month: 'long' })
-      const period = year === currentYear ? monthName : `${monthName} ${year}`
-
-      const availableRes = await fetch(
-        `/api/ideas/unassigned?period=${period}&contentType=${deliveryItem.contentType}`
-      )
-      if (availableRes.ok) {
-        const data = await availableRes.json()
-        setAvailableIdeas(data.ideas || [])
+        setAvailableIdeas(data.suggestions || [])
       }
     } catch (error) {
       console.error('Error fetching ideas:', error)
