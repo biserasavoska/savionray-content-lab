@@ -117,6 +117,9 @@ export default function DeliveryPlanForm() {
 
         const result = await response.json()
         console.log('API success response:', result)
+        
+        // Small delay to allow server to process before redirect
+        await new Promise(resolve => setTimeout(resolve, 500))
         router.push(`/delivery-plans/${result.id}`)
       } catch (error) {
         console.error('onSubmit error:', error)
