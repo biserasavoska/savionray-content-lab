@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const contentType = url.searchParams.get('contentType');
     const search = url.searchParams.get('search');
 
-    let where: any = {
+    const where: any = {
       organizationId: orgContext.organizationId,
       deliveryItemId: null, // Only unassigned ideas
       status: 'PENDING',
