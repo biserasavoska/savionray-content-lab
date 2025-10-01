@@ -91,13 +91,18 @@ export default function DeliveryPlanForm() {
       }
       
       console.log('Cleaned data for submission:', cleanData)
+      console.log('Current organization for delivery plan creation:', currentOrganization)
+      
+      if (!currentOrganization?.id) {
+        throw new Error('No organization selected. Please select an organization before creating a delivery plan.')
+      }
       
       try {
         const response = await fetch('/api/delivery-plans', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-selected-organization': currentOrganization?.id || '',
+            'x-selected-organization': currentOrganization.id,
           },
           body: JSON.stringify(cleanData),
         })
