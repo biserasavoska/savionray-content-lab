@@ -120,7 +120,7 @@ export default function DeliveryPlanForm() {
         
         // Small delay to allow server to process before redirect
         await new Promise(resolve => setTimeout(resolve, 500))
-        router.push(`/delivery-plans/${result.id}`)
+        router.push(`/delivery-plans/${result.id}?org=${currentOrganization.id}`)
       } catch (error) {
         console.error('onSubmit error:', error)
         throw error

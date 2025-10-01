@@ -137,7 +137,16 @@ export default function DeliveryPlanDetails({ plan: initialPlan }: DeliveryPlanD
           </Badge>
           <Button
             variant="outline"
-            onClick={() => router.push(`/delivery-plans/${plan.id}/edit`)}
+            onClick={() => {
+              // Get organization from URL or use a fallback
+              const urlParams = new URLSearchParams(window.location.search)
+              const orgId = urlParams.get('org')
+              if (orgId) {
+                router.push(`/delivery-plans/${plan.id}/edit?org=${orgId}`)
+              } else {
+                router.push(`/delivery-plans/${plan.id}/edit`)
+              }
+            }}
           >
             <PencilIcon className="h-4 w-4 mr-2" />
             Edit

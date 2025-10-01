@@ -55,27 +55,10 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         console.log('Received organizations data:', data)
         setUserOrganizations(data.organizations || [])
         
-        // If no current organization is set, prioritize SavionRay for admin users
+        // If no current organization is set, use the first available organization
         if (!currentOrganization && data.organizations?.length > 0) {
-          let defaultOrg = data.organizations[0] // Fallback to first organization
-          
-          // For admin users, prioritize SavionRay organization
-          if (session?.user?.role === 'ADMIN') {
-            const savionRayOrg = data.organizations.find((org: Organization) => 
-              org.name.toLowerCase().includes('savion') || 
-              org.name.toLowerCase().includes('savionray') ||
-              org.slug === 'savionray'
-            )
-            if (savionRayOrg) {
-              defaultOrg = savionRayOrg
-              console.log('Admin user: Setting SavionRay as default organization:', savionRayOrg)
-            } else {
-              console.log('Admin user: SavionRay not found, using first available:', data.organizations[0])
-            }
-          } else {
-            console.log('Non-admin user: Setting current organization to first available:', data.organizations[0])
-          }
-          
+          const defaultOrg = data.organizations[0]
+          console.log('Setting current organization to first available:', defaultOrg)
           setCurrentOrganization(defaultOrg)
         }
       } else {

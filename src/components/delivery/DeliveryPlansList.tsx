@@ -266,7 +266,11 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
   }
 
   const handlePlanClick = (planId: string) => {
-    router.push(`/delivery-plans/${planId}`)
+    if (!currentOrganization?.id) {
+      console.error('No organization selected for navigation')
+      return
+    }
+    router.push(`/delivery-plans/${planId}?org=${currentOrganization.id}`)
   }
 
   const handleArchiveToggle = async (planId: string, isArchived: boolean) => {
@@ -494,7 +498,11 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
-                      router.push(`/delivery-plans/${plan.id}/edit`)
+                      if (!currentOrganization?.id) {
+                        console.error('No organization selected for navigation')
+                        return
+                      }
+                      router.push(`/delivery-plans/${plan.id}/edit?org=${currentOrganization.id}`)
                     }}
                   >
                     Edit Plan
