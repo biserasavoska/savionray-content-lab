@@ -43,14 +43,14 @@ export async function GET(
     const endDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0, 23, 59, 59);
 
     // Find unassigned ideas that match:
-    // 1. Same organization as the delivery plan
+    // 1. Same organization (verified by orgContext - plan must belong to this org)
     // 2. Same content type
     // 3. Publishing date within the plan's target month
     // 4. Not already assigned to any delivery item
     // 5. Status is PENDING
     const suggestions = await prisma.idea.findMany({
       where: {
-        organizationId: deliveryItem.plan.organizationId,
+        organizationId: orgContext.organizationId,
         deliveryItemId: null,
         contentType: deliveryItem.contentType,
         publishingDateTime: {
