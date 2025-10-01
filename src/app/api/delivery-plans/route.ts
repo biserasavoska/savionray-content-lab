@@ -104,6 +104,7 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url)
     const month = url.searchParams.get('month') // Format: YYYY-MM
+    const period = url.searchParams.get('period') // Format: "October 2025"
     const showArchived = url.searchParams.get('showArchived') === 'true'
 
     // Create organization-aware filter
@@ -128,6 +129,26 @@ export async function GET(req: NextRequest) {
         targetMonth: {
           gte: targetMonth,
           lt: nextMonth,
+        },
+      }
+    }
+
+    // Handle period filter (e.g., "October 2025")
+    if (period && period !== 'ALL') {
+      const currentYear = new Date().getFullYear();
+      const parts = period.split(' ');
+      const monthName = parts[0];
+      const year = parts.length > 1 ? parseInt(parts[1]) : currentYear;
+      
+      // Create date range for the month
+      const startDate = new Date(year, new Date(`${monthName} 1, ${year}`).getMonth(), 1);
+      const endDate = new Date(year, new Date(`${monthName} 1, ${year}`).getMonth() + 1, 0, 23, 59, 59);
+      
+      where = {
+        ...where,
+        targetMonth: {
+          gte: startDate,
+          lte: endDate,
         },
       }
     }

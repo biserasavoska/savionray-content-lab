@@ -8,6 +8,9 @@ import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/layout/Card'
 import Badge from '@/components/ui/common/Badge'
 import Button from '@/components/ui/common/Button'
+import ProgressBar from './ProgressBar'
+import StatusBadge from './StatusBadge'
+import ContentStageCounts from './ContentStageCounts'
 
 interface DeliveryPlan {
   id: string
@@ -80,13 +83,14 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
   const [error, setError] = useState('')
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null)
   const [showArchived, setShowArchived] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('')
 
   // Fetch plans from API if not provided as props
   useEffect(() => {
     if (!initialPlans && currentOrganization) {
       fetchPlans()
     }
-  }, [currentOrganization, initialPlans, showArchived, selectedMonth])
+  }, [currentOrganization, initialPlans, showArchived, selectedMonth, selectedPeriod])
 
   const fetchPlans = async () => {
     if (!currentOrganization) {
@@ -104,6 +108,9 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
       }
       if (selectedMonth) {
         params.append('month', format(selectedMonth, 'yyyy-MM'))
+      }
+      if (selectedPeriod && selectedPeriod !== 'ALL') {
+        params.append('period', selectedPeriod)
       }
       
       console.log('Fetching delivery plans for organization:', currentOrganization.id)
@@ -176,12 +183,39 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
       return itemProgress.completed >= itemProgress.total
     }).length
     
+    // Calculate content stage counts
+    const ideasCount = plan.items.filter(item => item.Idea && item.Idea.length > 0).length
+    const draftsCount = plan.items.filter(item => 
+      item.Idea.some(idea => idea.ContentDraft.some(draft => draft.status === 'DRAFT'))
+    ).length
+    const approvedCount = plan.items.filter(item => 
+      item.Idea.some(idea => idea.ContentDraft.some(draft => draft.status === 'APPROVED'))
+    ).length
+    const deliveredCount = plan.items.filter(item => 
+      item.Idea.some(idea => idea.ContentDraft.some(draft => draft.status === 'DELIVERED'))
+    ).length
+    
     const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0
+    
+    // Determine status
+    let status = 'NOT_STARTED'
+    if (deliveredCount === totalItems && totalItems > 0) {
+      status = 'COMPLETED'
+    } else if (progress >= 80) {
+      status = 'ON_TRACK'
+    } else if (progress > 0) {
+      status = 'BEHIND_SCHEDULE'
+    }
     
     return {
       completed: completedItems,
       total: totalItems,
-      progress: Math.round(progress)
+      progress: Math.round(progress),
+      ideasCount,
+      draftsCount,
+      approvedCount,
+      deliveredCount,
+      status
     }
   }
 
@@ -195,11 +229,39 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
     return dateB.getTime() - dateA.getTime()
   })
 
+  // Calculate periods (same format as Ideas page)
+  const periods = Array.from(
+    new Set(
+      (plans || []).map((plan) => {
+        const targetDate = new Date(plan.targetMonth)
+        const currentYear = new Date().getFullYear()
+        const year = targetDate.getFullYear()
+        const monthName = targetDate.toLocaleDateString('en-US', { month: 'long' })
+        
+        // Only show year if it's not the current year
+        return year === currentYear ? monthName : `${monthName} ${year}`
+      })
+    )
+  ).sort((a, b) => {
+    // Sort by date, most recent first
+    const dateA = new Date(a.includes(' ') ? a : `${a} ${new Date().getFullYear()}`)
+    const dateB = new Date(b.includes(' ') ? b : `${b} ${new Date().getFullYear()}`)
+    return dateB.getTime() - dateA.getTime()
+  })
+
   const handleMonthChange = (month: string) => {
     if (month === '') {
       setSelectedMonth(null)
     } else {
       setSelectedMonth(new Date(month))
+    }
+  }
+
+  const handlePeriodChange = (period: string) => {
+    setSelectedPeriod(period)
+    // Clear month filter when period is selected
+    if (period !== 'ALL') {
+      setSelectedMonth(null)
     }
   }
 
@@ -272,8 +334,21 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
         <div className="flex items-center space-x-4">
           <select
             className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            onChange={(e) => handlePeriodChange(e.target.value)}
+            value={selectedPeriod}
+          >
+            <option value="ALL">All Periods</option>
+            {periods.map((period) => (
+              <option key={period} value={period}>
+                {period}
+              </option>
+            ))}
+          </select>
+          <select
+            className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             onChange={(e) => handleMonthChange(e.target.value)}
             value={selectedMonth ? format(selectedMonth, 'MMMM yyyy') : ''}
+            disabled={selectedPeriod !== 'ALL'}
           >
             <option value="">All Months</option>
             {months.map((month) => (
@@ -326,24 +401,27 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
                   </div>
                 </div>
                 <div className="mt-4">
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>Progress ({planProgress.completed}/{planProgress.total} items completed)</span>
-                    <span>{planProgress.progress}%</span>
+                  <div className="flex items-center justify-between mb-3">
+                    <StatusBadge status={planProgress.status as any} />
+                    <span className="text-sm text-gray-500">
+                      Target: {format(new Date(plan.targetMonth), 'MMMM yyyy')}
+                    </span>
                   </div>
-                  <div className="mt-1 relative">
-                    <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
-                      <div
-                        style={{ width: `${planProgress.progress}%` }}
-                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-500"
-                      />
-                    </div>
-                  </div>
+                  <ProgressBar 
+                    current={planProgress.deliveredCount} 
+                    total={planProgress.total} 
+                    className="mb-3"
+                  />
+                  <ContentStageCounts
+                    ideasCount={planProgress.ideasCount}
+                    draftsCount={planProgress.draftsCount}
+                    approvedCount={planProgress.approvedCount}
+                    deliveredCount={planProgress.deliveredCount}
+                    totalItems={planProgress.total}
+                  />
                 </div>
                 <div className="mt-4 text-sm text-gray-500">
                   <div className="flex space-x-4">
-                    <span>
-                      Target Month: {format(new Date(plan.targetMonth), 'MMMM yyyy')}
-                    </span>
                     <span>
                       Start Date: {format(new Date(plan.startDate), 'MMM d, yyyy')}
                     </span>
