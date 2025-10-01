@@ -7,6 +7,7 @@ import { Input, Textarea, Select } from '@/components/ui/common/FormField'
 import Button from '@/components/ui/common/Button'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/common/Card'
 import { useFormData } from '@/components/ui/common/hooks'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 const ContentType = {
   NEWSLETTER: 'NEWSLETTER',
@@ -37,6 +38,7 @@ interface FormData {
 
 export default function DeliveryPlanForm() {
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
 
   // Use the new form hook
   const { formData, updateFormData, errors, loading, handleSubmit } = useFormData({
@@ -95,6 +97,7 @@ export default function DeliveryPlanForm() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-selected-organization': currentOrganization?.id || '',
           },
           body: JSON.stringify(cleanData),
         })
