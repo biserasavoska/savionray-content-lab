@@ -41,13 +41,13 @@ export async function GET(
     const totalItems = deliveryPlan.items.length;
     const ideasCount = deliveryPlan.items.filter(item => item.Idea && item.Idea.length > 0).length;
     const draftsCount = deliveryPlan.items.filter(item => 
-      item.ContentItem.some(content => content.currentStage === 'DRAFT')
+      item.ContentItem.some(content => content.currentStage === 'CONTENT_REVIEW')
     ).length;
     const approvedCount = deliveryPlan.items.filter(item => 
       item.ContentItem.some(content => content.status === 'APPROVED')
     ).length;
     const deliveredCount = deliveryPlan.items.filter(item => 
-      item.ContentItem.some(content => content.status === 'DELIVERED')
+      item.ContentItem.some(content => content.status === 'PUBLISHED')
     ).length;
 
     // Calculate overall progress percentage
