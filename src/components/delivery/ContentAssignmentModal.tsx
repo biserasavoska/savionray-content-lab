@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import Button from '@/components/ui/common/Button'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface Idea {
   id: string
@@ -54,6 +55,7 @@ export default function ContentAssignmentModal({
   onClose,
   onAssignSuccess,
 }: ContentAssignmentModalProps) {
+  const { currentOrganization } = useOrganization()
   const [suggestions, setSuggestions] = useState<Idea[]>([])
   const [availableIdeas, setAvailableIdeas] = useState<Idea[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -71,9 +73,19 @@ export default function ContentAssignmentModal({
   const fetchSuggestionsAndAvailable = async () => {
     setLoading(true)
     try {
+      if (!currentOrganization?.id) {
+        console.error('No organization selected for fetching suggestions')
+        return
+      }
+
       // Fetch smart suggestions
       const suggestionsRes = await fetch(
-        `/api/delivery-items/${deliveryItem.id}/suggestions`
+        `/api/delivery-items/${deliveryItem.id}/suggestions`,
+        {
+          headers: {
+            'x-selected-organization': currentOrganization.id,
+          },
+        }
       )
       if (suggestionsRes.ok) {
         const data = await suggestionsRes.json()
@@ -81,6 +93,8 @@ export default function ContentAssignmentModal({
         // They already match the plan's organization, content type, and period
         setSuggestions(data.suggestions || [])
         setAvailableIdeas(data.suggestions || [])
+      } else {
+        console.error('Failed to fetch suggestions:', suggestionsRes.status, suggestionsRes.statusText)
       }
     } catch (error) {
       console.error('Error fetching ideas:', error)
