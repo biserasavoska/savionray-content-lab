@@ -61,6 +61,14 @@ export default function IdeasList() {
     }
   }, [currentOrganization, selectedStatus, selectedContentType, selectedPeriod])
 
+  // Reset period selection when organization changes
+  useEffect(() => {
+    if (currentOrganization) {
+      setHasSetInitialPeriod(false)
+      setSelectedPeriod('ALL')
+    }
+  }, [currentOrganization?.id])
+
   const fetchIdeas = async (page = 1, append = false, customLimit?: number) => {
     if (!currentOrganization) return
     
@@ -160,9 +168,9 @@ export default function IdeasList() {
       setAvailablePeriods(data.periods || [])
       setLatestPeriod(data.latestPeriod)
       
-      // Only set the default period to the latest period if this is the initial load
-      // and we haven't set an initial period yet
-      if (data.latestPeriod && !hasSetInitialPeriod) {
+      // Always set the default period to the latest period on initial load
+      // selectedPeriod will be 'ALL' on first load, so we can check that
+      if (data.latestPeriod && selectedPeriod === 'ALL' && !hasSetInitialPeriod) {
         setSelectedPeriod(data.latestPeriod)
         setHasSetInitialPeriod(true)
       }
