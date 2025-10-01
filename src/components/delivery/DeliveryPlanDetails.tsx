@@ -16,6 +16,7 @@ import {
 import { Card, CardHeader, CardContent } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
+import DeliveryItemContentManager from './DeliveryItemContentManager'
 
 interface DeliveryItem {
   id: string
@@ -75,8 +76,10 @@ const ITEM_STATUS_COLORS = {
   DELIVERED: 'bg-gray-100 text-gray-800',
 } as const
 
-export default function DeliveryPlanDetails({ plan }: DeliveryPlanDetailsProps) {
+export default function DeliveryPlanDetails({ plan: initialPlan }: DeliveryPlanDetailsProps) {
   const router = useRouter()
+  const [plan, setPlan] = useState(initialPlan)
+  const [refreshing, setRefreshing] = useState(false)
 
   const getStatusColor = (status: string) => {
     return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'
@@ -88,6 +91,20 @@ export default function DeliveryPlanDetails({ plan }: DeliveryPlanDetailsProps) 
 
   const formatContentType = (type: string) => {
     return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+  }
+
+  const handleRefreshPlan = async () => {
+    setRefreshing(true)
+    try {
+      // Force a page refresh to get updated data
+      router.refresh()
+      // Alternatively, we could fetch the plan data directly here
+      window.location.reload()
+    } catch (error) {
+      console.error('Error refreshing plan:', error)
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   const totalItems = plan.items.length
@@ -214,43 +231,50 @@ export default function DeliveryPlanDetails({ plan }: DeliveryPlanDetailsProps) 
         </CardContent>
       </Card>
 
-      {/* Delivery Items */}
+      {/* Delivery Items with Content Assignment */}
       <Card>
         <CardHeader>
-          <h3 className="text-lg font-medium text-gray-900">Delivery Items</h3>
+          <h3 className="text-lg font-medium text-gray-900">Delivery Items & Content Assignments</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            Assign ideas to delivery items to track progress and plan content delivery
+          </p>
         </CardHeader>
         <CardContent>
           {plan.items.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No delivery items yet.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {plan.items.map((item, index) => (
-                <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-blue-600">
-                            {item.priority}
-                          </span>
-                        </div>
+                <div key={item.id}>
+                  {/* Delivery Item Header */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-blue-600">
+                          {item.priority}
+                        </span>
                       </div>
                       <div>
                         <h4 className="text-sm font-medium text-gray-900">
                           {formatContentType(item.contentType)}
                         </h4>
-                        <p className="text-sm text-gray-500">
-                          Quantity: {item.quantity} • Due: {format(new Date(item.dueDate), 'MMM d, yyyy')}
+                        <p className="text-xs text-gray-500">
+                          Due: {format(new Date(item.dueDate), 'MMM d, yyyy')}
+                          {item.notes && ` • ${item.notes}`}
                         </p>
-                        {item.notes && (
-                          <p className="text-sm text-gray-600 mt-1">{item.notes}</p>
-                        )}
                       </div>
                     </div>
                     <Badge className={getItemStatusColor(item.status)}>
                       {item.status.replace('_', ' ')}
                     </Badge>
                   </div>
+
+                  {/* Content Assignment Manager */}
+                  <DeliveryItemContentManager
+                    deliveryItem={item}
+                    plan={plan}
+                    onAssignmentChange={handleRefreshPlan}
+                  />
                 </div>
               ))}
             </div>
