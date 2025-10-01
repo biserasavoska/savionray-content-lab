@@ -327,7 +327,10 @@ export default function IdeaDetailPage() {
         <div className="px-6 py-6 space-y-6">
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">Description</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{idea.description}</p>
+            <div 
+              className="text-gray-700 whitespace-pre-wrap prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: idea.description }}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
