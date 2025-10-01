@@ -61,6 +61,14 @@ export default function IdeasList() {
     }
   }, [currentOrganization, selectedStatus, selectedContentType, selectedPeriod])
 
+  // Reset period selection when organization changes
+  useEffect(() => {
+    if (currentOrganization) {
+      setHasSetInitialPeriod(false)
+      setSelectedPeriod('ALL')
+    }
+  }, [currentOrganization?.id])
+
   const fetchIdeas = async (page = 1, append = false, customLimit?: number) => {
     if (!currentOrganization) return
     
