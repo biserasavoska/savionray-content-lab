@@ -4,12 +4,14 @@ import { redirect, notFound } from 'next/navigation'
 
 import { authOptions, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import DeliveryPlanEditForm from '@/components/delivery/DeliveryPlanEditForm'
 
 interface EditDeliveryPlanPageProps {
   params: {
     id: string
+  }
+  searchParams: {
+    org?: string
   }
 }
 
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic'
 
-export default async function EditDeliveryPlanPage({ params }: EditDeliveryPlanPageProps) {
+export default async function EditDeliveryPlanPage({ params, searchParams }: EditDeliveryPlanPageProps) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) {
     redirect('/auth/signin')
@@ -31,9 +33,11 @@ export default async function EditDeliveryPlanPage({ params }: EditDeliveryPlanP
     redirect('/ready-content')
   }
 
-  // Get organization context
-  const orgContext = await requireOrganizationContext(undefined, undefined)
-  if (!orgContext) {
+  // Get organization from URL parameter
+  const selectedOrganizationId = searchParams.org
+  
+  if (!selectedOrganizationId) {
+    console.error('No organization specified in URL parameters')
     redirect('/ready-content')
   }
 
@@ -41,7 +45,7 @@ export default async function EditDeliveryPlanPage({ params }: EditDeliveryPlanP
     const plan = await prisma.contentDeliveryPlan.findUnique({
       where: {
         id: params.id,
-        organizationId: orgContext.organizationId,
+        organizationId: selectedOrganizationId,
       },
       include: {
         client: {
