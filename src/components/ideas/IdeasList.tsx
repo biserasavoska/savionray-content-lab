@@ -32,6 +32,13 @@ export default function IdeasList() {
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  // Helper function to strip HTML tags from description
+  const stripHtmlTags = (html: string) => {
+    const tmp = document.createElement('DIV')
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || ''
+  }
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 9,
@@ -353,7 +360,7 @@ export default function IdeasList() {
               
               <CardContent className="pt-0">
                 <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                  {idea.description}
+                  {stripHtmlTags(idea.description)}
                 </p>
                 
                 <div className="space-y-2 text-xs text-gray-500 mb-4">
