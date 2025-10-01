@@ -18,7 +18,7 @@ export async function GET(
     const orgContext = await requireOrganizationContext(undefined, req);
 
     // Get the delivery plan
-    const deliveryPlan = await prisma.deliveryPlan.findFirst({
+    const deliveryPlan = await prisma.contentDeliveryPlan.findFirst({
       where: {
         id: params.id,
         organizationId: orgContext.organizationId,
@@ -26,12 +26,8 @@ export async function GET(
       include: {
         items: {
           include: {
-            idea: true,
-            contentDrafts: {
-              where: {
-                organizationId: orgContext.organizationId,
-              },
-            },
+            Idea: true,
+            ContentItem: true,
           },
         },
       },
@@ -43,15 +39,15 @@ export async function GET(
 
     // Calculate progress for each stage
     const totalItems = deliveryPlan.items.length;
-    const ideasCount = deliveryPlan.items.filter(item => item.idea).length;
+    const ideasCount = deliveryPlan.items.filter(item => item.Idea && item.Idea.length > 0).length;
     const draftsCount = deliveryPlan.items.filter(item => 
-      item.contentDrafts.some(draft => draft.status === 'DRAFT')
+      item.ContentItem.some(content => content.currentStage === 'DRAFT')
     ).length;
     const approvedCount = deliveryPlan.items.filter(item => 
-      item.contentDrafts.some(draft => draft.status === 'APPROVED')
+      item.ContentItem.some(content => content.status === 'APPROVED')
     ).length;
     const deliveredCount = deliveryPlan.items.filter(item => 
-      item.contentDrafts.some(draft => draft.status === 'DELIVERED')
+      item.ContentItem.some(content => content.status === 'DELIVERED')
     ).length;
 
     // Calculate overall progress percentage
