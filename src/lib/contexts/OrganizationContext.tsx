@@ -55,12 +55,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         console.log('Received organizations data:', data)
         setUserOrganizations(data.organizations || [])
         
-        // If no current organization is set, use the first available organization
-        if (!currentOrganization && data.organizations?.length > 0) {
-          const defaultOrg = data.organizations[0]
-          console.log('Setting current organization to first available:', defaultOrg)
-          setCurrentOrganization(defaultOrg)
-        }
+        // Don't automatically set organization here - let the useEffect handle it
+        // This prevents overriding the user's current selection
       } else {
         console.error('Failed to fetch organizations:', response.status, response.statusText)
       }
@@ -89,8 +85,14 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         window.history.pushState({}, '', newPath)
       }
       
-      // Refresh the page to update all context-dependent components
-      window.location.reload()
+      // Use router.refresh() instead of window.location.reload() for better UX
+      // This will refresh the page data without a full reload
+      if (typeof window !== 'undefined') {
+        // Trigger a custom event that components can listen to
+        window.dispatchEvent(new CustomEvent('organizationChanged', { 
+          detail: { organizationId: organizationId } 
+        }))
+      }
     }
   }
 
@@ -116,23 +118,26 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
   // Restore selected organization from localStorage
   useEffect(() => {
-    if (userOrganizations.length > 0) {
+    if (userOrganizations.length > 0 && !currentOrganization) {
       const savedOrganizationId = localStorage.getItem('selectedOrganizationId')
       if (savedOrganizationId) {
         const savedOrganization = userOrganizations.find(org => org.id === savedOrganizationId)
         if (savedOrganization) {
           // Always respect the user's saved organization selection
+          console.log('Restoring saved organization:', savedOrganization.name)
           setCurrentOrganization(savedOrganization)
         } else {
           // If saved org not found, default to first organization
+          console.log('Saved org not found, using first available:', userOrganizations[0].name)
           setCurrentOrganization(userOrganizations[0])
         }
       } else {
         // No saved organization, use the first one
+        console.log('No saved org, using first available:', userOrganizations[0].name)
         setCurrentOrganization(userOrganizations[0])
       }
     }
-  }, [userOrganizations, userRole])
+  }, [userOrganizations, userRole, currentOrganization])
 
   const value: OrganizationContextType = {
     currentOrganization,
