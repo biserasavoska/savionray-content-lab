@@ -67,15 +67,19 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
   // Switch to a different organization
   const switchOrganization = async (organizationId: string) => {
+    console.log('🔄 Switching to organization:', organizationId)
     const organization = userOrganizations.find(org => org.id === organizationId)
     if (organization) {
+      console.log('✅ Found organization:', organization.name)
       setCurrentOrganization(organization)
       
       // Store the selected organization in localStorage for persistence
       localStorage.setItem('selectedOrganizationId', organizationId)
+      console.log('💾 Saved to localStorage:', organizationId)
       
       // Set a cookie for server-side organization context
       document.cookie = `selectedOrganizationId=${organizationId}; path=/; max-age=86400; SameSite=Lax`
+      console.log('🍪 Set cookie:', organizationId)
       
       // Update the URL to reflect the organization context
       const currentPath = window.location.pathname
@@ -92,7 +96,10 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         window.dispatchEvent(new CustomEvent('organizationChanged', { 
           detail: { organizationId: organizationId } 
         }))
+        console.log('📡 Dispatched organizationChanged event')
       }
+    } else {
+      console.error('❌ Organization not found:', organizationId)
     }
   }
 
@@ -120,24 +127,37 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (userOrganizations.length > 0 && !currentOrganization) {
       const savedOrganizationId = localStorage.getItem('selectedOrganizationId')
+      console.log('Organization context: userOrganizations loaded:', userOrganizations.map(o => o.name))
+      console.log('Organization context: savedOrganizationId from localStorage:', savedOrganizationId)
+      
       if (savedOrganizationId) {
         const savedOrganization = userOrganizations.find(org => org.id === savedOrganizationId)
         if (savedOrganization) {
           // Always respect the user's saved organization selection
-          console.log('Restoring saved organization:', savedOrganization.name)
+          console.log('✅ Restoring saved organization:', savedOrganization.name)
           setCurrentOrganization(savedOrganization)
         } else {
-          // If saved org not found, default to first organization
-          console.log('Saved org not found, using first available:', userOrganizations[0].name)
-          setCurrentOrganization(userOrganizations[0])
+          // If saved org not found, check if user is admin
+          if (session?.user?.role === 'ADMIN') {
+            console.log('⚠️ Admin user: saved org not found, NOT setting default organization')
+            // Don't set any organization for admin users if saved org not found
+          } else {
+            console.log('📝 Non-admin user: saved org not found, using first available:', userOrganizations[0].name)
+            setCurrentOrganization(userOrganizations[0])
+          }
         }
       } else {
-        // No saved organization, use the first one
-        console.log('No saved org, using first available:', userOrganizations[0].name)
-        setCurrentOrganization(userOrganizations[0])
+        // No saved organization
+        if (session?.user?.role === 'ADMIN') {
+          console.log('⚠️ Admin user: no saved org, NOT setting default organization')
+          // Don't set any organization for admin users if no saved org
+        } else {
+          console.log('📝 Non-admin user: no saved org, using first available:', userOrganizations[0].name)
+          setCurrentOrganization(userOrganizations[0])
+        }
       }
     }
-  }, [userOrganizations, userRole, currentOrganization])
+  }, [userOrganizations, userRole, currentOrganization, session?.user?.role])
 
   const value: OrganizationContextType = {
     currentOrganization,

@@ -83,6 +83,18 @@ export async function getOrganizationContext(
       
       // Fall back to the first active organization if no selected organization found
       if (!organizationUser && user.organizationUsers.length > 0) {
+        // For admin users, don't automatically fall back to first organization
+        // Let them explicitly choose or stay with their current selection
+        if (session.user.role === 'ADMIN') {
+          logger.warn(`Admin user ${session.user.email} has no organization selected, returning null`, {
+            userId: user.id,
+            userEmail: session.user.email,
+            availableOrganizations: user.organizationUsers.length
+          });
+          return null;
+        }
+        
+        // For non-admin users, fall back to first organization
         organizationUser = user.organizationUsers[0];
         logger.warn(`No organization selected, falling back to first organization: ${organizationUser.organization.name}`, {
           userId: user.id,
