@@ -104,13 +104,44 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const { title, description, contentType, mediaType, publishingDateTime, organizationId } = body;
+    const { title, description, contentType, mediaType, publishingDateTime, organizationId, deliveryItemId } = body;
     
     if (!title || !description) {
       return NextResponse.json(
         { error: 'Title and description are required' },
         { status: 400 }
       );
+    }
+
+    // Validate delivery item assignment if provided
+    if (deliveryItemId) {
+      const deliveryItem = await prisma.contentDeliveryItem.findFirst({
+        where: {
+          id: deliveryItemId,
+          plan: {
+            organizationId: targetOrganizationId,
+          },
+        },
+        include: {
+          Idea: true,
+        },
+      });
+
+      if (!deliveryItem) {
+        return NextResponse.json(
+          { error: 'Delivery item not found or does not belong to your organization' },
+          { status: 404 }
+        );
+      }
+
+      // Check if there are available slots
+      const assignedCount = deliveryItem.Idea.length;
+      if (assignedCount >= deliveryItem.quantity) {
+        return NextResponse.json(
+          { error: 'This delivery item is already full' },
+          { status: 400 }
+        );
+      }
     }
 
     // Get session to check if user is admin
@@ -187,6 +218,7 @@ export async function POST(request: NextRequest) {
         status: 'PENDING',
         createdById: createdById,
         organizationId: targetOrganizationId,
+        deliveryItemId: deliveryItemId || null,
       },
       include: {
         User: {

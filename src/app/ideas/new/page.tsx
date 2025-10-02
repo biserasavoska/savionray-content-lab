@@ -33,7 +33,10 @@ export default function NewIdeaPage() {
     publishingDateTime: '',
     savedForLater: false,
     organizationId: '', // Add organization selection
+    deliveryItemId: '', // Add delivery plan assignment
   })
+  const [deliveryPlans, setDeliveryPlans] = useState<any[]>([])
+  const [loadingPlans, setLoadingPlans] = useState(false)
 
   // Fetch organizations for admin users
   useEffect(() => {
@@ -56,6 +59,38 @@ export default function NewIdeaPage() {
 
     fetchOrganizations()
   }, [session])
+
+  // Fetch delivery plans when content type changes
+  useEffect(() => {
+    const fetchDeliveryPlans = async () => {
+      if (!formData.contentType) return
+      
+      setLoadingPlans(true)
+      try {
+        const contentTypeMap: { [key: string]: string } = {
+          'social-media': 'SOCIAL_MEDIA_POST',
+          'blog': 'BLOG_POST',
+          'email': 'NEWSLETTER',
+          'video': 'SOCIAL_MEDIA_POST',
+          'infographic': 'SOCIAL_MEDIA_POST',
+          'whitepaper': 'BLOG_POST',
+        }
+        
+        const mappedContentType = contentTypeMap[formData.contentType] || 'SOCIAL_MEDIA_POST'
+        const response = await fetch(`/api/delivery-plans/assignment-options?contentType=${mappedContentType}`)
+        if (response.ok) {
+          const data = await response.json()
+          setDeliveryPlans(data.deliveryPlans || [])
+        }
+      } catch (error) {
+        console.error('Error fetching delivery plans:', error)
+      } finally {
+        setLoadingPlans(false)
+      }
+    }
+
+    fetchDeliveryPlans()
+  }, [formData.contentType])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -228,6 +263,52 @@ export default function NewIdeaPage() {
                   <option value="mixed">Mixed Media</option>
                 </select>
               </div>
+            </div>
+
+            {/* Delivery Plan Assignment */}
+            <div>
+              <label htmlFor="deliveryItemId" className="block text-sm font-medium text-gray-700 mb-2">
+                Assign to Delivery Plan (Optional)
+              </label>
+              <select
+                id="deliveryItemId"
+                name="deliveryItemId"
+                value={formData.deliveryItemId}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loadingPlans}
+              >
+                <option value="">
+                  {loadingPlans ? 'Loading delivery plans...' : 'No assignment (create standalone idea)'}
+                </option>
+                {deliveryPlans.map((plan) => {
+                  const contentTypeMap: { [key: string]: string } = {
+                    'social-media': 'SOCIAL_MEDIA_POST',
+                    'blog': 'BLOG_POST',
+                    'email': 'NEWSLETTER',
+                    'video': 'SOCIAL_MEDIA_POST',
+                    'infographic': 'SOCIAL_MEDIA_POST',
+                    'whitepaper': 'BLOG_POST',
+                  }
+                  const mappedContentType = contentTypeMap[formData.contentType] || 'SOCIAL_MEDIA_POST'
+                  const typeInfo = plan.itemsByType[mappedContentType]
+                  
+                  if (!typeInfo || typeInfo.available <= 0) return null
+                  
+                  return (
+                    <optgroup key={plan.id} label={`${plan.name} (${new Date(plan.targetMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})`}>
+                      {typeInfo.items.map((item: any) => (
+                        <option key={item.id} value={item.id}>
+                          {item.quantity} {formData.contentType.replace('-', ' ')} items - {item.availableSlots} slots available
+                        </option>
+                      ))}
+                    </optgroup>
+                  )
+                })}
+              </select>
+              <p className="mt-1 text-sm text-gray-500">
+                Assign this idea to a specific delivery plan item. Only shows plans with available slots for this content type.
+              </p>
             </div>
 
             <div>
