@@ -8,16 +8,22 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  console.log('Suggestions API: Starting request for delivery item:', params.id);
+  
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
+    console.log('Suggestions API: No session found');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
+    console.log('Suggestions API: Getting organization context');
     // Get organization context for multi-tenant isolation
     const orgContext = await requireOrganizationContext(undefined, req);
+    console.log('Suggestions API: Organization context:', orgContext);
 
     // Get the delivery item and its plan
+    console.log('Suggestions API: Looking for delivery item:', params.id, 'in org:', orgContext.organizationId);
     const deliveryItem = await prisma.contentDeliveryItem.findFirst({
       where: {
         id: params.id,
@@ -30,7 +36,9 @@ export async function GET(
       },
     });
 
+    console.log('Suggestions API: Found delivery item:', deliveryItem ? 'YES' : 'NO');
     if (!deliveryItem) {
+      console.log('Suggestions API: Delivery item not found for ID:', params.id);
       return NextResponse.json(
         { error: 'Delivery item not found' },
         { status: 404 }
@@ -84,7 +92,8 @@ export async function GET(
       },
     });
 
-    return NextResponse.json({
+    console.log('Suggestions API: Found', suggestions.length, 'suggestions');
+    const response = {
       suggestions,
       matchCriteria: {
         contentType: deliveryItem.contentType,
@@ -93,9 +102,11 @@ export async function GET(
         deliveryItemId: deliveryItem.id,
         deliveryItemName: `${deliveryItem.contentType} (${deliveryItem.quantity} items)`,
       },
-    });
+    };
+    console.log('Suggestions API: Returning response:', response);
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching suggestions for delivery item:', error);
+    console.error('Suggestions API: Error fetching suggestions for delivery item:', error);
     return NextResponse.json(
       { error: 'Failed to fetch suggestions' },
       { status: 500 }
