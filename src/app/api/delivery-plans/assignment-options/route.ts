@@ -18,28 +18,27 @@ export async function GET(req: NextRequest) {
     const contentType = url.searchParams.get('contentType');
 
     // Build where clause for delivery plans
-    let where: any = {
+    const where: any = {
       organizationId: orgContext.organizationId,
       isArchived: false,
       status: {
         in: ['DRAFT', 'ACTIVE'],
       },
-    };
-
-    // If content type is specified, only show plans that have items of that type
-    if (contentType) {
-      where.items = {
-        some: {
-          contentType: contentType,
+      // If content type is specified, only show plans that have items of that type
+      ...(contentType && {
+        items: {
+          some: {
+            contentType: contentType,
+          },
         },
-      };
-    }
+      }),
+    };
 
     const deliveryPlans = await prisma.contentDeliveryPlan.findMany({
       where,
       include: {
         items: {
-          where: contentType ? { contentType } : undefined,
+          where: contentType ? { contentType: contentType as any } : undefined,
           select: {
             id: true,
             contentType: true,
@@ -66,7 +65,7 @@ export async function GET(req: NextRequest) {
 
     // Transform the data to include available slots per content type
     const plansWithSlots = deliveryPlans.map(plan => {
-      const itemsByType = plan.items.reduce((acc, item) => {
+      const itemsByType = plan.items.reduce((acc: any, item: any) => {
         const assignedCount = item.Idea.length;
         const availableSlots = item.quantity - assignedCount;
         
