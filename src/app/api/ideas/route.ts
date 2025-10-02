@@ -106,42 +106,20 @@ export async function POST(request: NextRequest) {
     
     const { title, description, contentType, mediaType, publishingDateTime, organizationId, deliveryItemId } = body;
     
+    console.log('Idea creation request:', {
+      title,
+      contentType,
+      mediaType,
+      publishingDateTime,
+      organizationId,
+      deliveryItemId
+    });
+    
     if (!title || !description) {
       return NextResponse.json(
         { error: 'Title and description are required' },
         { status: 400 }
       );
-    }
-
-    // Validate delivery item assignment if provided
-    if (deliveryItemId) {
-      const deliveryItem = await prisma.contentDeliveryItem.findFirst({
-        where: {
-          id: deliveryItemId,
-          plan: {
-            organizationId: targetOrganizationId,
-          },
-        },
-        include: {
-          Idea: true,
-        },
-      });
-
-      if (!deliveryItem) {
-        return NextResponse.json(
-          { error: 'Delivery item not found or does not belong to your organization' },
-          { status: 404 }
-        );
-      }
-
-      // Check if there are available slots
-      const assignedCount = deliveryItem.Idea.length;
-      if (assignedCount >= deliveryItem.quantity) {
-        return NextResponse.json(
-          { error: 'This delivery item is already full' },
-          { status: 400 }
-        );
-      }
     }
 
     // Get session to check if user is admin
@@ -183,30 +161,67 @@ export async function POST(request: NextRequest) {
       targetOrganizationId = context.organizationId;
       createdById = context.userId;
     }
+
+    // Validate delivery item assignment if provided
+    if (deliveryItemId) {
+      const deliveryItem = await prisma.contentDeliveryItem.findFirst({
+        where: {
+          id: deliveryItemId,
+          plan: {
+            organizationId: targetOrganizationId,
+          },
+        },
+        include: {
+          Idea: true,
+        },
+      });
+
+      if (!deliveryItem) {
+        return NextResponse.json(
+          { error: 'Delivery item not found or does not belong to your organization' },
+          { status: 404 }
+        );
+      }
+
+      // Check if there are available slots
+      const assignedCount = deliveryItem.Idea.length;
+      if (assignedCount >= deliveryItem.quantity) {
+        return NextResponse.json(
+          { error: 'This delivery item is already full' },
+          { status: 400 }
+        );
+      }
+    }
     
     // Map form values to Prisma enum values
     const mapContentType = (type: string) => {
       switch (type) {
         case 'social-media': return 'SOCIAL_MEDIA_POST';
-        case 'newsletter': return 'NEWSLETTER';
-        case 'blog-post': return 'BLOG_POST';
-        case 'website-copy': return 'WEBSITE_COPY';
-        case 'email-campaign': return 'EMAIL_CAMPAIGN';
+        case 'blog': return 'BLOG_POST';
+        case 'email': return 'NEWSLETTER';
+        case 'video': return 'SOCIAL_MEDIA_POST'; // Video content is typically social media
+        case 'infographic': return 'SOCIAL_MEDIA_POST'; // Infographics are typically social media
+        case 'whitepaper': return 'BLOG_POST'; // Whitepapers are typically blog content
         default: return 'SOCIAL_MEDIA_POST';
       }
     };
 
     const mapMediaType = (type: string) => {
       switch (type) {
+        case 'text': return 'SOCIAL_CARD'; // Text content is typically social cards
         case 'image': return 'PHOTO';
         case 'video': return 'VIDEO';
-        case 'infographic': return 'GRAPH_OR_INFOGRAPHIC';
-        case 'social-card': return 'SOCIAL_CARD';
-        case 'poll': return 'POLL';
-        case 'carousel': return 'CAROUSEL';
+        case 'audio': return 'SOCIAL_CARD'; // Audio content is typically social cards
+        case 'mixed': return 'SOCIAL_CARD'; // Mixed media is typically social cards
         default: return 'SOCIAL_CARD';
       }
     };
+
+    console.log('Mapped values:', {
+      contentType: mapContentType(contentType),
+      mediaType: mapMediaType(mediaType),
+      publishingDateTime: publishingDateTime ? new Date(publishingDateTime) : null,
+    });
 
     const idea = await prisma.idea.create({
       data: {
