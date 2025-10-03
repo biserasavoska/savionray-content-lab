@@ -41,6 +41,12 @@ export default async function DeliveryPlanPage({ params, searchParams }: Deliver
     redirect('/ready-content')
   }
 
+  // Handle the case where 'default-org-id' is used (legacy issue)
+  if (selectedOrganizationId === 'default-org-id') {
+    console.warn('Legacy default-org-id detected, redirecting to delivery plans list')
+    redirect('/delivery-plans')
+  }
+
   try {
     const plan = await prisma.contentDeliveryPlan.findUnique({
       where: {
