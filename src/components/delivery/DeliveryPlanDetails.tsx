@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { 
@@ -17,6 +17,7 @@ import { Card, CardHeader, CardContent } from '@/components/ui/common/Card'
 import Button from '@/components/ui/common/Button'
 import Badge from '@/components/ui/common/Badge'
 import DeliveryItemContentManager from './DeliveryItemContentManager'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface DeliveryItem {
   id: string
@@ -78,8 +79,78 @@ const ITEM_STATUS_COLORS = {
 
 export default function DeliveryPlanDetails({ plan: initialPlan }: DeliveryPlanDetailsProps) {
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
   const [plan, setPlan] = useState(initialPlan)
   const [refreshing, setRefreshing] = useState(false)
+  const [organizationMismatch, setOrganizationMismatch] = useState(false)
+
+  // Check if the plan belongs to the current organization
+  useEffect(() => {
+    if (currentOrganization && plan.organizationId !== currentOrganization.id) {
+      console.warn('Delivery plan organization mismatch:', {
+        planOrgId: plan.organizationId,
+        currentOrgId: currentOrganization.id,
+        planName: plan.name
+      })
+      setOrganizationMismatch(true)
+    } else {
+      setOrganizationMismatch(false)
+    }
+  }, [currentOrganization, plan.organizationId])
+
+  // If there's an organization mismatch, show a warning
+  if (organizationMismatch && currentOrganization) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => router.back()}
+              className="flex items-center space-x-2"
+            >
+              <ArrowLeftIcon className="h-4 w-4" />
+              <span>Back</span>
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">{plan.name}</h1>
+              <p className="text-sm text-gray-500">
+                Created by {plan.client.name || plan.client.email} • {format(new Date(plan.createdAt), 'MMM d, yyyy')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3 text-amber-600">
+              <ExclamationTriangleIcon className="h-6 w-6" />
+              <div>
+                <h3 className="text-lg font-medium">Organization Mismatch</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  This delivery plan belongs to <strong>{plan.organization.name}</strong>, but you're currently viewing <strong>{currentOrganization.name}</strong>.
+                </p>
+                <p className="text-sm text-gray-600 mt-2">
+                  To view or edit this delivery plan, please switch to the correct organization.
+                </p>
+                <div className="mt-4">
+                  <Button
+                    onClick={() => {
+                      // Navigate to delivery plans list for the current organization
+                      router.push(`/delivery-plans?org=${currentOrganization.id}`)
+                    }}
+                    variant="outline"
+                  >
+                    View {currentOrganization.name} Delivery Plans
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const getStatusColor = (status: string) => {
     return STATUS_COLORS[status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'
