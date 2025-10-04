@@ -64,7 +64,7 @@ export default function FeedbackForm({ draftId, ideaId, onSuccess }: FeedbackFor
       }
 
       onSuccess?.()
-    }
+    },
   })
 
   const handleFormSubmit = (e: React.FormEvent) => {

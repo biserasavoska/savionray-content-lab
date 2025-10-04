@@ -16,6 +16,7 @@ interface Feedback {
 import { getStatusBadgeClasses, getStatusLabel, DRAFT_STATUS, CONTENT_TYPE } from '@/lib/utils/enum-utils'
 // EnhancedFeedbackForm removed - using simple feedback form instead
 import FeedbackList from '@/components/feedback/FeedbackList'
+import FeedbackForm from '@/components/feedback/FeedbackForm'
 import AIEnhancedContentReview from '@/components/content/AIEnhancedContentReview'
 import StatusBadge from '@/components/ui/common/StatusBadge'
 import Button from '@/components/ui/common/Button'
@@ -491,9 +492,13 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
               {isClient && showFeedbackForm[draft.id] && (
                 <div className="mb-6">
                   <div className="bg-gray-50 p-4 rounded-md">
-                    <p className="text-sm text-gray-600 mb-2">
-                      Feedback form temporarily unavailable. Please use the main feedback system.
-                    </p>
+                    <FeedbackForm
+                      draftId={draft.id}
+                      onSuccess={() => {
+                        toggleFeedbackForm(draft.id)
+                        window.location.reload()
+                      }}
+                    />
                   </div>
                 </div>
               )}
