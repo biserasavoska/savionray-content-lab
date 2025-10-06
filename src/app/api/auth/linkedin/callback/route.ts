@@ -1,74 +1,86 @@
-import { NextResponse } from 'next/server'
-
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const code = searchParams.get('code')
-  const state = searchParams.get('state') // This is the user ID we passed
-  const error = searchParams.get('error')
-  const origin = new URL(request.url).origin
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url)
+  const code = url.searchParams.get('code')
+  const returnedState = url.searchParams.get('state')
+  // Prefer explicit NEXTAUTH_URL (required by NextAuth), otherwise derive from request
+  const configuredBase = process.env.NEXTAUTH_URL
+  const origin = configuredBase || `${url.protocol}//${url.host}`
 
-  if (error) {
-    console.error('LinkedIn OAuth error:', error)
-    return NextResponse.redirect(`${origin}/profile?error=linkedin_connection_failed`)
-  }
-
-  if (!code || !state) {
+  if (!code || !returnedState) {
     return NextResponse.redirect(`${origin}/profile?error=invalid_callback`)
   }
 
+  // Verify state from cookie
+  const cookieStore = cookies()
+  const storedState = cookieStore.get('li_oauth_state')?.value
+  if (!storedState || storedState !== returnedState) {
+    return NextResponse.redirect(`${origin}/profile?error=state_mismatch`)
+  }
+
+  const [userId] = returnedState.split(':')
+
   try {
-    // Exchange code for access token
+    // Exchange authorization code for access token
     const tokenResponse = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
         redirect_uri: `${origin}/api/auth/linkedin/callback`,
-        client_id: process.env.LINKEDIN_CLIENT_ID!,
-        client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+        client_id: process.env.LINKEDIN_CLIENT_ID || '',
+        client_secret: process.env.LINKEDIN_CLIENT_SECRET || '',
       }).toString(),
     })
 
     if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.text()
-      console.error('LinkedIn token error:', errorData)
-      throw new Error('Failed to get access token')
+      const errText = await tokenResponse.text()
+      console.error('LinkedIn token error:', errText)
+      return NextResponse.redirect(`${origin}/profile?error=token_exchange_failed`)
     }
 
-    const tokenData = await tokenResponse.json()
+    const tokenJson = await tokenResponse.json()
+    const accessToken = tokenJson.access_token as string
+    const expiresIn = tokenJson.expires_in as number
 
-    // Store the access token in the database
+    // Upsert into NextAuth Account table
     await prisma.account.upsert({
       where: {
         provider_providerAccountId: {
           provider: 'linkedin',
-          providerAccountId: state, // Using state as providerAccountId since it contains user ID
+          providerAccountId: userId,
         },
       },
       update: {
-        access_token: tokenData.access_token,
-        expires_at: Math.floor(Date.now() / 1000 + tokenData.expires_in),
-        scope: tokenData.scope,
+        access_token: accessToken,
+        expires_at: Math.floor(Date.now() / 1000 + expiresIn),
+        token_type: 'Bearer',
+        scope: 'profile email',
       },
       create: {
-        userId: state,
+        userId,
         type: 'oauth',
         provider: 'linkedin',
-        providerAccountId: state,
-        access_token: tokenData.access_token,
-        expires_at: Math.floor(Date.now() / 1000 + tokenData.expires_in),
-        scope: tokenData.scope,
+        providerAccountId: userId,
+        access_token: accessToken,
+        expires_at: Math.floor(Date.now() / 1000 + expiresIn),
+        token_type: 'Bearer',
+        scope: 'profile email',
       },
     })
 
+    // Clear state cookie
+    cookies().set('li_oauth_state', '', { path: '/', maxAge: 0 })
+
     return NextResponse.redirect(`${origin}/profile?success=linkedin_connected`)
-  } catch (error) {
-    console.error('Error handling LinkedIn callback:', error)
+  } catch (err) {
+    console.error('LinkedIn callback error:', err)
     return NextResponse.redirect(`${origin}/profile?error=linkedin_connection_failed`)
   }
-} 
+}
+
+

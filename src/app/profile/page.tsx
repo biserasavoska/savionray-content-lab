@@ -33,9 +33,15 @@ export default function ProfilePage() {
     // Check if user has LinkedIn connected
     const checkLinkedInConnection = async () => {
       try {
+        console.log('Checking LinkedIn connection status...')
         const response = await fetch('/api/auth/linkedin/status')
         const data = await response.json()
+        console.log('LinkedIn status response:', data)
         setIsConnected(data.isConnected)
+        
+        if (data.isConnected) {
+          setSuccess('LinkedIn account is connected!')
+        }
       } catch (error) {
         console.error('Error checking LinkedIn connection:', error)
       }
@@ -69,24 +75,8 @@ export default function ProfilePage() {
     setIsConnecting(true)
     setError('')
     try {
-      const response = await fetch('/api/auth/linkedin/connect', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          clientId: process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID,
-          redirectUri: `${window.location.origin}/api/auth/linkedin/callback`,
-          scope: 'openid profile w_member_social email',
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to initiate LinkedIn connection')
-      }
-
-      const { authUrl } = await response.json()
-      window.location.href = authUrl
+      // Use our custom connect route (avoids NextAuth OIDC validation issues)
+      window.location.href = '/api/auth/linkedin/connect'
     } catch (error) {
       console.error('Error connecting LinkedIn:', error)
       setError('Failed to initiate LinkedIn connection. Please try again.')
