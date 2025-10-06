@@ -147,13 +147,14 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           }
         }
       } else {
-        // No saved organization
-        if (session?.user?.role === 'ADMIN') {
-          console.log('⚠️ Admin user: no saved org, NOT setting default organization')
-          // Don't set any organization for admin users if no saved org
-        } else {
-          console.log('📝 Non-admin user: no saved org, using first available:', userOrganizations[0].name)
+        // No saved organization - set the first available one for all users
+        if (userOrganizations.length > 0) {
+          console.log('📝 No saved org, using first available:', userOrganizations[0].name)
           setCurrentOrganization(userOrganizations[0])
+          // Save this as the default selection
+          localStorage.setItem('selectedOrganizationId', userOrganizations[0].id)
+        } else {
+          console.log('⚠️ No organizations available for user')
         }
       }
     }
