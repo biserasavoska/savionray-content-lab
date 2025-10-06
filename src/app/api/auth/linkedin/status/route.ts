@@ -12,12 +12,24 @@ export async function GET() {
   }
 
   try {
+    console.log('Checking LinkedIn connection for user:', session.user.id)
+    
     const linkedInAccount = await prisma.account.findFirst({
       where: {
         userId: session.user.id,
         provider: 'linkedin',
       },
     })
+
+    console.log('LinkedIn account found:', !!linkedInAccount)
+    if (linkedInAccount) {
+      console.log('LinkedIn account details:', {
+        id: linkedInAccount.id,
+        provider: linkedInAccount.provider,
+        hasAccessToken: !!linkedInAccount.access_token,
+        expiresAt: linkedInAccount.expires_at
+      })
+    }
 
     return NextResponse.json({
       isConnected: !!linkedInAccount,
