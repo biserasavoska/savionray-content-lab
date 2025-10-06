@@ -12,7 +12,9 @@ export async function GET(req: NextRequest) {
   }
 
   const clientId = process.env.LINKEDIN_CLIENT_ID
-  const redirectUri = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/linkedin/callback`
+  // Prefer explicit NEXTAUTH_URL, otherwise derive from the incoming request
+  const baseUrl = process.env.NEXTAUTH_URL || new URL(req.url).origin
+  const redirectUri = `${baseUrl}/api/auth/linkedin/callback`
   const scope = 'profile email'
 
   if (!clientId) {

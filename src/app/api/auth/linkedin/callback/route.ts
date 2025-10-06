@@ -6,7 +6,9 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const code = url.searchParams.get('code')
   const returnedState = url.searchParams.get('state')
-  const origin = `${url.protocol}//${url.host}`
+  // Prefer explicit NEXTAUTH_URL (required by NextAuth), otherwise derive from request
+  const configuredBase = process.env.NEXTAUTH_URL
+  const origin = configuredBase || `${url.protocol}//${url.host}`
 
   if (!code || !returnedState) {
     return NextResponse.redirect(`${origin}/profile?error=invalid_callback`)
