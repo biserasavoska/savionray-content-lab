@@ -64,6 +64,10 @@ if [ -n "$RAILWAY_ENVIRONMENT" ]; then
     echo "--- Database has data (${USER_COUNT} users), skipping seeding ---"
   fi
   
+  # Clean up problematic LinkedIn accounts
+  echo "--- Cleaning up LinkedIn accounts with incorrect providerAccountId ---"
+  npm run railway-cleanup-linkedin || echo "--- LinkedIn cleanup failed, continuing anyway ---"
+  
   echo "--- Starting Next.js on port $PORT ---"
   exec npx next start -p $PORT
 else
