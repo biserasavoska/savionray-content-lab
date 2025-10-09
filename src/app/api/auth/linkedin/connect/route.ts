@@ -15,6 +15,16 @@ export async function GET(req: NextRequest) {
   // Prefer explicit NEXTAUTH_URL, otherwise derive from the incoming request
   const baseUrl = process.env.NEXTAUTH_URL || new URL(req.url).origin
   const redirectUri = `${baseUrl}/api/auth/linkedin/callback`
+  
+  // Debug logging for Railway
+  console.log('🔍 LinkedIn Connect Debug:', {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    reqUrl: req.url,
+    baseUrl,
+    redirectUri,
+    clientId: clientId ? `${clientId.substring(0, 8)}...` : 'NOT_SET'
+  })
+  
   // Request both authentication and posting permissions in one step
   const scope = 'openid profile email w_member_social'
 
