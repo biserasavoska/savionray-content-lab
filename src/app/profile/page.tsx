@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const searchParams = useSearchParams()
   const [isConnecting, setIsConnecting] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
+  const [linkedinProfile, setLinkedinProfile] = useState<any>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -23,10 +24,14 @@ export default function ProfilePage() {
       setError('Failed to connect LinkedIn account. Please try again.')
     } else if (urlError === 'invalid_callback') {
       setError('Invalid callback from LinkedIn. Please try again.')
+    } else if (urlError === 'userinfo_failed') {
+      setError('LinkedIn connection failed during user verification. Please check your LinkedIn app configuration and try again.')
+    } else if (urlError === 'linkedin_posting_failed') {
+      setError('Failed to enable LinkedIn posting permissions. Please try again.')
     }
 
     if (urlSuccess === 'linkedin_connected') {
-      setSuccess('LinkedIn account connected successfully!')
+      setSuccess('LinkedIn account connected successfully! You can now publish content to LinkedIn.')
       setIsConnected(true)
     }
 
@@ -38,9 +43,10 @@ export default function ProfilePage() {
         const data = await response.json()
         console.log('LinkedIn status response:', data)
         setIsConnected(data.isConnected)
+        setLinkedinProfile(data.userinfo || null)
         
         if (data.isConnected) {
-          setSuccess('LinkedIn account is connected!')
+          setSuccess('LinkedIn account is connected and ready for posting!')
         }
       } catch (error) {
         console.error('Error checking LinkedIn connection:', error)
@@ -76,7 +82,9 @@ export default function ProfilePage() {
     setError('')
     try {
       // Use our custom connect route (avoids NextAuth OIDC validation issues)
-      window.location.href = '/api/auth/linkedin/connect'
+      if (typeof window !== 'undefined') {
+        window.location.href = '/api/auth/linkedin/connect'
+      }
     } catch (error) {
       console.error('Error connecting LinkedIn:', error)
       setError('Failed to initiate LinkedIn connection. Please try again.')
@@ -96,6 +104,7 @@ export default function ProfilePage() {
       }
 
       setIsConnected(false)
+      setLinkedinProfile(null)
       setSuccess('LinkedIn account disconnected successfully!')
     } catch (error) {
       console.error('Error disconnecting LinkedIn:', error)
@@ -149,20 +158,34 @@ export default function ProfilePage() {
                   </svg>
                   <div>
                     <h3 className="font-medium">LinkedIn</h3>
-                    <p className="text-sm text-gray-500">
-                      {isConnected
-                        ? 'Your LinkedIn account is connected'
-                        : 'Connect your LinkedIn profile for posting'}
-                    </p>
+                    {isConnected && linkedinProfile ? (
+                      <div className="mt-1">
+                        <p className="text-sm text-gray-500">
+                          Connected as <span className="font-medium text-gray-900">{linkedinProfile.name}</span>
+                        </p>
+                        <p className="text-xs text-gray-400">{linkedinProfile.email}</p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        {isConnected
+                          ? 'Your LinkedIn account is connected and ready for posting'
+                          : 'Connect your LinkedIn profile for posting'}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {isConnected ? (
-                  <button
-                    onClick={handleDisconnectLinkedIn}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Disconnect
-                  </button>
+                  <div className="flex space-x-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      ✓ Connected
+                    </span>
+                    <button
+                      onClick={handleDisconnectLinkedIn}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={handleConnectLinkedIn}

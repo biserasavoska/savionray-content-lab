@@ -45,15 +45,12 @@ export async function POST(
     const body = await req.json()
     const { platforms = ['linkedin'] } = body
 
-    // For now, we'll simulate publishing to LinkedIn
-    // In a real implementation, you'd integrate with LinkedIn's API
     const publishResults = []
 
     for (const platform of platforms) {
       try {
         if (platform === 'linkedin') {
-          // Simulate LinkedIn publishing
-          const linkedinResult = await publishToLinkedIn(contentDraft)
+          const linkedinResult = await publishToLinkedIn(contentDraft, session.user.id)
           publishResults.push({
             platform: 'linkedin',
             success: true,
@@ -71,7 +68,7 @@ export async function POST(
       }
     }
 
-    // Update the draft status to indicate it's been published
+    // Update the draft status to indicate it's been published and persist links in metadata for now
     await prisma.contentDraft.update({
       where: { id: params.id },
       data: {
@@ -99,25 +96,101 @@ export async function POST(
   }
 }
 
-// Simulate LinkedIn publishing - replace with actual LinkedIn API integration
-async function publishToLinkedIn(contentDraft: any) {
-  // This is a simulation - in reality you'd:
-  // 1. Get LinkedIn access token from user's connected account
-  // 2. Format content according to LinkedIn's requirements
-  // 3. Call LinkedIn's API to create a post
-  // 4. Return the actual post ID and URL
-  
-  const content = contentDraft.body || contentDraft.Idea?.description || 'No content available'
-  const title = contentDraft.Idea?.title || 'Untitled Content'
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  // Simulate successful publishing
-  return {
-    postId: `li_${Date.now()}`,
-    url: `https://www.linkedin.com/posts/activity-${Date.now()}`,
-    content: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-    title
+async function publishToLinkedIn(contentDraft: any, userId: string) {
+  // 1) Fetch access token from connected LinkedIn account
+  const account = await prisma.account.findFirst({
+    where: { userId, provider: 'linkedin' }
+  })
+  if (!account?.access_token) {
+    throw new Error('LinkedIn account not connected')
   }
+
+  // Check if token is expired
+  if (account.expires_at && account.expires_at < Math.floor(Date.now() / 1000)) {
+    throw new Error('LinkedIn access token expired. Please reconnect your LinkedIn account.')
+  }
+
+  const accessToken = account.access_token as string
+  const linkedinMemberId = account.providerAccountId
+
+  if (!linkedinMemberId) {
+    throw new Error('LinkedIn member ID not found. Please reconnect your LinkedIn account.')
+  }
+
+  const authorUrn = `urn:li:person:${linkedinMemberId}`
+
+  // 3) Compose simple text post (member UGC)
+  const text = (contentDraft.body || contentDraft.Idea?.description || '').toString().slice(0, 2900)
+  if (!text) {
+    throw new Error('No content to publish')
+  }
+
+  const ugcPayload = {
+    author: authorUrn,
+    lifecycleState: 'PUBLISHED',
+    specificContent: {
+      'com.linkedin.ugc.ShareContent': {
+        shareCommentary: { text },
+        shareMediaCategory: 'NONE'
+      }
+    },
+    visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'CONNECTIONS' }
+  }
+
+  // Retry logic for LinkedIn API calls
+  let postRes: Response
+  let lastError: Error | null = null
+  
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      postRes = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Restli-Protocol-Version': '2.0.0'
+        },
+        body: JSON.stringify(ugcPayload)
+      })
+
+      if (postRes.ok) {
+        break // Success, exit retry loop
+      }
+
+      // Check if we should retry
+      if (postRes.status === 429 || (postRes.status >= 500 && postRes.status < 600)) {
+        if (attempt < 3) {
+          const delay = Math.pow(2, attempt) * 1000 // Exponential backoff: 2s, 4s
+          console.log(`LinkedIn API retry ${attempt}/3 after ${delay}ms for status ${postRes.status}`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+      }
+
+      // Don't retry for client errors (4xx except 429)
+      const txt = await postRes.text()
+      lastError = new Error(`LinkedIn post failed: ${postRes.status} ${txt}`)
+      break
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Network error')
+      if (attempt < 3) {
+        const delay = Math.pow(2, attempt) * 1000
+        console.log(`LinkedIn API retry ${attempt}/3 after ${delay}ms for error:`, lastError.message)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        continue
+      }
+      break
+    }
+  }
+
+  if (!postRes!.ok) {
+    throw lastError || new Error('LinkedIn post failed after retries')
+  }
+
+  const postJson = await postRes!.json() as { id: string }
+  const postId = postJson.id // e.g. urn:li:ugcPost:XXXXXXXX
+  const postUrl = `https://www.linkedin.com/feed/update/${postId}`
+
+  return { postId, url: postUrl }
 }

@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: 'profile email'
+          scope: 'openid profile email w_member_social'
         }
       }
     }),

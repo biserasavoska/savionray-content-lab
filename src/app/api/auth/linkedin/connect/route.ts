@@ -15,8 +15,8 @@ export async function GET(req: NextRequest) {
   // Prefer explicit NEXTAUTH_URL, otherwise derive from the incoming request
   const baseUrl = process.env.NEXTAUTH_URL || new URL(req.url).origin
   const redirectUri = `${baseUrl}/api/auth/linkedin/callback`
-  // Request member posting permission for Phase 2
-  const scope = 'profile email w_member_social'
+  // Request both authentication and posting permissions in one step
+  const scope = 'openid profile email w_member_social'
 
   if (!clientId) {
     return new NextResponse('LinkedIn Client ID not configured', { status: 500 })

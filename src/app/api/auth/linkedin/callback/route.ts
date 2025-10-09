@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${origin}/profile?error=state_mismatch`)
   }
 
-  const [userId] = returnedState.split(':')
+  const [userId] = storedState.split(':')
 
   try {
     // Exchange authorization code for access token
@@ -47,29 +47,42 @@ export async function GET(req: NextRequest) {
     const accessToken = tokenJson.access_token as string
     const expiresIn = tokenJson.expires_in as number
 
-    // Upsert into NextAuth Account table
+    // Fetch LinkedIn member ID from userinfo
+    const userinfoRes = await fetch('https://api.linkedin.com/v2/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    })
+    if (!userinfoRes.ok) {
+      const txt = await userinfoRes.text()
+      console.error('LinkedIn userinfo failed:', txt)
+      return NextResponse.redirect(`${origin}/profile?error=userinfo_failed`)
+    }
+    const userinfo = await userinfoRes.json() as { sub: string }
+    const linkedinMemberId = userinfo.sub
+
+    // Upsert into NextAuth Account table with LinkedIn member ID as providerAccountId
+    // Now includes both authentication and posting permissions in one step
     await prisma.account.upsert({
       where: {
         provider_providerAccountId: {
           provider: 'linkedin',
-          providerAccountId: userId,
+          providerAccountId: linkedinMemberId,
         },
       },
       update: {
         access_token: accessToken,
         expires_at: Math.floor(Date.now() / 1000 + expiresIn),
         token_type: 'Bearer',
-        scope: 'profile email',
+        scope: 'openid profile email w_member_social',
       },
       create: {
         userId,
         type: 'oauth',
         provider: 'linkedin',
-        providerAccountId: userId,
+        providerAccountId: linkedinMemberId,
         access_token: accessToken,
         expires_at: Math.floor(Date.now() / 1000 + expiresIn),
         token_type: 'Bearer',
-        scope: 'profile email',
+        scope: 'openid profile email w_member_social',
       },
     })
 
