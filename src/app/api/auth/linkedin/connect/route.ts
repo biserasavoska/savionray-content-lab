@@ -7,22 +7,26 @@ import { authOptions } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
+  
+  // Use proper base URL for Railway
+  const baseUrl = process.env.NEXTAUTH_URL || new URL(req.url).origin
+  
   if (!session?.user?.id) {
-    return NextResponse.redirect(new URL('/auth/signin?error=Unauthorized', req.url))
+    return NextResponse.redirect(new URL('/auth/signin?error=Unauthorized', baseUrl))
   }
 
   const clientId = process.env.LINKEDIN_CLIENT_ID
-  // Prefer explicit NEXTAUTH_URL, otherwise derive from the incoming request
-  const baseUrl = process.env.NEXTAUTH_URL || new URL(req.url).origin
   const redirectUri = `${baseUrl}/api/auth/linkedin/callback`
   
   // Debug logging for Railway
   console.log('🔍 LinkedIn Connect Debug:', {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     reqUrl: req.url,
+    reqHeaders: Object.fromEntries(req.headers.entries()),
     baseUrl,
     redirectUri,
-    clientId: clientId ? `${clientId.substring(0, 8)}...` : 'NOT_SET'
+    clientId: clientId ? `${clientId.substring(0, 8)}...` : 'NOT_SET',
+    isRailway: !!process.env.RAILWAY_ENVIRONMENT
   })
   
   // Request both authentication and posting permissions in one step
