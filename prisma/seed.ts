@@ -6,6 +6,19 @@ import { USER_ROLE, CONTENT_TYPE, IDEA_STATUS, DRAFT_STATUS } from '../src/lib/u
 const prisma = new PrismaClient()
 
 async function main() {
+  // ✅ SAFETY CHECK: Prevent seeding if data already exists
+  const existingIdeas = await prisma.idea.count()
+  const existingPlans = await prisma.contentDeliveryPlan.count()
+  
+  if (existingIdeas > 0 || existingPlans > 0) {
+    console.log('⚠️  Database already has data, skipping seeding to prevent duplicates')
+    console.log(`Found ${existingIdeas} ideas and ${existingPlans} delivery plans`)
+    console.log('If you need to reseed, please clear the database first')
+    return
+  }
+  
+  console.log('🌱 Starting database seeding...')
+  
   // Create default organization
   const defaultOrg = await prisma.organization.upsert({
     where: { id: 'default-org-id' },
