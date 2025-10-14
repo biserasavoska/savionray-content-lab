@@ -261,13 +261,20 @@ export default function ApprovedContentList({ isAdminUser, isCreativeUser, isCli
               {item.body && (
                 <div className="bg-green-50 rounded-md p-4 mb-4">
                   <h4 className="text-sm font-semibold text-green-700 mb-2">AI Generated Content:</h4>
-                  <div className="text-sm text-gray-800 whitespace-pre-wrap">
-                    {expandedContent.has(item.id) 
-                      ? item.body 
-                      : (item.body?.length || 0) > 200 
-                        ? item.body.substring(0, 200) + '...' 
-                        : item.body
-                    }
+                  <div className="text-sm text-gray-800 prose prose-sm max-w-none">
+                    {expandedContent.has(item.id) ? (
+                      <div dangerouslySetInnerHTML={{ __html: item.body }} />
+                    ) : (
+                      <div>
+                        <div 
+                          dangerouslySetInnerHTML={{ 
+                            __html: item.body.length > 200 
+                              ? item.body.substring(0, 200) + '...' 
+                              : item.body 
+                          }} 
+                        />
+                      </div>
+                    )}
                   </div>
                   {(item.body?.length || 0) > 200 && (
                     <button

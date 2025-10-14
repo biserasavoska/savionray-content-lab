@@ -45,10 +45,10 @@ const ContentCardBody: React.FC<ContentCardBodyProps> = ({
       {/* Content Preview */}
       {content && (
         <div className="mb-4">
-          <div className={`text-sm text-gray-700 ${
+          <div className={`text-sm text-gray-700 prose prose-sm max-w-none ${
             localExpanded ? '' : 'line-clamp-3'
           }`}>
-            {content}
+            <div dangerouslySetInnerHTML={{ __html: content }} />
           </div>
           
           {shouldShowExpandButton && (
