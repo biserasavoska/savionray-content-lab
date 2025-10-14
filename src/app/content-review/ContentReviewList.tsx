@@ -155,7 +155,7 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
   }, [])
 
   const handleStatusUpdate = async (contentItemId: string, newStatus: string) => {
-    if (!session) return
+    if (!session || !currentOrganization) return
 
     setIsSubmitting(contentItemId)
     try {
@@ -163,13 +163,15 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id,
         },
         body: JSON.stringify({ status: newStatus }),
       })
 
       if (response.ok) {
-        // Refresh the page to show updated data
-        window.location.reload()
+        // Refresh the drafts data instead of reloading the entire page
+        // This preserves the organization context and provides better UX
+        await fetchDrafts()
       } else {
         console.error('Failed to update status')
         alert('Failed to update status. Please try again.')
@@ -196,9 +198,10 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
     }))
   }
 
-  const handleFeedbackSuccess = () => {
-    // Refresh the page to show updated feedback
-    window.location.reload()
+  const handleFeedbackSuccess = async () => {
+    // Refresh the drafts data instead of reloading the entire page
+    // This preserves the organization context and provides better UX
+    await fetchDrafts()
   }
 
   const getContentTypeLabel = (contentType: string) => {
@@ -494,9 +497,10 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
                   <div className="bg-gray-50 p-4 rounded-md">
                     <FeedbackForm
                       draftId={draft.id}
-                      onSuccess={() => {
+                      onSuccess={async () => {
                         toggleFeedbackForm(draft.id)
-                        window.location.reload()
+                        // Refresh the drafts data instead of reloading the entire page
+                        await fetchDrafts()
                       }}
                     />
                   </div>

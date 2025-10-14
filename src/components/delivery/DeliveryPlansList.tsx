@@ -275,10 +275,16 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
 
   const handleArchiveToggle = async (planId: string, isArchived: boolean) => {
     try {
+      if (!currentOrganization?.id) {
+        console.error('No organization context available')
+        return
+      }
+
       const response = await fetch(`/api/delivery-plans/${planId}/archive`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id,
         },
         body: JSON.stringify({ isArchived }),
       })
@@ -287,7 +293,9 @@ export default function DeliveryPlansList({ plans: initialPlans }: DeliveryPlans
         throw new Error('Failed to update plan status')
       }
 
-      window.location.reload()
+      // Refresh the plans data instead of reloading the entire page
+      // This preserves the organization context and provides better UX
+      await fetchPlans()
     } catch (error) {
       console.error('Error updating plan status:', error)
     }

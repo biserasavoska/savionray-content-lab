@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { ArrowLeftIcon, PencilIcon } from '@heroicons/react/24/outline'
 import SimpleRichTextEditor from '@/components/ui/SimpleRichTextEditor'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface Idea {
   id: string
@@ -28,6 +29,7 @@ export default function EditIdeaPage() {
   const { data: session } = useSession()
   const params = useParams()
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
   const [idea, setIdea] = useState<Idea | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -43,14 +45,24 @@ export default function EditIdeaPage() {
   })
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && currentOrganization?.id) {
       fetchIdea()
     }
-  }, [params.id])
+  }, [params.id, currentOrganization?.id])
 
   const fetchIdea = async () => {
     try {
-      const response = await fetch(`/api/ideas/${params.id}`)
+      if (!currentOrganization?.id) {
+        setError('No organization context available')
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`/api/ideas/${params.id}`, {
+        headers: {
+          'x-selected-organization': currentOrganization.id,
+        },
+      })
       if (!response.ok) {
         throw new Error('Failed to fetch idea')
       }
@@ -98,6 +110,12 @@ export default function EditIdeaPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!currentOrganization?.id) {
+      setError('No organization context available')
+      return
+    }
+
     setSaving(true)
     setError(null)
 
@@ -106,6 +124,7 @@ export default function EditIdeaPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id,
         },
         body: JSON.stringify(formData),
       })

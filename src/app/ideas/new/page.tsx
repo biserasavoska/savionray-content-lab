@@ -9,6 +9,7 @@ import SimpleRichTextEditor from '@/components/ui/SimpleRichTextEditor'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { isAdmin } from '@/lib/auth'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface Organization {
   id: string
@@ -22,6 +23,7 @@ interface Organization {
 export default function NewIdeaPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
   const [loading, setLoading] = useState(false)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loadingOrgs, setLoadingOrgs] = useState(false)
@@ -65,6 +67,12 @@ export default function NewIdeaPage() {
     const fetchDeliveryPlans = async () => {
       if (!formData.contentType) return
       
+      // Only fetch if we have an organization context
+      if (!currentOrganization?.id) {
+        console.warn('No organization context available for fetching delivery plans')
+        return
+      }
+      
       setLoadingPlans(true)
       try {
         const contentTypeMap: { [key: string]: string } = {
@@ -77,10 +85,16 @@ export default function NewIdeaPage() {
         }
         
         const mappedContentType = contentTypeMap[formData.contentType] || 'SOCIAL_MEDIA_POST'
-        const response = await fetch(`/api/delivery-plans/assignment-options?contentType=${mappedContentType}`)
+        const response = await fetch(`/api/delivery-plans/assignment-options?contentType=${mappedContentType}`, {
+          headers: {
+            'x-selected-organization': currentOrganization.id,
+          },
+        })
         if (response.ok) {
           const data = await response.json()
           setDeliveryPlans(data.deliveryPlans || [])
+        } else {
+          console.error('Failed to fetch delivery plans:', response.status, response.statusText)
         }
       } catch (error) {
         console.error('Error fetching delivery plans:', error)
@@ -90,7 +104,7 @@ export default function NewIdeaPage() {
     }
 
     fetchDeliveryPlans()
-  }, [formData.contentType])
+  }, [formData.contentType, currentOrganization?.id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

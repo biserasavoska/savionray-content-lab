@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ArrowLeftIcon, PencilIcon, TrashIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import FeedbackForm from '@/components/feedback/FeedbackForm'
 import FeedbackList from '@/components/feedback/FeedbackList'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 
 interface Idea {
   id: string
@@ -42,6 +43,7 @@ export default function IdeaDetailPage() {
   const { data: session } = useSession()
   const params = useParams()
   const router = useRouter()
+  const { currentOrganization } = useOrganization()
   const [idea, setIdea] = useState<Idea | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -64,16 +66,27 @@ export default function IdeaDetailPage() {
   const [loadingFeedback, setLoadingFeedback] = useState(false)
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && currentOrganization?.id) {
       fetchIdea(params.id as string)
       fetchFeedback(params.id as string)
     }
-  }, [params.id])
+  }, [params.id, currentOrganization?.id])
 
   const fetchIdea = async (id: string) => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/ideas/${id}`)
+      
+      if (!currentOrganization?.id) {
+        setError('No organization context available')
+        setLoading(false)
+        return
+      }
+
+      const response = await fetch(`/api/ideas/${id}`, {
+        headers: {
+          'x-selected-organization': currentOrganization.id,
+        },
+      })
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -121,7 +134,7 @@ export default function IdeaDetailPage() {
   }
 
   const handleStatusChange = async (newStatus: string) => {
-    if (!idea) return
+    if (!idea || !currentOrganization?.id) return
 
     setIsUpdating(true)
     setError(null)
@@ -132,6 +145,7 @@ export default function IdeaDetailPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization.id,
         },
         body: JSON.stringify({ status: newStatus }),
       })
@@ -161,11 +175,14 @@ export default function IdeaDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!idea || !confirm('Are you sure you want to delete this idea?')) return
+    if (!idea || !currentOrganization?.id || !confirm('Are you sure you want to delete this idea?')) return
 
     try {
       const response = await fetch(`/api/ideas/${idea.id}`, {
         method: 'DELETE',
+        headers: {
+          'x-selected-organization': currentOrganization.id,
+        },
       })
 
       if (!response.ok) {
