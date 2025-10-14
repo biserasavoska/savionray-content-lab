@@ -20,7 +20,6 @@ import {
   UsersIcon,
   BuildingOfficeIcon,
   CreditCardIcon,
-  EnvelopeIcon,
   ChatBubbleLeftIcon
 } from '@heroicons/react/24/outline'
 
@@ -183,13 +182,6 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
                     >
                       <CogIcon className="mr-3 h-4 w-4" />
                       Organization
-                    </Link>
-                    <Link
-                      href="/organization/settings/invitations"
-                      className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-200"
-                    >
-                      <EnvelopeIcon className="mr-3 h-4 w-4" />
-                      Invitations
                     </Link>
                   </>
                 )}
