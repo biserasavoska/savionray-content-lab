@@ -58,9 +58,6 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
     { name: 'Published', href: '/published', icon: FolderIcon, roles: ['CREATIVE', 'ADMIN'] },
     { name: 'Scheduled Posts', href: '/scheduled-posts', icon: CalendarIcon, roles: ['CREATIVE', 'ADMIN'] },
     
-    // Content Status (Unified System)
-    { name: 'Content Status', href: '/content-review/unified', icon: EyeIcon, roles: ['CREATIVE', 'ADMIN'] },
-    
     // Other items
     { name: 'Feedback', href: '/feedback-management', icon: ChatBubbleLeftIcon, roles: ['CLIENT', 'ADMIN'] },
     { name: 'Delivery Plans', href: '/delivery-plans', icon: ChartBarIcon, roles: ['CREATIVE', 'ADMIN'] },
