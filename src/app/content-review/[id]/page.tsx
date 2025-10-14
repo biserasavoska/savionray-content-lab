@@ -9,9 +9,6 @@ import 'react-quill/dist/quill.snow.css'
 
 import type { User } from '@/types/content'
 import { AVAILABLE_MODELS } from '@/lib/models'
-import ModelSelector from '@/components/content/ModelSelector'
-import ReasoningOptions from '@/components/content/ReasoningOptions'
-import ReasoningDisplay from '@/components/content/ReasoningDisplay'
 import {
   Button,
   StatusBadge,
@@ -141,15 +138,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   
   // Manual content creation state
   const [manualContent, setManualContent] = useState('')
-  const [manualHashtags, setManualHashtags] = useState('')
-  const [manualCallToAction, setManualCallToAction] = useState('')
   const [isManualMode, setIsManualMode] = useState(true)
-  
-  // Add reasoning options state
-  const [includeReasoning, setIncludeReasoning] = useState(false)
-  const [reasoningSummary, setReasoningSummary] = useState(false)
-  const [encryptedReasoning, setEncryptedReasoning] = useState(false)
-  const [showReasoning, setShowReasoning] = useState(false)
 
   useEffect(() => {
     if (session?.user && params.id && currentOrganization) {
@@ -234,9 +223,6 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           format: 'social',
           model: selectedModel.id,
           additionalContext,
-          includeReasoning,
-          reasoningSummary,
-          encryptedReasoning
         }),
       })
 
@@ -268,10 +254,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           body: data.postText || '',
           metadata: {
             model: selectedModel.id,
-            additionalContext,
-            hashtags: data.hashtags,
-            callToAction: data.callToAction,
-            reasoning: data.reasoning
+            additionalContext
           }
         }),
       })
@@ -324,10 +307,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           body: content,
           metadata: {
             model: selectedModel.id,
-            additionalContext,
-            hashtags: generatedContent?.hashtags,
-            callToAction: generatedContent?.callToAction,
-            reasoning: generatedContent?.reasoning
+            additionalContext
           }
         }),
       });
@@ -396,15 +376,14 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
 
   const breadcrumbItems = [
     { href: '/', children: 'Home' },
-    { href: '/content-review', children: 'Content Review' },
-    { href: `/content-review/${params.id}`, children: 'Review Details' }
+    { href: '/content-review', children: 'Content Creation' },
+    { href: `/content-review/${params.id}`, children: 'Content Details' }
   ]
 
   return (
     <PageLayout>
       <PageHeader
-        title="Content Review"
-        subtitle={`Reviewing: ${contentItem.idea?.title || contentItem.title || 'Untitled Content'}`}
+        title="Content Creation"
         breadcrumbs={<Breadcrumbs items={breadcrumbItems} />}
         actions={
           <Button onClick={() => router.back()} variant="outline">
@@ -440,79 +419,9 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           </PageSection>
         )}
         
-        {/* Content Item Details */}
-        <PageSection title="Content Details" className="mb-6">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-700">Status:</span>
-              <StatusBadge status={contentItem.status as any} />
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Stage:</span>
-              <StatusBadge status={contentItem.currentStage as any} />
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Type:</span>
-              <StatusBadge status={contentItem.contentType as any} />
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Created:</span>
-              <span className="ml-2 text-gray-600">
-                {new Date(contentItem.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        </PageSection>
-        
-        {/* Debug Information - Remove this in production */}
-        {process.env.NODE_ENV === 'development' && (
-          <PageSection title="Debug Info (Development Only)" className="mb-6">
-            <div className="text-xs text-yellow-700 space-y-1">
-              <div><strong>Content Item ID:</strong> {contentItem.id}</div>
-              <div><strong>Has Idea Data:</strong> {(contentItem.idea || contentItem.Idea) ? 'Yes' : 'No'}</div>
-              {(contentItem.idea || contentItem.Idea) && (
-                <>
-                  <div><strong>Idea ID:</strong> {contentItem.idea?.id || contentItem.Idea?.id}</div>
-                  <div><strong>Idea Title:</strong> {contentItem.idea?.title || contentItem.Idea?.title}</div>
-                  <div><strong>Idea Description:</strong> {contentItem.idea?.description || contentItem.Idea?.description}</div>
-                </>
-              )}
-              <div><strong>Content Type:</strong> {contentItem.contentType}</div>
-              <div><strong>Status:</strong> {contentItem.status}</div>
-            </div>
-          </PageSection>
-        )}
 
-        {/* Content Generation Section */}
-        <PageSection title="AI Content Generation" className="mb-6">
-          {/* AI Context Preview */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">AI Context Preview:</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">Title:</span>
-                <span className="ml-2 text-gray-800">{contentItem.idea?.title || contentItem.Idea?.title || 'No title available'}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Description:</span>
-                <span className="ml-2 text-gray-800">{contentItem.idea?.description || contentItem.Idea?.description || 'No description available'}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Content Type:</span>
-                <span className="ml-2 text-gray-800">{contentItem.contentType}</span>
-              </div>
-              {additionalContext && (
-                <div>
-                  <span className="font-medium text-gray-600">Additional Context:</span>
-                  <span className="ml-2 text-gray-800">{additionalContext}</span>
-                </div>
-              )}
-            </div>
-            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-              <strong>Tip:</strong> The AI will generate content based on the idea context above. 
-              Use the "Additional Context" field to add specific requirements or tone preferences.
-            </div>
-          </div>
+        {/* Context Section */}
+        <PageSection title="Context" className="mb-6">
 
           {/* Current Post Content Display */}
           <div className="mb-6">
@@ -556,29 +465,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
             </div>
           </div>
 
-          <div className="mb-6">
-            <ModelSelector
-              selectedModel={selectedModel.id}
-              onModelChange={(modelId) => {
-                const model = AVAILABLE_MODELS.find(m => m.id === modelId)
-                if (model) setSelectedModel(model)
-              }}
-            />
-          </div>
-
-          {/* Reasoning Options */}
-          <div className="mb-6">
-            <ReasoningOptions
-              selectedModel={selectedModel.id}
-              includeReasoning={includeReasoning}
-              reasoningSummary={reasoningSummary}
-              encryptedReasoning={encryptedReasoning}
-              onIncludeReasoningChange={setIncludeReasoning}
-              onReasoningSummaryChange={setReasoningSummary}
-              onEncryptedReasoningChange={setEncryptedReasoning}
-            />
-          </div>
-
+          {/* Additional Context */}
           <div className="mb-6">
             <Textarea
               label="Additional Context & Requirements"
@@ -599,13 +486,34 @@ The AI will combine this with the idea context above to generate relevant conten
             />
           </div>
 
+          {/* AI Model Selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              AI Model
+            </label>
+            <select
+              value={selectedModel.id}
+              onChange={(e) => {
+                const model = AVAILABLE_MODELS.find(m => m.id === e.target.value)
+                if (model) setSelectedModel(model)
+              }}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              {AVAILABLE_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <Button
             onClick={generateContent}
             disabled={loading}
             loading={loading}
             variant="default"
           >
-            {loading ? 'Generating...' : 'Generate with AI'}
+            {loading ? 'Generating...' : 'Generate'}
           </Button>
 
           {error && (
@@ -636,36 +544,7 @@ The AI will combine this with the idea context above to generate relevant conten
                 />
               </div>
               
-              <div>
-                <Input
-                  label="Hashtags"
-                  type="text"
-                  value={generatedContent.hashtags.map(tag => '#' + tag).join(' ')}
-                  onChange={(e) => setGeneratedContent(prev => prev ? { 
-                    ...prev, 
-                    hashtags: e.target.value.split(' ').filter(tag => tag.startsWith('#')).map(tag => tag.substring(1))
-                  } : null)}
-                  placeholder="#hashtag1 #hashtag2 #hashtag3"
-                />
-              </div>
-              
-              <div>
-                <Textarea
-                  label="Call to Action"
-                  value={generatedContent.callToAction}
-                  onChange={(e) => setGeneratedContent(prev => prev ? { ...prev, callToAction: e.target.value } : null)}
-                  rows={2}
-                />
-              </div>
 
-              {/* Reasoning Display */}
-              {generatedContent?.reasoning && (
-                <ReasoningDisplay
-                  reasoning={generatedContent.reasoning}
-                  isVisible={showReasoning}
-                  onToggleVisibility={() => setShowReasoning(!showReasoning)}
-                />
-              )}
             </div>
           )}
         </PageSection>
@@ -711,25 +590,6 @@ The AI will combine this with the idea context above to generate relevant conten
                   </div>
                 </div>
 
-                <div>
-                  <Input
-                    label="Hashtags"
-                    type="text"
-                    value={manualHashtags}
-                    onChange={(e) => setManualHashtags(e.target.value)}
-                    placeholder="#hashtag1 #hashtag2 #hashtag3"
-                  />
-                </div>
-
-                <div>
-                  <Textarea
-                    label="Call to Action"
-                    value={manualCallToAction}
-                    onChange={(e) => setManualCallToAction(e.target.value)}
-                    rows={2}
-                    placeholder="Add a compelling call to action..."
-                  />
-                </div>
 
                 <div className="flex space-x-3">
                   <Button
@@ -737,8 +597,8 @@ The AI will combine this with the idea context above to generate relevant conten
                       setContent(manualContent)
                       setGeneratedContent({
                         postText: manualContent,
-                        hashtags: manualHashtags.split(' ').filter(tag => tag.startsWith('#')).map(tag => tag.substring(1)),
-                        callToAction: manualCallToAction
+                        hashtags: [],
+                        callToAction: ''
                       })
                       setSuccessMessage('Manual content applied successfully!')
                       setTimeout(() => setSuccessMessage(''), 3000)
@@ -752,8 +612,6 @@ The AI will combine this with the idea context above to generate relevant conten
                   <Button
                     onClick={() => {
                       setManualContent('')
-                      setManualHashtags('')
-                      setManualCallToAction('')
                     }}
                     variant="outline"
                   >
