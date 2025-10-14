@@ -422,6 +422,34 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
 
         {/* Context Section */}
         <PageSection title="Context" className="mb-6">
+          {/* AI Context Preview */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">AI Context Preview:</h3>
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Title:</span>
+                <span className="ml-2 text-gray-800">{contentItem.idea?.title || contentItem.Idea?.title || 'No title available'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Description:</span>
+                <span className="ml-2 text-gray-800">{contentItem.idea?.description || contentItem.Idea?.description || 'No description available'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Content Type:</span>
+                <span className="ml-2 text-gray-800">{contentItem.contentType}</span>
+              </div>
+              {additionalContext && (
+                <div>
+                  <span className="font-medium text-gray-600">Additional Context:</span>
+                  <span className="ml-2 text-gray-800">{additionalContext}</span>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+              <strong>Tip:</strong> The AI will generate content based on the idea context above. 
+              Use the "Additional Context" field to add specific requirements or tone preferences.
+            </div>
+          </div>
 
           {/* Current Post Content Display */}
           <div className="mb-6">
