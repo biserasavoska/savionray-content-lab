@@ -424,7 +424,6 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
         <PageSection title="Context" className="mb-6">
           {/* AI Context Preview */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">AI Context Preview:</h3>
             <div className="space-y-2 text-sm">
               <div>
                 <span className="font-medium text-gray-600">Title:</span>
