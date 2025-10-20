@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
+    "dev:stable": "NODE_OPTIONS='--max-old-space-size=4096' node scripts/dev-server-stable.js",
     "build": "next build",
     "start": "bash scripts/start-railway.sh",
     "start:simple": "next start -p $PORT",
@@ -62,6 +63,7 @@
     "react-dom": "^18",
     "react-dropzone": "^14.3.8",
     "react-quill": "^2.0.0",
+    "rollbar": "^2.26.5",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "stripe": "^14.17.0",

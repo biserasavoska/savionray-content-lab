@@ -9,6 +9,7 @@ import RoleBasedNavigation from './navigation/RoleBasedNavigation'
 import TopNavigation from './TopNavigation'
 import DesktopTopNavigation from './DesktopTopNavigation'
 import LogRocketProvider from './LogRocketProvider'
+import RollbarProvider from './RollbarProvider'
 
 import { OrganizationProvider } from '@/lib/contexts/OrganizationContext'
 import { initializeThemeDetection } from '@/lib/utils/theme-detection'
@@ -46,11 +47,13 @@ export default function RootClientWrapper({
     return (
       <SessionProvider session={session}>
         <OrganizationProvider>
-          <LogRocketProvider>
-            <div className="min-h-screen bg-bg text-fg">
-              {children}
-            </div>
-          </LogRocketProvider>
+          <RollbarProvider>
+            <LogRocketProvider>
+              <div className="min-h-screen bg-bg text-fg">
+                {children}
+              </div>
+            </LogRocketProvider>
+          </RollbarProvider>
         </OrganizationProvider>
       </SessionProvider>
     )
@@ -59,25 +62,27 @@ export default function RootClientWrapper({
   return (
     <SessionProvider session={session}>
       <OrganizationProvider>
-        <LogRocketProvider>
-          <div className="min-h-screen bg-bg text-fg flex flex-row">
-            {/* Role-based Sidebar (hidden on auth pages) */}
-            {!isAuthPage && (
-              <RoleBasedNavigation isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-            )}
-            {/* Main content area */}
-            <div className="flex-1 flex flex-col min-h-screen">
-              {/* Top navigation for mobile */}
-              {!isAuthPage && <TopNavigation setIsSidebarOpen={setIsSidebarOpen} />}
-              {/* Desktop top navigation */}
-              {!isAuthPage && <DesktopTopNavigation />}
-              {/* Main page content */}
-              <main className="flex-1">
-                {children}
-              </main>
+        <RollbarProvider>
+          <LogRocketProvider>
+            <div className="min-h-screen bg-bg text-fg flex flex-row">
+              {/* Role-based Sidebar (hidden on auth pages) */}
+              {!isAuthPage && (
+                <RoleBasedNavigation isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+              )}
+              {/* Main content area */}
+              <div className="flex-1 flex flex-col min-h-screen">
+                {/* Top navigation for mobile */}
+                {!isAuthPage && <TopNavigation setIsSidebarOpen={setIsSidebarOpen} />}
+                {/* Desktop top navigation */}
+                {!isAuthPage && <DesktopTopNavigation />}
+                {/* Main page content */}
+                <main className="flex-1">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
-        </LogRocketProvider>
+          </LogRocketProvider>
+        </RollbarProvider>
       </OrganizationProvider>
     </SessionProvider>
   )
