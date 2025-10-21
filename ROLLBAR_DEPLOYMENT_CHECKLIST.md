@@ -82,3 +82,4 @@ curl "https://your-production-domain.com/api/test-rollbar?type=info"
 4. **Rate Limiting**: Be aware of Rollbar rate limits for high-traffic applications
 5. **Data Privacy**: Ensure sensitive data is not included in error reports
 
+

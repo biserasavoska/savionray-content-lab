@@ -88,3 +88,4 @@ Once deployed, you'll have:
 
 Your Checkly setup is ready to deploy! Just run the login command and deploy. 🚀
 
+

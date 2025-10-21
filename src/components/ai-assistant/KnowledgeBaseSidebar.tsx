@@ -6,7 +6,7 @@ import {
   FolderIcon,
   DocumentIcon,
   TrashIcon,
-  UploadIcon,
+  ArrowUpTrayIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
 import { knowledgeBaseService } from '@/lib/knowledge-base/knowledge-base-service'
@@ -200,7 +200,7 @@ export default function KnowledgeBaseSidebar({
       {selectedKnowledgeBase && (
         <div className="p-4 border-t border-gray-200">
           <button className="w-full flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            <UploadIcon className="h-5 w-5" />
+            <ArrowUpTrayIcon className="h-5 w-5" />
             <span>Upload Documents</span>
           </button>
         </div>

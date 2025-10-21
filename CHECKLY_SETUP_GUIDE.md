@@ -115,3 +115,4 @@ This will deploy all checks to Checkly's global infrastructure.
 
 Your Checkly configuration is ready. Run the commands above to start monitoring your application 24/7!
 
+

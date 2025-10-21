@@ -78,13 +78,12 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     // Create document record
     const document = await prisma.knowledgeDocument.create({
       data: {
-        title: title || file.name,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
+        filename: file.name,
+        originalName: file.name,
+        contentType: file.type,
+        size: file.size,
         status: 'UPLOADED',
-        knowledgeBaseId,
-        uploadedById: session.user.id
+        knowledgeBaseId
       }
     })
 

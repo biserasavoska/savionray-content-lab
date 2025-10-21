@@ -168,3 +168,4 @@ Your Better Stack integration is ready. Just add your source token and start mon
 
 **Note:** The Better Stack collector (Docker-based) requires Linux kernel 5.14+ for eBPF auto-instrumentation, which is not available on macOS. The HTTP API integration provided here works perfectly for your Next.js application and provides comprehensive logging and monitoring capabilities.
 
+

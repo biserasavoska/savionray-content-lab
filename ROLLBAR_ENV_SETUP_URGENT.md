@@ -66,3 +66,4 @@ Without the environment variables, Rollbar can't connect to your account, so no 
 
 Once you add the environment variables, you'll start seeing real errors from your staging and production environments! 🚀
 
+
