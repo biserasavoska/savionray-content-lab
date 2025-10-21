@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions, isAdmin, isCreative } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/utils/logger'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
@@ -28,10 +28,30 @@ export async function GET(request: NextRequest) {
     const period = searchParams.get('period') // Format: "October" or "October 2024"
     const skip = (page - 1) * limit
 
-    // Build where clause
+    // Determine user role for filtering
+    const isUserCreative = session ? isCreative(session) : false;
+    const isUserAdmin = session ? isAdmin(session) : false;
+    const isUserClient = session?.user?.role === 'CLIENT';
+
+    // Build where clause with role-based status filtering
     const where: any = {
       organizationId: context.organizationId,
-      status: {
+    };
+
+    // Apply role-based status filtering
+    if (isUserClient) {
+      // Client users can only see content that's been submitted for review
+      where.status = {
+        in: [
+          DRAFT_STATUS.AWAITING_FEEDBACK,
+          DRAFT_STATUS.AWAITING_REVISION,
+          DRAFT_STATUS.APPROVED,
+          DRAFT_STATUS.REJECTED
+        ]
+      };
+    } else {
+      // Admin and Creative users can see all content including drafts
+      where.status = {
         in: [
           DRAFT_STATUS.DRAFT,
           DRAFT_STATUS.AWAITING_FEEDBACK,
@@ -39,8 +59,8 @@ export async function GET(request: NextRequest) {
           DRAFT_STATUS.APPROVED,
           DRAFT_STATUS.REJECTED
         ]
-      }
-    };
+      };
+    }
 
     // Apply period filter if provided
     if (period && period !== 'ALL') {

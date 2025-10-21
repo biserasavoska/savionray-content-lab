@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from "./prisma"
 
 export function isCreative(session: Session | null): boolean {
-  return session?.user?.role === 'CREATIVE'
+  return session?.user?.role === 'CREATIVE' || session?.user?.role === 'ADMIN'
 }
 
 export function isClient(session: Session | null): boolean {

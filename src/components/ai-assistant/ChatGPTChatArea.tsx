@@ -13,6 +13,7 @@ import { chatService } from '@/lib/chat/chat-service'
 
 interface ChatGPTChatAreaProps {
   conversationId: string | null
+  knowledgeBaseId?: string | null
 }
 
 interface Message {
@@ -23,7 +24,7 @@ interface Message {
   isStreaming?: boolean
 }
 
-export default function ChatGPTChatArea({ conversationId }: ChatGPTChatAreaProps) {
+export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: ChatGPTChatAreaProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)

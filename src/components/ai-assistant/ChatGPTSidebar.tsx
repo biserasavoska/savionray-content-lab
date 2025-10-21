@@ -28,11 +28,13 @@ interface Conversation {
 interface ChatGPTSidebarProps {
   selectedConversation: string | null
   onSelectConversation: (id: string) => void
+  onToggleKnowledgeBase?: () => void
 }
 
 export default function ChatGPTSidebar({ 
   selectedConversation, 
-  onSelectConversation 
+  onSelectConversation,
+  onToggleKnowledgeBase 
 }: ChatGPTSidebarProps) {
   const { data: session } = useSession()
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -173,9 +175,12 @@ export default function ChatGPTSidebar({
 
         {/* Library */}
         <div className="space-y-2">
-          <div className="flex items-center space-x-3 text-gray-600 hover:text-gray-900 cursor-pointer">
+          <div 
+            className="flex items-center space-x-3 text-gray-600 hover:text-gray-900 cursor-pointer"
+            onClick={() => onToggleKnowledgeBase?.()}
+          >
             <BookOpenIcon className="h-5 w-5" />
-            {!isCollapsed && <span className="text-sm">Library</span>}
+            {!isCollapsed && <span className="text-sm">Knowledge Base</span>}
           </div>
         </div>
 

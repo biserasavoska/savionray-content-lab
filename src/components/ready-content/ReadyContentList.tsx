@@ -27,7 +27,6 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   const { data: session } = useSession()
   const { currentOrganization } = useOrganization()
   
-  console.log('ReadyContentList render - currentOrganization:', currentOrganization)
   const [content, setContent] = useState<(Omit<ContentDraft, 'status'> & {
     status: string
     Idea: Idea & {
@@ -136,7 +135,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
 
   // Refetch content when period changes
   useEffect(() => {
-    if (currentOrganization && selectedPeriod !== 'ALL') {
+    if (currentOrganization) {
       const fetchContent = async () => {
         try {
           setLoading(true)
@@ -174,7 +173,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
 
       fetchContent()
     }
-  }, [selectedPeriod])
+  }, [selectedPeriod, currentOrganization])
 
   const filteredContent = content.filter(item => {
     if (selectedType !== 'ALL' && item.contentType !== selectedType) {
@@ -490,13 +489,13 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                   onChange={(e) => setSelectedStatus(e.target.value)}
                   className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
                 >
-                  <option value="ALL">All Statuses</option>
-                  {!isClientUser && <option value="DRAFT">Draft</option>}
-                  <option value="AWAITING_FEEDBACK">Awaiting Feedback</option>
-                  <option value="AWAITING_REVISION">Awaiting Revision</option>
-                  <option value="APPROVED">Approved</option>
-                  <option value="REJECTED">Rejected</option>
-                  <option value="PUBLISHED">Published</option>
+              <option value="ALL">All Statuses</option>
+              {(!isClientUser && (isCreativeUser || session?.user?.role === 'ADMIN')) && <option value="DRAFT">Draft</option>}
+              <option value="AWAITING_FEEDBACK">Awaiting Feedback</option>
+              <option value="AWAITING_REVISION">Awaiting Revision</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="PUBLISHED">Published</option>
                 </select>
               </div>
               <div>
@@ -741,6 +740,127 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                             'Request Revision'
                           )}
                         </Button>
+                      </div>
+                    )}
+
+                    {/* Admin/Creative users can manage all content including drafts */}
+                    {(!isClientUser && (isCreativeUser || session?.user?.role === 'ADMIN')) && (
+                      <div className="flex flex-col space-y-2">
+                        {/* Submit for Review button for drafts */}
+                        {item.status === DRAFT_STATUS.DRAFT && (
+                          <Button
+                            onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.AWAITING_FEEDBACK)}
+                            disabled={isSubmitting === item.id || updatedItems.has(item.id)}
+                            variant="default"
+                            size="sm"
+                          >
+                            {isSubmitting === item.id ? (
+                              <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Submitting...
+                              </>
+                            ) : updatedItems.has(item.id) ? (
+                              <>
+                                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Submitted ✓
+                              </>
+                            ) : (
+                              'Submit for Review'
+                            )}
+                          </Button>
+                        )}
+
+                        {/* Approve button for content awaiting feedback */}
+                        {item.status === DRAFT_STATUS.AWAITING_FEEDBACK && (
+                          <Button
+                            onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.APPROVED)}
+                            disabled={isSubmitting === item.id || updatedItems.has(item.id)}
+                            variant="default"
+                            size="sm"
+                          >
+                            {isSubmitting === item.id ? (
+                              <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Updating...
+                              </>
+                            ) : updatedItems.has(item.id) ? (
+                              <>
+                                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Approved ✓
+                              </>
+                            ) : (
+                              'Approve'
+                            )}
+                          </Button>
+                        )}
+
+                        {/* Request Revision button for content awaiting feedback */}
+                        {item.status === DRAFT_STATUS.AWAITING_FEEDBACK && (
+                          <Button
+                            onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.AWAITING_REVISION)}
+                            disabled={isSubmitting === item.id || updatedItems.has(item.id)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            {isSubmitting === item.id ? (
+                              <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Updating...
+                              </>
+                            ) : updatedItems.has(item.id) ? (
+                              <>
+                                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Requested Revision ✓
+                              </>
+                            ) : (
+                              'Request Revision'
+                            )}
+                          </Button>
+                        )}
+
+                        {/* Reject button for any content */}
+                        {(item.status === DRAFT_STATUS.AWAITING_FEEDBACK || item.status === DRAFT_STATUS.DRAFT) && (
+                          <Button
+                            onClick={() => handleStatusUpdate(item.id, DRAFT_STATUS.REJECTED)}
+                            disabled={isSubmitting === item.id || updatedItems.has(item.id)}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            {isSubmitting === item.id ? (
+                              <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Updating...
+                              </>
+                            ) : updatedItems.has(item.id) ? (
+                              <>
+                                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Rejected ✓
+                              </>
+                            ) : (
+                              'Reject'
+                            )}
+                          </Button>
+                        )}
                       </div>
                     )}
 
