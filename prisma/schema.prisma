@@ -60,6 +60,8 @@ model User {
   organizationUsers                          OrganizationUser[]       @relation("OrganizationUser_userIdToUser")
   sessions                                   Session[]
   stageTransitions                           StageTransition[]
+  chatConversations                          ChatConversation[]
+  knowledgeBases                             KnowledgeBase[]
 }
 
 model ScheduledPost {
@@ -374,6 +376,8 @@ model Organization {
   Idea               Idea[]
   Media              Media[]
   OrganizationUser   OrganizationUser[]
+  chatConversations  ChatConversation[]
+  knowledgeBases     KnowledgeBase[]
 }
 
 model OrganizationUser {
@@ -445,6 +449,110 @@ enum DeliveryPlanStatus {
   ACTIVE
   COMPLETED
   CANCELLED
+}
+
+// Chat and Knowledge Base Models
+model ChatConversation {
+  id             String            @id @default(cuid())
+  title          String?           
+  organizationId String
+  createdById    String
+  model          String            @default("gpt-5-mini")
+  settings       Json              @default("{}")
+  isArchived     Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User              @relation(fields: [createdById], references: [id])
+  messages       ChatMessage[]
+  knowledgeBase  KnowledgeBase[]
+  
+  @@index([organizationId])
+  @@index([createdById])
+}
+
+model ChatMessage {
+  id             String            @id @default(cuid())
+  conversationId String
+  role           MessageRole       
+  content        String
+  metadata       Json?             
+  isStreaming    Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  
+  conversation   ChatConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model KnowledgeBase {
+  id             String            @id @default(cuid())
+  name           String
+  description    String?
+  organizationId String
+  createdById    String
+  isPublic       Boolean           @default(false)
+  settings       Json              @default("{}")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User              @relation(fields: [createdById], references: [id])
+  documents      KnowledgeDocument[]
+  conversations  ChatConversation[]
+  
+  @@index([organizationId])
+  @@index([createdById])
+}
+
+model KnowledgeDocument {
+  id             String            @id @default(cuid())
+  knowledgeBaseId String
+  filename       String
+  originalName   String
+  contentType    String
+  size           Int
+  url            String?           
+  status         DocumentStatus    @default(UPLOADED)
+  metadata       Json?             
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  
+  knowledgeBase  KnowledgeBase     @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  chunks         DocumentChunk[]
+  
+  @@index([knowledgeBaseId])
+  @@index([status])
+}
+
+model DocumentChunk {
+  id             String            @id @default(cuid())
+  documentId     String
+  content        String
+  chunkIndex     Int
+  embedding      Float[]          
+  metadata       Json?             
+  createdAt      DateTime          @default(now())
+  
+  document       KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@index([documentId])
+  @@index([chunkIndex])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  PROCESSED
+  FAILED
 }
 
 enum DeliveryItemStatus {

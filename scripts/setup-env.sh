@@ -1,40 +1,36 @@
 #!/bin/bash
 
-echo "🔧 Setting up environment variables..."
+# Setup script for monitoring environment variables
+# This script creates the .env.local file with all required variables
 
-# Generate a new NEXTAUTH_SECRET
-NEXTAUTH_SECRET=$(openssl rand -base64 32)
+echo "🔧 Setting up monitoring environment variables..."
 
-# Create .env file
-cat > .env << EOF
-# Database
-DATABASE_URL="postgresql://postgres:password@localhost:5432/savionray_content_lab"
+# Create .env.local file
+cat > .env.local << EOF
+# Rollbar Error Tracking
+ROLLBAR_SERVER_ACCESS_TOKEN=04c4928a2f754ab0bdc091733c7a8e26
+NEXT_PUBLIC_ROLLBAR_CLIENT_ACCESS_TOKEN=5edea99b9891476885963e63bbbe691c
+NEXT_PUBLIC_APP_VERSION=1.0.0
 
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="${NEXTAUTH_SECRET}"
+# Better Stack Logging
+BETTERSTACK_SOURCE_TOKEN=KFgJg3R6QBRYaMtxU97zTJk7
+BETTERSTACK_API_URL=https://logs.betterstack.com
 
-# OpenAI
-OPENAI_API_KEY="your-openai-api-key-here"
+# Checkly Monitoring
+CHECKLY_ACCOUNT_ID=7ff4cdcc-25b1-48a0-83c3-233d4a86b1d9
+CHECKLY_API_KEY=cu_2af377dd442447eb90a9187b4d4613b2
 
-# LinkedIn OAuth (optional for local development)
-LINKEDIN_CLIENT_ID="your-linkedin-client-id"
-LINKEDIN_CLIENT_SECRET="your-linkedin-client-secret"
+# Environment
+NODE_ENV=development
 EOF
 
-echo "✅ Environment file created!"
+echo "✅ Created .env.local file with all monitoring variables"
 echo ""
-echo "📝 Next steps:"
-echo "1. Edit .env file and add your actual API keys:"
-echo "   - OPENAI_API_KEY: Get from https://platform.openai.com/api-keys"
-echo "   - LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET (optional)"
+echo "🚀 Next steps:"
+echo "1. Restart your development server: npm run dev"
+echo "2. Test the monitoring integrations:"
+echo "   - Rollbar: http://localhost:3001/test-rollbar"
+echo "   - Better Stack: http://localhost:3001/test-betterstack"
+echo "3. Verify with: node scripts/verify-monitoring-env.js"
 echo ""
-echo "2. Start the database:"
-echo "   docker-compose up -d"
-echo ""
-echo "3. Run migrations and seed:"
-echo "   npx prisma migrate deploy"
-echo "   npx prisma db seed"
-echo ""
-echo "4. Start the development server:"
-echo "   npm run dev" 
+echo "🎉 Your monitoring stack is now fully configured!"

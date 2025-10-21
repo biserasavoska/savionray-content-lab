@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useOrganization } from '@/lib/contexts/OrganizationContext'
 import {
   Button,
   StatusBadge,
@@ -36,22 +37,50 @@ interface Organization {
   OrganizationUser: OrganizationUser[]
 }
 
-interface OrganizationWithUsers extends Organization {
-  OrganizationUser: OrganizationUser[]
-}
-
-interface UserManagementListProps {
-  organization: OrganizationWithUsers
-}
-
-export default function UserManagementList({ organization }: UserManagementListProps) {
+export default function UserManagementList() {
   const { data: session } = useSession()
-  const [isLoading, setIsLoading] = useState(false)
+  const { currentOrganization } = useOrganization()
+  const [organization, setOrganization] = useState<Organization | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isUpdating, setIsUpdating] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
 
+  useEffect(() => {
+    if (currentOrganization?.id) {
+      fetchOrganizationData()
+    }
+  }, [currentOrganization?.id])
+
+  const fetchOrganizationData = async () => {
+    if (!currentOrganization?.id) return
+
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/organization/${currentOrganization.id}/users`, {
+        headers: {
+          'x-selected-organization': currentOrganization.id,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setOrganization(data)
+      } else {
+        setMessage('Failed to fetch organization data')
+        setMessageType('error')
+      }
+    } catch (error) {
+      console.error('Error fetching organization data:', error)
+      setMessage('An error occurred while fetching organization data')
+      setMessageType('error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleRoleChange = async (userId: string, newRole: string) => {
-    setIsLoading(true)
+    setIsUpdating(true)
     setMessage('')
 
     try {
@@ -59,6 +88,7 @@ export default function UserManagementList({ organization }: UserManagementListP
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization?.id || '',
         },
         body: JSON.stringify({ role: newRole }),
       })
@@ -66,8 +96,8 @@ export default function UserManagementList({ organization }: UserManagementListP
       if (response.ok) {
         setMessage('User role updated successfully!')
         setMessageType('success')
-        // Refresh the page to show updated data
-        window.location.reload()
+        // Refresh the organization data
+        await fetchOrganizationData()
       } else {
         const error = await response.json()
         setMessage(`Error: ${error.message}`)
@@ -77,12 +107,12 @@ export default function UserManagementList({ organization }: UserManagementListP
       setMessage('An error occurred while updating user role')
       setMessageType('error')
     } finally {
-      setIsLoading(false)
+      setIsUpdating(false)
     }
   }
 
   const handleSystemRoleChange = async (userId: string, newSystemRole: string) => {
-    setIsLoading(true)
+    setIsUpdating(true)
     setMessage('')
 
     try {
@@ -90,6 +120,7 @@ export default function UserManagementList({ organization }: UserManagementListP
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': currentOrganization?.id || '',
         },
         body: JSON.stringify({ systemRole: newSystemRole }),
       })
@@ -97,8 +128,8 @@ export default function UserManagementList({ organization }: UserManagementListP
       if (response.ok) {
         setMessage('User system role updated successfully!')
         setMessageType('success')
-        // Refresh the page to show updated data
-        window.location.reload()
+        // Refresh the organization data
+        await fetchOrganizationData()
       } else {
         const error = await response.json()
         setMessage(`Error: ${error.message}`)
@@ -108,7 +139,7 @@ export default function UserManagementList({ organization }: UserManagementListP
       setMessage('An error occurred while updating user system role')
       setMessageType('error')
     } finally {
-      setIsLoading(false)
+      setIsUpdating(false)
     }
   }
 
@@ -117,19 +148,22 @@ export default function UserManagementList({ organization }: UserManagementListP
       return
     }
 
-    setIsLoading(true)
+    setIsUpdating(true)
     setMessage('')
 
     try {
       const response = await fetch(`/api/organization/users/${userId}`, {
         method: 'DELETE',
+        headers: {
+          'x-selected-organization': currentOrganization?.id || '',
+        },
       })
 
       if (response.ok) {
         setMessage('User removed from organization successfully!')
         setMessageType('success')
-        // Refresh the page to show updated data
-        window.location.reload()
+        // Refresh the organization data
+        await fetchOrganizationData()
       } else {
         const error = await response.json()
         setMessage(`Error: ${error.message}`)
@@ -139,7 +173,7 @@ export default function UserManagementList({ organization }: UserManagementListP
       setMessage('An error occurred while removing user')
       setMessageType('error')
     } finally {
-      setIsLoading(false)
+      setIsUpdating(false)
     }
   }
 
@@ -148,19 +182,22 @@ export default function UserManagementList({ organization }: UserManagementListP
       return
     }
 
-    setIsLoading(true)
+    setIsUpdating(true)
     setMessage('')
 
     try {
       const response = await fetch(`/api/organization/users/${userId}/delete`, {
         method: 'DELETE',
+        headers: {
+          'x-selected-organization': currentOrganization?.id || '',
+        },
       })
 
       if (response.ok) {
         setMessage('User permanently deleted successfully!')
         setMessageType('success')
-        // Refresh the page to show updated data
-        window.location.reload()
+        // Refresh the organization data
+        await fetchOrganizationData()
       } else {
         const error = await response.json()
         setMessage(`Error: ${error.message}`)
@@ -170,7 +207,7 @@ export default function UserManagementList({ organization }: UserManagementListP
       setMessage('An error occurred while deleting user')
       setMessageType('error')
     } finally {
-      setIsLoading(false)
+      setIsUpdating(false)
     }
   }
 
@@ -187,6 +224,23 @@ export default function UserManagementList({ organization }: UserManagementListP
     { value: 'CLIENT', label: 'Client' },
     { value: 'CREATIVE', label: 'Creative' }
   ]
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-2 text-gray-600">Loading team members...</span>
+      </div>
+    )
+  }
+
+  if (!organization) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500">No organization data available</p>
+      </div>
+    )
+  }
 
   return (
     <PageLayout>
@@ -250,7 +304,7 @@ export default function UserManagementList({ organization }: UserManagementListP
                         options={roleOptions}
                         value={orgUser.role}
                         onChange={(e) => handleRoleChange(orgUser.userId, e.target.value)}
-                        disabled={isLoading || orgUser.role === 'OWNER'}
+                        disabled={isUpdating || orgUser.role === 'OWNER'}
                       />
                     </div>
 
@@ -261,7 +315,7 @@ export default function UserManagementList({ organization }: UserManagementListP
                         options={systemRoleOptions}
                         value={orgUser.User_OrganizationUser_userIdToUser.role}
                         onChange={(e) => handleSystemRoleChange(orgUser.userId, e.target.value)}
-                        disabled={isLoading || orgUser.userId === session?.user?.id}
+                        disabled={isUpdating || orgUser.userId === session?.user?.id}
                       />
                     </div>
 
@@ -272,7 +326,7 @@ export default function UserManagementList({ organization }: UserManagementListP
                           <>
                             <Button
                               onClick={() => handleRemoveUser(orgUser.userId)}
-                              disabled={isLoading}
+                              disabled={isUpdating}
                               variant="ghost"
                               size="sm"
                               className="text-orange-600 hover:text-orange-800"
@@ -281,7 +335,7 @@ export default function UserManagementList({ organization }: UserManagementListP
                             </Button>
                             <Button
                               onClick={() => handleDeleteUser(orgUser.userId)}
-                              disabled={isLoading || orgUser.userId === session?.user?.id}
+                              disabled={isUpdating || orgUser.userId === session?.user?.id}
                               variant="ghost"
                               size="sm"
                               className="text-red-600 hover:text-red-800"
@@ -318,4 +372,4 @@ export default function UserManagementList({ organization }: UserManagementListP
       </PageContent>
     </PageLayout>
   )
-} 
+}

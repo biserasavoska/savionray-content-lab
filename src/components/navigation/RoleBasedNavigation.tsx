@@ -21,7 +21,8 @@ import {
   BuildingOfficeIcon,
   CreditCardIcon,
   EnvelopeIcon,
-  ChatBubbleLeftIcon
+  ChatBubbleLeftIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 
 import { useInterface } from '@/hooks/useInterface'
@@ -49,6 +50,7 @@ export default function RoleBasedNavigation({ isOpen, setIsOpen }: RoleBasedNavi
   const navigationItems: NavigationItem[] = [
     // Common items
     { name: 'Dashboard', href: '/', icon: HomeIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
+    { name: 'AI Assistant', href: '/ai-assistant', icon: ChatBubbleLeftRightIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     { name: 'Ideas', href: '/ideas', icon: LightBulbIcon, roles: ['CLIENT', 'CREATIVE', 'ADMIN'] },
     
     // Content Creation (Legacy System)
