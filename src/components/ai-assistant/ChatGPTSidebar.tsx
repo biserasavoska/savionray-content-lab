@@ -108,10 +108,10 @@ export default function ChatGPTSidebar({
         {/* New Chat Button */}
         <button 
           onClick={handleNewChat}
-          className="w-full flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 hover:shadow-sm"
         >
           <PlusIcon className="h-5 w-5 text-gray-600" />
-          {!isCollapsed && <span className="text-gray-900">New chat</span>}
+          {!isCollapsed && <span className="text-gray-900 font-medium">New chat</span>}
         </button>
 
         {/* Search Chats */}

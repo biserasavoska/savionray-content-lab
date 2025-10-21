@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { DraftStatus } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
-import { authOptions , isClient, isAdmin } from '@/lib/auth'
+import { authOptions, isClient, isAdmin, isCreative } from '@/lib/auth'
 
 export async function POST(
   req: NextRequest,
@@ -15,8 +15,8 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (!isClient(session) && !isAdmin(session)) {
-    return NextResponse.json({ error: 'Only clients and admins can reject drafts' }, { status: 403 })
+  if (!isClient(session) && !isAdmin(session) && !isCreative(session)) {
+    return NextResponse.json({ error: 'Only clients, admins, and creative users can reject drafts' }, { status: 403 })
   }
 
   try {

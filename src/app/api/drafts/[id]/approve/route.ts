@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
 import { prisma } from '@/lib/prisma'
-import { authOptions , isClient } from '@/lib/auth'
+import { authOptions, isClient, isAdmin, isCreative } from '@/lib/auth'
 import { DRAFT_STATUS } from '@/lib/utils/enum-constants'
 
 export async function POST(
@@ -14,8 +14,8 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (!isClient(session)) {
-    return NextResponse.json({ error: 'Only clients can approve drafts' }, { status: 403 })
+  if (!isClient(session) && !isAdmin(session) && !isCreative(session)) {
+    return NextResponse.json({ error: 'Only clients, admins, and creative users can approve drafts' }, { status: 403 })
   }
 
   try {

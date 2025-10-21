@@ -140,16 +140,39 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
     }
   }
 
+  // Auto-resize textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value)
+    
+    // Auto-resize
+    const textarea = e.target
+    textarea.style.height = 'auto'
+    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px'
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full bg-white">
       {/* Top Header */}
-      <div className="border-b border-gray-200 p-4">
+      <div className="border-b border-gray-200 p-4 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <button className="flex items-center space-x-2 text-gray-900 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors">
-              <span className="font-medium">{selectedModel}</span>
-              <ChevronDownIcon className="h-4 w-4" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">SR</span>
+              </div>
+              <span className="font-semibold text-gray-900">Savion Ray AI</span>
+            </div>
+            <select 
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
+            >
+              <option value="ChatGPT 5 Thinking">ChatGPT 5 Thinking</option>
+              <option value="ChatGPT 5 Mini">ChatGPT 5 Mini</option>
+              <option value="ChatGPT 5 Pro">ChatGPT 5 Pro</option>
+              <option value="GPT-4o">GPT-4o</option>
+              <option value="GPT-4o Mini">GPT-4o Mini</option>
+            </select>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -177,8 +200,8 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
         ) : (
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map(message => (
-              <div key={message.id} className={`flex items-start space-x-4 ${message.role === 'USER' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              <div key={message.id} className={`flex items-start space-x-4 py-4 ${message.role === 'USER' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   message.role === 'USER' 
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
                     : 'bg-gradient-to-r from-green-400 to-blue-500'
@@ -187,18 +210,21 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
                     {message.role === 'USER' ? 'U' : 'AI'}
                   </span>
                 </div>
-                <div className={`flex-1 max-w-2xl ${message.role === 'USER' ? 'text-right' : 'text-left'}`}>
-                  <div className={`inline-block p-4 rounded-lg ${
+                <div className={`flex-1 max-w-3xl ${message.role === 'USER' ? 'text-right' : 'text-left'}`}>
+                  <div className={`inline-block p-4 rounded-2xl shadow-sm ${
                     message.role === 'USER'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
+                      ? 'bg-blue-600 text-white rounded-br-md'
+                      : 'bg-gray-100 text-gray-900 rounded-bl-md'
                   }`}>
-                    <div className="whitespace-pre-wrap">
+                    <div className="whitespace-pre-wrap leading-relaxed">
                       {message.content}
                       {message.isStreaming && (
-                        <span className="inline-block w-2 h-4 bg-gray-500 animate-pulse ml-1"></span>
+                        <span className="inline-block w-2 h-5 bg-gray-500 animate-pulse ml-1 align-middle"></span>
                       )}
                     </div>
+                  </div>
+                  <div className={`text-xs text-gray-500 mt-2 ${message.role === 'USER' ? 'text-right' : 'text-left'}`}>
+                    {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
@@ -228,9 +254,9 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
           <div className="relative">
             <textarea
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
-              placeholder="Ask anything"
+              placeholder="Message Savion Ray AI..."
               className="w-full p-4 pr-16 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={1}
               style={{ minHeight: '56px', maxHeight: '200px' }}
