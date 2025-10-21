@@ -32,21 +32,21 @@ export class DocumentProcessor {
 
       // Extract text based on file type
       let text = ''
-      switch (document.fileType) {
+      switch (document.contentType) {
         case 'text/plain':
-          text = await this.extractTextFromTxt(document.fileName)
+          text = await this.extractTextFromTxt(document.filename)
           break
         case 'text/markdown':
-          text = await this.extractTextFromMarkdown(document.fileName)
+          text = await this.extractTextFromMarkdown(document.filename)
           break
         case 'application/pdf':
-          text = await this.extractTextFromPdf(document.fileName)
+          text = await this.extractTextFromPdf(document.filename)
           break
         case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-          text = await this.extractTextFromDocx(document.fileName)
+          text = await this.extractTextFromDocx(document.filename)
           break
         default:
-          throw new Error(`Unsupported file type: ${document.fileType}`)
+          throw new Error(`Unsupported file type: ${document.contentType}`)
       }
 
       // Create chunks
@@ -68,8 +68,7 @@ export class DocumentProcessor {
       await prisma.knowledgeDocument.update({
         where: { id: documentId },
         data: { 
-          status: 'PROCESSED',
-          processedAt: new Date()
+          status: 'PROCESSED'
         }
       })
 
