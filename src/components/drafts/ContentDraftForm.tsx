@@ -80,8 +80,8 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
       // Wait for any pending auto-saves to complete
       await autoSave.flush()
 
-      const response = await fetch(draftId ? `/api/drafts/${draftId}/submit` : '/api/drafts', {
-        method: 'POST',
+      const response = await fetch(draftId ? `/api/drafts/${draftId}` : '/api/drafts', {
+        method: draftId ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -99,6 +99,32 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
       router.push(`/ideas/${idea.id}/drafts`)
     }
   })
+
+  // Submit for review function
+  const handleSubmitForReview = async () => {
+    if (!session?.user?.id) return
+
+    // Wait for any pending auto-saves to complete
+    await autoSave.flush()
+
+    const response = await fetch(draftId ? `/api/drafts/${draftId}/submit` : '/api/drafts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...formData,
+        ideaId: idea.id,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to submit for review')
+    }
+
+    onSuccess?.()
+    router.push(`/ideas/${idea.id}/drafts`)
+  }
 
   // Auto-save function
   const autoSave = useCallback(
@@ -221,9 +247,17 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
             </Button>
             <Button
               type="submit"
+              variant="outline"
               loading={loading || saveStatus === 'saving'}
             >
-              {draft ? 'Update Draft' : 'Create Draft'}
+              {draft ? 'Update Draft' : 'Save Draft'}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmitForReview}
+              loading={loading}
+            >
+              Submit for Review
             </Button>
           </div>
         </CardFooter>

@@ -9,6 +9,7 @@ import {
   ArrowUpIcon,
   PlusIcon
 } from '@heroicons/react/24/outline'
+import { chatService } from '@/lib/chat/chat-service'
 
 interface ChatGPTChatAreaProps {
   conversationId: string | null
@@ -16,9 +17,10 @@ interface ChatGPTChatAreaProps {
 
 interface Message {
   id: string
-  role: 'user' | 'assistant'
+  role: 'USER' | 'ASSISTANT' | 'SYSTEM'
   content: string
-  timestamp: Date
+  createdAt: string
+  isStreaming?: boolean
 }
 
 export default function ChatGPTChatArea({ conversationId }: ChatGPTChatAreaProps) {
@@ -26,41 +28,108 @@ export default function ChatGPTChatArea({ conversationId }: ChatGPTChatAreaProps
   const [inputValue, setInputValue] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [selectedModel, setSelectedModel] = useState('ChatGPT 5 Thinking')
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (conversationId) {
+      loadMessages()
+    } else {
+      setMessages([])
+    }
+  }, [conversationId])
+
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
+  const loadMessages = async () => {
+    if (!conversationId) return
+    
+    try {
+      setIsLoading(true)
+      const conversationMessages = await chatService.getMessages(conversationId)
+      setMessages(conversationMessages)
+    } catch (error) {
+      console.error('Error loading messages:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputValue,
-      timestamp: new Date()
-    }
-
-    setMessages(prev => [...prev, userMessage])
+    const messageContent = inputValue.trim()
     setInputValue('')
     setIsStreaming(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'This is a simulated AI response. In the actual implementation, this will be replaced with streaming responses from OpenAI.',
-        timestamp: new Date()
+    try {
+      // Create user message
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'USER',
+        content: messageContent,
+        createdAt: new Date().toISOString()
       }
+
+      setMessages(prev => [...prev, userMessage])
+
+      // Save user message to database
+      if (conversationId) {
+        await chatService.sendMessage(conversationId, messageContent, 'USER')
+      }
+
+      // Create AI response message placeholder
+      const aiMessageId = (Date.now() + 1).toString()
+      const aiMessage: Message = {
+        id: aiMessageId,
+        role: 'ASSISTANT',
+        content: '',
+        createdAt: new Date().toISOString(),
+        isStreaming: true
+      }
+
       setMessages(prev => [...prev, aiMessage])
+
+      // Stream AI response
+      const stream = await chatService.streamResponse(messageContent, conversationId || undefined, selectedModel.toLowerCase())
+      let fullResponse = ''
+
+      await chatService.parseStreamResponse(
+        stream,
+        (chunk: string) => {
+          fullResponse += chunk
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === aiMessageId 
+                ? { ...msg, content: fullResponse }
+                : msg
+            )
+          )
+        },
+        () => {
+          setIsStreaming(false)
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === aiMessageId 
+                ? { ...msg, isStreaming: false }
+                : msg
+            )
+          )
+        }
+      )
+
+    } catch (error) {
+      console.error('Error sending message:', error)
       setIsStreaming(false)
-    }, 2000)
+      setMessages(prev => prev.filter(msg => msg.id !== (Date.now() + 1).toString()))
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -107,23 +176,28 @@ export default function ChatGPTChatArea({ conversationId }: ChatGPTChatAreaProps
         ) : (
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map(message => (
-              <div key={message.id} className={`flex items-start space-x-4 ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+              <div key={message.id} className={`flex items-start space-x-4 ${message.role === 'USER' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  message.role === 'user' 
+                  message.role === 'USER' 
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
                     : 'bg-gradient-to-r from-green-400 to-blue-500'
                 }`}>
                   <span className="text-white font-bold text-sm">
-                    {message.role === 'user' ? 'U' : 'AI'}
+                    {message.role === 'USER' ? 'U' : 'AI'}
                   </span>
                 </div>
-                <div className={`flex-1 max-w-2xl ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+                <div className={`flex-1 max-w-2xl ${message.role === 'USER' ? 'text-right' : 'text-left'}`}>
                   <div className={`inline-block p-4 rounded-lg ${
-                    message.role === 'user'
+                    message.role === 'USER'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-900'
                   }`}>
-                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <div className="whitespace-pre-wrap">
+                      {message.content}
+                      {message.isStreaming && (
+                        <span className="inline-block w-2 h-4 bg-gray-500 animate-pulse ml-1"></span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

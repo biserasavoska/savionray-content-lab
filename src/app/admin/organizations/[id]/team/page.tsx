@@ -3,8 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { authOptions, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { requireOrganizationContext } from '@/lib/utils/organization-context'
-import UserManagementList from '@/app/organization/users/UserManagementList'
+import OrganizationTeamManagement from './OrganizationTeamManagement'
 
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic'
@@ -27,22 +26,10 @@ export default async function OrganizationTeamPage({
   // Get the organization
   const organization = await prisma.organization.findUnique({
     where: { id: params.id },
-    include: {
-      OrganizationUser: {
-        where: { isActive: true },
-        include: {
-          User_OrganizationUser_userIdToUser: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-              image: true,
-            }
-          }
-        },
-        orderBy: { joinedAt: 'desc' }
-      }
+    select: {
+      id: true,
+      name: true,
+      slug: true
     }
   })
 
@@ -54,14 +41,22 @@ export default async function OrganizationTeamPage({
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div className="px-4 py-6 sm:px-0">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
+          <div className="flex items-center gap-4">
+            <a
+              href="/admin/organizations"
+              className="text-blue-600 hover:text-blue-500"
+            >
+              ← Back to Organizations
+            </a>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mt-4">Team Management</h1>
           <p className="mt-2 text-sm text-gray-600">
             Manage team members for <strong>{organization.name}</strong>. Edit system roles and remove/delete team members.
           </p>
         </div>
 
         <div className="bg-white shadow rounded-lg">
-          <UserManagementList organization={organization} />
+          <OrganizationTeamManagement organizationId={organization.id} organizationName={organization.name} />
         </div>
       </div>
     </div>

@@ -39,7 +39,7 @@ export async function POST(
     const updatedDraft = await prisma.contentDraft.update({
       where: { id: params.id },
       data: {
-        status: 'DRAFT',
+        status: 'AWAITING_FEEDBACK',
       },
       include: {
         User: {

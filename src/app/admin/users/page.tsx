@@ -57,6 +57,28 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role: newRole }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update user role')
+      }
+
+      alert(`User role updated successfully!`)
+      await fetchUsers() // Refresh the user list
+    } catch (err) {
+      alert(`Error: ${err instanceof Error ? err.message : 'Failed to update user role'}`)
+    }
+  }
+
   const handleResetPassword = async () => {
     if (!resetPasswordModal.user || !resetPasswordModal.newPassword) return
 
@@ -169,13 +191,22 @@ export default function AdminUsersPage() {
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        user.role === 'ADMIN' 
-                          ? 'bg-red-100 text-red-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {user.role}
-                      </span>
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-0 ${
+                          user.role === 'ADMIN' 
+                            ? 'bg-red-100 text-red-800' 
+                            : user.role === 'CREATIVE'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}
+                        disabled={user.id === session?.user?.id} // Prevent changing own role
+                      >
+                        <option value="ADMIN">Admin</option>
+                        <option value="CREATIVE">Creative</option>
+                        <option value="CLIENT">Client</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col space-y-1">

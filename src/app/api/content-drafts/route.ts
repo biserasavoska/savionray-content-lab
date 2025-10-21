@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireOrganizationContext } from '@/lib/utils/organization-context';
 import { getServerSession } from 'next-auth';
-import { authOptions, isAdmin } from '@/lib/auth';
+import { authOptions, isAdmin, isCreative } from '@/lib/auth';
 import { IDEA_STATUS, DRAFT_STATUS } from '@/lib/utils/enum-utils';
 
 export async function GET(request: NextRequest) {
@@ -17,6 +17,12 @@ export async function GET(request: NextRequest) {
       userId: context.userId,
       userEmail: context.userEmail
     });
+    
+    // Get user session to determine role-based filtering
+    const session = await getServerSession(authOptions);
+    const isUserCreative = session ? isCreative(session) : false;
+    const isUserAdmin = session ? isAdmin(session) : false;
+    const isUserClient = session?.user?.role === 'CLIENT';
     
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -35,16 +41,29 @@ export async function GET(request: NextRequest) {
     if (status) {
       where.status = status;
     } else {
-      // Default filter: show drafts that need review
-      where.status = {
-        in: [
-          DRAFT_STATUS.DRAFT, 
-          DRAFT_STATUS.AWAITING_FEEDBACK, 
-          DRAFT_STATUS.AWAITING_REVISION, 
-          DRAFT_STATUS.APPROVED, 
-          DRAFT_STATUS.REJECTED
-        ]
-      };
+      // Role-based default filter
+      if (isUserClient) {
+        // Client users: exclude DRAFT status (only show submitted content)
+        where.status = {
+          in: [
+            DRAFT_STATUS.AWAITING_FEEDBACK, 
+            DRAFT_STATUS.AWAITING_REVISION, 
+            DRAFT_STATUS.APPROVED, 
+            DRAFT_STATUS.REJECTED
+          ]
+        };
+      } else {
+        // Creative/Admin users: show all statuses including drafts
+        where.status = {
+          in: [
+            DRAFT_STATUS.DRAFT, 
+            DRAFT_STATUS.AWAITING_FEEDBACK, 
+            DRAFT_STATUS.AWAITING_REVISION, 
+            DRAFT_STATUS.APPROVED, 
+            DRAFT_STATUS.REJECTED
+          ]
+        };
+      }
     }
 
     // Apply period filter if provided

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireOrganizationContext } from '@/lib/utils/organization-context';
+import { getServerSession } from 'next-auth';
+import { authOptions, isCreative, isAdmin } from '@/lib/auth';
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils';
 
 export async function GET(request: NextRequest) {
@@ -16,18 +18,32 @@ export async function GET(request: NextRequest) {
       userEmail: context.userEmail
     });
     
+    // Get user session to determine role-based filtering
+    const session = await getServerSession(authOptions);
+    const isUserClient = session?.user?.role === 'CLIENT';
+    
+    // Role-based status filter
+    const statusFilter = isUserClient 
+      ? [
+          DRAFT_STATUS.AWAITING_FEEDBACK, 
+          DRAFT_STATUS.AWAITING_REVISION, 
+          DRAFT_STATUS.APPROVED, 
+          DRAFT_STATUS.REJECTED
+        ]
+      : [
+          DRAFT_STATUS.DRAFT, 
+          DRAFT_STATUS.AWAITING_FEEDBACK, 
+          DRAFT_STATUS.AWAITING_REVISION, 
+          DRAFT_STATUS.APPROVED, 
+          DRAFT_STATUS.REJECTED
+        ];
+    
     // Get all content drafts with their associated ideas' publishing dates
     const drafts = await prisma.contentDraft.findMany({
       where: {
         organizationId: context.organizationId,
         status: {
-          in: [
-            DRAFT_STATUS.DRAFT, 
-            DRAFT_STATUS.AWAITING_FEEDBACK, 
-            DRAFT_STATUS.AWAITING_REVISION, 
-            DRAFT_STATUS.APPROVED, 
-            DRAFT_STATUS.REJECTED
-          ]
+          in: statusFilter
         }
       },
       include: {
