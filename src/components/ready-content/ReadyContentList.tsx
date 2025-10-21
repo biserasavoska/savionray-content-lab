@@ -244,9 +244,9 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         endpoint = `/api/drafts/${draftId}/reject`
         method = 'POST'
       } else {
-        // For other status updates, use the general endpoint if it exists
-        endpoint = `/api/drafts/${draftId}`
-        method = 'PUT'
+        // For other status updates, use the status endpoint
+        endpoint = `/api/drafts/${draftId}/status`
+        method = 'PATCH'
       }
 
       const response = await fetch(endpoint, {
