@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
-import { authOptions , isAdmin } from '@/lib/auth'
+import { authOptions, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import { logger } from '@/lib/utils/logger'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -35,7 +35,7 @@ export async function DELETE(
       )
     }
 
-    const { userId } = params
+    const userId = params.id
 
     // Check if user exists in organization
     const organizationUser = await prisma.organizationUser.findFirst({
@@ -53,48 +53,84 @@ export async function DELETE(
       )
     }
 
-    // Prevent removing owner
+    // Prevent deleting organization owner
     if (organizationUser.role === 'OWNER') {
       return NextResponse.json(
-        { error: 'Cannot remove organization owner' },
+        { error: 'Cannot delete organization owner' },
         { status: 403 }
       )
     }
 
-    // Prevent removing yourself
+    // Prevent deleting yourself
     if (userId === orgContext.userId) {
       return NextResponse.json(
-        { error: 'Cannot remove yourself from organization' },
+        { error: 'Cannot delete yourself' },
         { status: 403 }
       )
     }
 
-    // Deactivate user in organization (soft delete)
-    const updatedUser = await prisma.organizationUser.update({
-      where: { id: organizationUser.id },
-      data: { 
-        isActive: false,
-        joinedAt: null // Clear join date
-      }
+    // Check if user is a super admin (prevent deletion)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isSuperAdmin: true }
     })
 
-    logger.info('User removed from organization', {
+    if (user?.isSuperAdmin) {
+      return NextResponse.json(
+        { error: 'Cannot delete super admin users' },
+        { status: 403 }
+      )
+    }
+
+    // Start a transaction to delete user and all related data
+    await prisma.$transaction(async (tx) => {
+      // First, remove user from all organizations
+      await tx.organizationUser.deleteMany({
+        where: { userId: userId }
+      })
+
+      // Delete user's ideas
+      await tx.idea.deleteMany({
+        where: { createdById: userId }
+      })
+
+      // Delete user's content drafts
+      await tx.contentDraft.deleteMany({
+        where: { createdById: userId }
+      })
+
+      // Delete user's feedback
+      await tx.feedback.deleteMany({
+        where: { createdById: userId }
+      })
+
+      // Delete user's media
+      await tx.media.deleteMany({
+        where: { uploadedById: userId }
+      })
+
+      // Finally, delete the user
+      await tx.user.delete({
+        where: { id: userId }
+      })
+    })
+
+    logger.info('User permanently deleted', {
       organizationId: orgContext.organizationId,
       userId: userId,
-      removedBy: orgContext.userId
+      deletedBy: orgContext.userId
     })
 
     return NextResponse.json({
-      message: 'User removed from organization successfully',
-      user: updatedUser
+      message: 'User permanently deleted successfully'
     })
 
   } catch (error) {
-    logger.error('Error removing user from organization', error instanceof Error ? error : new Error(String(error)))
+    logger.error('Error permanently deleting user', error instanceof Error ? error : new Error(String(error)))
     
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
-} 
+}

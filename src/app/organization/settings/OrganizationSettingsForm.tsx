@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Button,
@@ -48,13 +48,43 @@ interface OrganizationWithUsers extends Organization {
 }
 
 interface OrganizationSettingsFormProps {
-  organization: OrganizationWithUsers
+  organizationId: string
+  organizationName: string
 }
 
-export default function OrganizationSettingsForm({ organization }: OrganizationSettingsFormProps) {
+export default function OrganizationSettingsForm({ organizationId, organizationName }: OrganizationSettingsFormProps) {
+  const [organization, setOrganization] = useState<OrganizationWithUsers | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
+
+  // Fetch organization data
+  useEffect(() => {
+    const fetchOrganizationData = async () => {
+      try {
+        setIsLoadingData(true)
+        const response = await fetch(`/api/organization/${organizationId}`, {
+          headers: {
+            'x-selected-organization': organizationId,
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setOrganization(data.organization)
+        } else {
+          console.error('Failed to fetch organization data')
+        }
+      } catch (error) {
+        console.error('Error fetching organization data:', error)
+      } finally {
+        setIsLoadingData(false)
+      }
+    }
+
+    fetchOrganizationData()
+  }, [organizationId])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -74,6 +104,7 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-selected-organization': organizationId,
         },
         body: JSON.stringify(data),
       })
@@ -92,6 +123,23 @@ export default function OrganizationSettingsForm({ organization }: OrganizationS
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isLoadingData) {
+    return (
+      <div className="min-h-[200px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p className="ml-3 text-gray-600">Loading organization data...</p>
+      </div>
+    )
+  }
+
+  if (!organization) {
+    return (
+      <div className="text-center py-8 text-gray-600">
+        No organization data available.
+      </div>
+    )
   }
 
   return (

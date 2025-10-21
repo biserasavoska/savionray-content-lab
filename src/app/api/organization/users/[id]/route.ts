@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
-import { authOptions, isAdmin } from '@/lib/auth'
+import { authOptions , isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { requireOrganizationContext } from '@/lib/utils/organization-context'
 import { logger } from '@/lib/utils/logger'
 
-export async function PUT(
+export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -35,25 +35,7 @@ export async function PUT(
       )
     }
 
-    const { userId } = params
-    const body = await request.json()
-    const { systemRole } = body
-
-    if (!systemRole) {
-      return NextResponse.json(
-        { error: 'System role is required' },
-        { status: 400 }
-      )
-    }
-
-    // Validate system role
-    const validSystemRoles = ['ADMIN', 'CLIENT', 'CREATIVE']
-    if (!validSystemRoles.includes(systemRole)) {
-      return NextResponse.json(
-        { error: 'Invalid system role' },
-        { status: 400 }
-      )
-    }
+    const userId = params.id
 
     // Check if user exists in organization
     const organizationUser = await prisma.organizationUser.findFirst({
@@ -71,38 +53,48 @@ export async function PUT(
       )
     }
 
-    // Prevent changing system role of organization owner
+    // Prevent removing owner
     if (organizationUser.role === 'OWNER') {
       return NextResponse.json(
-        { error: 'Cannot change system role of organization owner' },
+        { error: 'Cannot remove organization owner' },
         { status: 403 }
       )
     }
 
-    // Update user system role
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { role: systemRole }
+    // Prevent removing yourself
+    if (userId === orgContext.userId) {
+      return NextResponse.json(
+        { error: 'Cannot remove yourself from organization' },
+        { status: 403 }
+      )
+    }
+
+    // Deactivate user in organization (soft delete)
+    const updatedUser = await prisma.organizationUser.update({
+      where: { id: organizationUser.id },
+      data: { 
+        isActive: false,
+        joinedAt: null // Clear join date
+      }
     })
 
-    logger.info('User system role updated', {
+    logger.info('User removed from organization', {
       organizationId: orgContext.organizationId,
       userId: userId,
-      newSystemRole: systemRole,
-      updatedBy: orgContext.userId
+      removedBy: orgContext.userId
     })
 
     return NextResponse.json({
-      message: 'User system role updated successfully',
+      message: 'User removed from organization successfully',
       user: updatedUser
     })
 
   } catch (error) {
-    logger.error('Error updating user system role', error instanceof Error ? error : new Error(String(error)))
+    logger.error('Error removing user from organization', error instanceof Error ? error : new Error(String(error)))
     
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
-}
+} 

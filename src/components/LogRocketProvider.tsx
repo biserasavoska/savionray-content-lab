@@ -61,12 +61,15 @@ export default function LogRocketProvider({ children }: LogRocketProviderProps) 
         // Add global error handler to suppress LogRocket network errors
         const originalConsoleError = console.error
         console.error = (...args) => {
-          // Suppress LogRocket network errors from appearing in console
+          // Suppress LogRocket and Rollbar network errors from appearing in console
           const errorMessage = args.join(' ')
           if (errorMessage.includes('net::ERR_NETWORK_CHANGED') || 
               errorMessage.includes('logger-1.min.js') ||
-              errorMessage.includes('LogRocket')) {
-            // Silently ignore LogRocket network errors
+              errorMessage.includes('LogRocket') ||
+              errorMessage.includes('Rollbar') ||
+              errorMessage.includes('rollbar.umd.min.js') ||
+              errorMessage.includes('Failed to load Rollbar script')) {
+            // Silently ignore these network errors
             return
           }
           // Log other errors normally

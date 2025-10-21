@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { formatDate } from '../../../../lib/utils/date-helpers'
 import type { ContentDraft, Idea, User, Media } from '../../../../types/content'
 import { useCurrentOrganization } from '@/hooks/useCurrentOrganization'
+import { isAdmin, isCreative } from '@/lib/auth'
+import { DRAFT_STATUS } from '@/lib/utils/enum-utils'
 
 import MediaUpload from './MediaUpload'
 

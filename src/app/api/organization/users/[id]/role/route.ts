@@ -8,7 +8,7 @@ import { logger } from '@/lib/utils/logger'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -35,7 +35,7 @@ export async function PUT(
       )
     }
 
-    const { userId } = params
+    const userId = params.id
     const body = await request.json()
     const { role } = body
 
