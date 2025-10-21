@@ -13,10 +13,10 @@ interface KnowledgeBase {
 
 interface KnowledgeDocument {
   id: string
-  title: string
-  fileName: string
-  fileType: string
-  fileSize: number
+  filename: string
+  originalName: string
+  contentType: string
+  size: number
   status: 'UPLOADED' | 'PROCESSING' | 'PROCESSED' | 'FAILED'
   createdAt: string
   _count: {

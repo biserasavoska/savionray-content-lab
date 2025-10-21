@@ -34,7 +34,8 @@ export async function GET(req: NextRequest) {
         documents: {
           select: {
             id: true,
-            title: true,
+            filename: true,
+            originalName: true,
             status: true,
             createdAt: true,
             _count: {
@@ -103,7 +104,8 @@ export async function POST(req: NextRequest) {
         documents: {
           select: {
             id: true,
-            title: true,
+            filename: true,
+            originalName: true,
             status: true,
             createdAt: true,
             _count: {

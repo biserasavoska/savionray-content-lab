@@ -25,8 +25,8 @@ interface KnowledgeBase {
 
 interface KnowledgeDocument {
   id: string
-  title: string
-  fileName: string
+  filename: string
+  originalName: string
   status: 'UPLOADED' | 'PROCESSING' | 'PROCESSED' | 'FAILED'
   createdAt: string
   _count: {
