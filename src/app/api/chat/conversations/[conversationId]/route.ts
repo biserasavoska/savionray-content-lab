@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 interface RouteParams {
   params: {
-    id: string
+    conversationId: string
   }
 }
 
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversationId = params.id
+    const conversationId = params.conversationId
 
     // Get conversation with messages
     const conversation = await prisma.chatConversation.findFirst({
@@ -56,7 +56,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversationId = params.id
+    const conversationId = params.conversationId
     const { title, model, settings } = await req.json()
 
     // Verify conversation ownership
@@ -108,7 +108,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const conversationId = params.id
+    const conversationId = params.conversationId
 
     // Verify conversation ownership
     const conversation = await prisma.chatConversation.findFirst({

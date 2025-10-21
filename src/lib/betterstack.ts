@@ -61,6 +61,7 @@ class BetterStackClient {
     try {
       const entry: LogEntry = {
         dt: new Date().toISOString(),
+        message: logEntry.message || 'No message provided',
         service: this.service,
         environment: this.environment,
         ...logEntry,

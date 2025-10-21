@@ -14,11 +14,11 @@ export function withBetterStackTracking(
     const method = request.method;
     const endpoint = request.nextUrl.pathname;
     
+    // Get user information from request if available
+    const userId = request.headers.get('x-user-id') || undefined;
+    const organizationId = request.headers.get('x-organization-id') || undefined;
+    
     try {
-      // Get user information from request if available
-      const userId = request.headers.get('x-user-id') || undefined;
-      const organizationId = request.headers.get('x-organization-id') || undefined;
-
       // Log the incoming request
       await betterStack.logInfo(`API Request: ${method} ${endpoint}`, {
         method,

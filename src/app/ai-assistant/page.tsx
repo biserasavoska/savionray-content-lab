@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 
 import ChatGPTSidebar from '@/components/ai-assistant/ChatGPTSidebar'
 import ChatGPTChatArea from '@/components/ai-assistant/ChatGPTChatArea'
