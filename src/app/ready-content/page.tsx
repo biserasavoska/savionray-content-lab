@@ -23,6 +23,10 @@ export default async function ReadyContentPage() {
   const isCreativeUser = isCreative(session)
   const isClientUser = isClient(session)
 
+  console.log('ReadyContentPage - session user role:', session.user?.role)
+  console.log('ReadyContentPage - isCreativeUser:', isCreativeUser)
+  console.log('ReadyContentPage - isClientUser:', isClientUser)
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">

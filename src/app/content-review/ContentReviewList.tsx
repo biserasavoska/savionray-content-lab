@@ -314,7 +314,7 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
               className="rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
             >
               <option value="ALL">All Statuses</option>
-              {!isClientUser && <option value="DRAFT">Draft</option>}
+              {(!isClientUser && (isCreativeUser || session?.user?.role === 'ADMIN')) && <option value="DRAFT">Draft</option>}
               <option value="AWAITING_FEEDBACK">Awaiting Feedback</option>
               <option value="AWAITING_REVISION">Awaiting Revision</option>
               <option value="APPROVED">Approved</option>

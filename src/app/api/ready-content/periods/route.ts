@@ -1,28 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions, isAdmin, isCreative } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { requireOrganizationContext } from '@/lib/utils/organization-context';
 import { DRAFT_STATUS } from '@/lib/utils/enum-utils';
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Get organization context from header
     const context = await requireOrganizationContext(undefined, request);
     if (!context) {
       return NextResponse.json({ error: 'Organization context not found' }, { status: 400 });
     }
 
+    // Determine user role for filtering
+    const isUserClient = session?.user?.role === 'CLIENT';
+    
+    // Apply role-based status filtering
+    const statusFilter = isUserClient
+      ? [
+          DRAFT_STATUS.AWAITING_FEEDBACK,
+          DRAFT_STATUS.AWAITING_REVISION,
+          DRAFT_STATUS.APPROVED,
+          DRAFT_STATUS.REJECTED
+        ]
+      : [
+          DRAFT_STATUS.DRAFT,
+          DRAFT_STATUS.AWAITING_FEEDBACK,
+          DRAFT_STATUS.AWAITING_REVISION,
+          DRAFT_STATUS.APPROVED,
+          DRAFT_STATUS.REJECTED
+        ];
+
     // Get all content drafts with their associated ideas' publishing dates
     const drafts = await prisma.contentDraft.findMany({
       where: {
         organizationId: context.organizationId,
         status: {
-          in: [
-            DRAFT_STATUS.DRAFT,
-            DRAFT_STATUS.AWAITING_FEEDBACK,
-            DRAFT_STATUS.AWAITING_REVISION,
-            DRAFT_STATUS.APPROVED,
-            DRAFT_STATUS.REJECTED
-          ]
+          in: statusFilter
         }
       },
       include: {
