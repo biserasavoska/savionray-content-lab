@@ -253,6 +253,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...(currentOrganization?.id && { 'x-selected-organization': currentOrganization.id }),
         },
         credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
