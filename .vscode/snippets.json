@@ -1,0 +1,82 @@
+{
+  "Error Handling Pattern": {
+    "prefix": "error-handle",
+    "body": [
+      "const handleError = async () => {",
+      "  setError(null)",
+      "  setLoading(true)",
+      "  try {",
+      "    await ${1:fetchData}()",
+      "  } catch (err) {",
+      "    setError(err.message)",
+      "  } finally {",
+      "    setLoading(false)",
+      "  }",
+      "}"
+    ],
+    "description": "Proper error handling pattern - NEVER use window.location.reload()"
+  },
+  "Retry Button": {
+    "prefix": "retry-btn",
+    "body": [
+      "<Button onClick={() => {",
+      "  setError(null)",
+      "  setLoading(true)",
+      "  ${1:fetchData}()",
+      "}}>Try Again</Button>"
+    ],
+    "description": "Retry button with proper state management"
+  },
+  "Status Update Pattern": {
+    "prefix": "status-update",
+    "body": [
+      "const handleStatusUpdate = async (${1:id}: string, ${2:status}: string) => {",
+      "  try {",
+      "    await updateStatus(${1:id}, ${2:status})",
+      "    // Refresh data instead of reloading page",
+      "    await ${3:fetchData}()",
+      "  } catch (error) {",
+      "    setError(error.message)",
+      "  }",
+      "}"
+    ],
+    "description": "Status update with proper data refresh - NEVER use window.location.reload()"
+  },
+  "Navigation Pattern": {
+    "prefix": "nav-push",
+    "body": [
+      "const router = useRouter()",
+      "",
+      "const navigateToPage = (path: string) => {",
+      "  router.push(path)",
+      "}"
+    ],
+    "description": "Proper navigation - NEVER use window.location.href"
+  },
+  "Data Fetching Hook": {
+    "prefix": "use-data-fetch",
+    "body": [
+      "const useDataFetching = (url: string) => {",
+      "  const [data, setData] = useState(null)",
+      "  const [loading, setLoading] = useState(true)",
+      "  const [error, setError] = useState(null)",
+      "  ",
+      "  const refetch = async () => {",
+      "    setLoading(true)",
+      "    setError(null)",
+      "    try {",
+      "      const result = await fetch(url)",
+      "      setData(result)",
+      "    } catch (err) {",
+      "      setError(err.message)",
+      "    } finally {",
+      "      setLoading(false)",
+      "    }",
+      "  }",
+      "  ",
+      "  return { data, loading, error, refetch }",
+      "}"
+    ],
+    "description": "Reusable data fetching hook with proper error handling"
+  }
+}

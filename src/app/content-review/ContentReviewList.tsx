@@ -274,7 +274,7 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
           }
         </p>
         {isCreativeUser && (
-          <Link href="/content-review/unified">
+          <Link href="/create-content">
             <Button variant="destructive" size="sm">
               Create Content
             </Button>

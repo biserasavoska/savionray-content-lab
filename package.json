@@ -20,7 +20,11 @@
     "clean-dev": "rm -rf .next node_modules/.cache && npm install && npm run build",
     "clean-all": "rm -rf .next node_modules package-lock.json && npm install && npm run build",
     "cleanup-linkedin": "node scripts/cleanup-linkedin-accounts.js",
-    "railway-cleanup-linkedin": "node scripts/railway-cleanup-linkedin.js"
+    "railway-cleanup-linkedin": "node scripts/railway-cleanup-linkedin.js",
+    "dev:clean": "pkill -f 'next dev' 2>/dev/null || true; rm -rf .next; npm run dev",
+    "dev:emergency": "./emergency-fix.sh",
+    "dev:start": "./daily-startup.sh",
+    "dev:monitor": "npm run dev & sleep 5 && curl -I http://localhost:3000"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.888.0",
