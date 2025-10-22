@@ -8,24 +8,6 @@ const ReactQuill = dynamic(() => import('react-quill'), {
   loading: () => <div className="border border-gray-300 rounded-md p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">Loading editor...</div>
 })
 
-// Load CSS dynamically on client side
-useEffect(() => {
-  if (typeof window !== 'undefined') {
-    // Create a link element to load CSS
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css'
-    document.head.appendChild(link)
-    
-    return () => {
-      // Cleanup on unmount
-      if (document.head.contains(link)) {
-        document.head.removeChild(link)
-      }
-    }
-  }
-}, [])
-
 interface SimpleRichTextEditorProps {
   content: string
   onContentChange: (content: string) => void
@@ -41,6 +23,23 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
   disabled = false,
   className = ''
 }) => {
+  // Load CSS dynamically on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Create a link element to load CSS
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = 'https://cdn.quilljs.com/1.3.6/quill.snow.css'
+      document.head.appendChild(link)
+      
+      return () => {
+        // Cleanup on unmount
+        if (document.head.contains(link)) {
+          document.head.removeChild(link)
+        }
+      }
+    }
+  }, [])
   // Quill toolbar configuration
   const modules = {
     toolbar: [
