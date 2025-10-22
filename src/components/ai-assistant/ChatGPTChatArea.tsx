@@ -28,7 +28,7 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
-  const [selectedModel, setSelectedModel] = useState('ChatGPT 5 Thinking')
+  const [selectedModel, setSelectedModel] = useState('GPT-4o Mini')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -98,8 +98,19 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
 
       setMessages(prev => [...prev, aiMessage])
 
+      // Map display model names to actual OpenAI model IDs
+      const getModelId = (displayName: string): string => {
+        const modelMap: { [key: string]: string } = {
+          'GPT-4o Mini': 'gpt-4o-mini',
+          'GPT-4o': 'gpt-4o',
+          'GPT-4': 'gpt-4',
+          'GPT-3.5 Turbo': 'gpt-3.5-turbo'
+        }
+        return modelMap[displayName] || 'gpt-4o-mini'
+      }
+
       // Stream AI response
-      const stream = await chatService.streamResponse(messageContent, conversationId || undefined, selectedModel.toLowerCase())
+      const stream = await chatService.streamResponse(messageContent, conversationId || undefined, getModelId(selectedModel))
       let fullResponse = ''
 
       await chatService.parseStreamResponse(
@@ -167,11 +178,10 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
               onChange={(e) => setSelectedModel(e.target.value)}
               className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
             >
-              <option value="ChatGPT 5 Thinking">ChatGPT 5 Thinking</option>
-              <option value="ChatGPT 5 Mini">ChatGPT 5 Mini</option>
-              <option value="ChatGPT 5 Pro">ChatGPT 5 Pro</option>
-              <option value="GPT-4o">GPT-4o</option>
               <option value="GPT-4o Mini">GPT-4o Mini</option>
+              <option value="GPT-4o">GPT-4o</option>
+              <option value="GPT-4">GPT-4</option>
+              <option value="GPT-3.5 Turbo">GPT-3.5 Turbo</option>
             </select>
           </div>
           
