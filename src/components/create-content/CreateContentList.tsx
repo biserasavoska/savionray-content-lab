@@ -137,7 +137,7 @@ export default function CreateContentList({ items }: CreateContentListProps) {
         
         {/* AI Content Creation Button */}
         <Link
-          href="/create-content/ai-enhanced"
+          href="/content-review/unified"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
         >
           <SparklesIcon className="mr-2 h-4 w-4" />
@@ -205,7 +205,7 @@ export default function CreateContentList({ items }: CreateContentListProps) {
 
                 <div className="mt-4 space-y-2">
                   <Link
-                    href={`/create-content/${item.id}/edit`}
+                    href={`/content-review/unified`}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 w-full justify-center"
                   >
                     {latestDraft ? 'Edit Content' : 'Create Content'}
@@ -213,7 +213,7 @@ export default function CreateContentList({ items }: CreateContentListProps) {
                   
                   {/* AI-Enhanced Edit Option */}
                   <Link
-                    href={`/create-content/${item.id}/edit?ai-enhanced=true`}
+                    href={`/content-review/unified`}
                     className="inline-flex items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 w-full justify-center"
                   >
                     <SparklesIcon className="mr-2 h-4 w-4" />

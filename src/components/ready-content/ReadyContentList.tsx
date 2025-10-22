@@ -270,9 +270,9 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(null), 3000)
         
-        // Refresh the page after a short delay to show updated data
-        setTimeout(() => {
-          window.location.reload()
+        // Refresh the data instead of reloading the page
+        setTimeout(async () => {
+          await fetchContent()
         }, 1500)
       } else {
         console.error('Failed to update status')
@@ -398,7 +398,11 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         </div>
         <h3 className="mt-2 text-lg font-medium text-red-900">Error loading content</h3>
         <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>Try Again</Button>
+        <Button onClick={() => {
+          setError(null)
+          setLoading(true)
+          fetchContent()
+        }}>Try Again</Button>
       </div>
     )
   }
@@ -423,7 +427,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
           }
         </p>
         {isCreativeUser && (
-          <Link href="/create-content">
+          <Link href="/content-review/unified">
             <Button variant="destructive" size="sm">
               Create Content
             </Button>

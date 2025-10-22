@@ -254,7 +254,11 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
     return (
       <div className="text-center py-12">
         <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={fetchDrafts}>Try Again</Button>
+        <Button onClick={() => {
+          setError('')
+          setLoading(true)
+          fetchDrafts()
+        }}>Try Again</Button>
       </div>
     )
   }
@@ -270,7 +274,7 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
           }
         </p>
         {isCreativeUser && (
-          <Link href="/create-content">
+          <Link href="/content-review/unified">
             <Button variant="destructive" size="sm">
               Create Content
             </Button>

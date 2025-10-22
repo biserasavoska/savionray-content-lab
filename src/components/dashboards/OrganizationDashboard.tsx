@@ -35,31 +35,32 @@ export default function OrganizationDashboard({ organizationId }: OrganizationDa
 
   const orgId = organizationId || currentOrganization?.id
 
-  useEffect(() => {
+  const fetchOrganizationStats = async () => {
     if (!orgId) return
 
-    const fetchOrganizationStats = async () => {
-      try {
-        setIsLoading(true)
-        const response = await fetch(`/api/organization/${orgId}/stats`, {
-          headers: {
-            'x-selected-organization': orgId
-          }
-        })
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch organization statistics')
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/organization/${orgId}/stats`, {
+        headers: {
+          'x-selected-organization': orgId
         }
-
-        const data = await response.json()
-        setStats(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred')
-      } finally {
-        setIsLoading(false)
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch organization statistics')
       }
-    }
 
+      const data = await response.json()
+      setStats(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!orgId) return
     fetchOrganizationStats()
   }, [orgId])
 
@@ -103,7 +104,11 @@ export default function OrganizationDashboard({ organizationId }: OrganizationDa
             </h2>
             <p className="text-gray-500 mb-4">{error}</p>
             <Button 
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                setError(null)
+                setIsLoading(true)
+                fetchOrganizationStats()
+              }}
               variant="outline"
             >
               Retry
@@ -294,7 +299,7 @@ export default function OrganizationDashboard({ organizationId }: OrganizationDa
               Create New Idea
             </Button>
             <Button 
-              onClick={() => window.location.href = '/create-content'}
+              onClick={() => window.location.href = '/content-review/unified'}
               variant="outline"
               className="w-full"
             >
