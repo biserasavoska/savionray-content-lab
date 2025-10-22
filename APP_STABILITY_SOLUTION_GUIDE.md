@@ -67,6 +67,7 @@ await fetchData()
 2. **Port Conflicts** - Multiple dev servers running simultaneously  
 3. **Hot Module Replacement Issues** - React components get into inconsistent state
 4. **Page Reload Anti-Patterns** - Using `window.location.reload()` destroys app state
+5. **ReactQuill SSR Issues** - `document is not defined` errors from server-side rendering
 
 ### Symptoms to Watch For
 
@@ -76,6 +77,8 @@ await fetchData()
 - ✅ Authentication keeps resetting
 - ✅ Organization context gets lost
 - ✅ Multiple compilation errors in sequence
+- ✅ `ReferenceError: document is not defined` errors
+- ✅ ReactQuill components failing to load
 
 ---
 
@@ -128,6 +131,9 @@ grep -r "window.location.reload" src/ --include="*.tsx" --include="*.ts" -l
 
 echo "Files with location.reload():"
 grep -r "location.reload" src/ --include="*.tsx" --include="*.ts" -l
+
+echo "Files with ReactQuill imports:"
+grep -r "import.*react-quill" src/ --include="*.tsx" --include="*.ts" -l
 ```
 
 **Replace patterns:**
@@ -161,6 +167,24 @@ window.location.href = '/path'
 
 // ✅ AFTER
 router.push('/path')
+
+// Pattern 4: ReactQuill SSR
+// ❌ BEFORE
+import ReactQuill from 'react-quill'
+import 'react-quill/dist/quill.snow.css'
+
+// ✅ AFTER
+import dynamic from 'next/dynamic'
+
+const ReactQuill = dynamic(() => import('react-quill'), { 
+  ssr: false,
+  loading: () => <div className="h-[200px] bg-gray-100 rounded-lg animate-pulse"></div>
+})
+
+// Import CSS only on client side
+if (typeof window !== 'undefined') {
+  import('react-quill/dist/quill.snow.css')
+}
 ```
 
 ### Phase 3: Prevention Setup (10 minutes)
