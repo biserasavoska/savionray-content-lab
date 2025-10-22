@@ -4,23 +4,11 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
-import dynamic from 'next/dynamic'
+import SimpleRichTextEditor from '@/components/ui/SimpleRichTextEditor'
 
-const ReactQuill = dynamic(() => import('react-quill'), { 
-  ssr: false,
-  loading: () => <div className="h-[200px] bg-gray-100 rounded-lg animate-pulse"></div>
-})
-
-// Import CSS only on client side
-if (typeof window !== 'undefined') {
-  import('react-quill/dist/quill.snow.css')
-}
 
 import type { User } from '@/types/content'
 import { AVAILABLE_MODELS } from '@/lib/models'
-import ModelSelector from '@/components/content/ModelSelector'
-import ReasoningOptions from '@/components/content/ReasoningOptions'
-import ReasoningDisplay from '@/components/content/ReasoningDisplay'
 import {
   Button,
   StatusBadge,
@@ -150,15 +138,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
   
   // Manual content creation state
   const [manualContent, setManualContent] = useState('')
-  const [manualHashtags, setManualHashtags] = useState('')
-  const [manualCallToAction, setManualCallToAction] = useState('')
   const [isManualMode, setIsManualMode] = useState(true)
-  
-  // Add reasoning options state
-  const [includeReasoning, setIncludeReasoning] = useState(false)
-  const [reasoningSummary, setReasoningSummary] = useState(false)
-  const [encryptedReasoning, setEncryptedReasoning] = useState(false)
-  const [showReasoning, setShowReasoning] = useState(false)
 
   useEffect(() => {
     if (session?.user && params.id && currentOrganization) {
@@ -243,9 +223,6 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           format: 'social',
           model: selectedModel.id,
           additionalContext,
-          includeReasoning,
-          reasoningSummary,
-          encryptedReasoning
         }),
       })
 
@@ -277,10 +254,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           body: data.postText || '',
           metadata: {
             model: selectedModel.id,
-            additionalContext,
-            hashtags: data.hashtags,
-            callToAction: data.callToAction,
-            reasoning: data.reasoning
+            additionalContext
           }
         }),
       })
@@ -333,10 +307,7 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
           body: content,
           metadata: {
             model: selectedModel.id,
-            additionalContext,
-            hashtags: generatedContent?.hashtags,
-            callToAction: generatedContent?.callToAction,
-            reasoning: generatedContent?.reasoning
+            additionalContext
           }
         }),
       });
@@ -405,15 +376,14 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
 
   const breadcrumbItems = [
     { href: '/', children: 'Home' },
-    { href: '/content-review', children: 'Content Review' },
-    { href: `/content-review/${params.id}`, children: 'Review Details' }
+    { href: '/content-review', children: 'Content Creation' },
+    { href: `/content-review/${params.id}`, children: 'Content Details' }
   ]
 
   return (
     <PageLayout>
       <PageHeader
-        title="Content Review"
-        subtitle={`Reviewing: ${contentItem.idea?.title || contentItem.title || 'Untitled Content'}`}
+        title="Content Creation"
         breadcrumbs={<Breadcrumbs items={breadcrumbItems} />}
         actions={
           <Button onClick={() => router.back()} variant="outline">
@@ -448,116 +418,82 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
             </div>
           </PageSection>
         )}
-        
-        {/* Content Item Details */}
-        <PageSection title="Content Details" className="mb-6">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-700">Status:</span>
-              <StatusBadge status={contentItem.status as any} />
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Stage:</span>
-              <StatusBadge status={contentItem.currentStage as any} />
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Type:</span>
-              <StatusBadge status={contentItem.contentType as any} />
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Created:</span>
-              <span className="ml-2 text-gray-600">
-                {new Date(contentItem.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        </PageSection>
-        
-        {/* Debug Information - Remove this in production */}
-        {process.env.NODE_ENV === 'development' && (
-          <PageSection title="Debug Info (Development Only)" className="mb-6">
-            <div className="text-xs text-yellow-700 space-y-1">
-              <div><strong>Content Item ID:</strong> {contentItem.id}</div>
-              <div><strong>Has Idea Data:</strong> {(contentItem.idea || contentItem.Idea) ? 'Yes' : 'No'}</div>
-              {(contentItem.idea || contentItem.Idea) && (
-                <>
-                  <div><strong>Idea ID:</strong> {contentItem.idea?.id || contentItem.Idea?.id}</div>
-                  <div><strong>Idea Title:</strong> {contentItem.idea?.title || contentItem.Idea?.title}</div>
-                  <div><strong>Idea Description:</strong> {contentItem.idea?.description || contentItem.Idea?.description}</div>
-                </>
-              )}
-              <div><strong>Content Type:</strong> {contentItem.contentType}</div>
-              <div><strong>Status:</strong> {contentItem.status}</div>
-            </div>
-          </PageSection>
-        )}
 
-        {/* Content Generation Section */}
-        <PageSection title="AI Content Generation" className="mb-6">
-          {/* AI Context Preview */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">AI Context Preview:</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">Title:</span>
-                <span className="ml-2 text-gray-800">{contentItem.idea?.title || contentItem.Idea?.title || 'No title available'}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Description:</span>
-                <span className="ml-2 text-gray-800">{contentItem.idea?.description || contentItem.Idea?.description || 'No description available'}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Content Type:</span>
-                <span className="ml-2 text-gray-800">{contentItem.contentType}</span>
-              </div>
-              {additionalContext && (
-                <div>
-                  <span className="font-medium text-gray-600">Additional Context:</span>
-                  <span className="ml-2 text-gray-800">{additionalContext}</span>
+        {/* Context Section */}
+        <PageSection title="Context" className="mb-6">
+
+          {/* Idea Details */}
+          <div className="mb-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title:</label>
+                    <p className="text-sm text-gray-900 font-semibold">{contentItem.idea?.title || contentItem.Idea?.title || 'No title available'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description:</label>
+                    <p className="text-sm text-gray-900">{contentItem.idea?.description || contentItem.Idea?.description || 'No description available'}</p>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-              <strong>Tip:</strong> The AI will generate content based on the idea context above. 
-              Use the "Additional Context" field to add specific requirements or tone preferences.
+                
+                {/* Right Column */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Content Type:</label>
+                    <p className="text-sm text-gray-900">{contentItem.contentType || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Media Type:</label>
+                    <p className="text-sm text-gray-900">{contentItem.metadata?.mediaType || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Publishing Date & Time:</label>
+                    <p className="text-sm text-gray-900">{contentItem.metadata?.publishingDate ? new Date(contentItem.metadata.publishingDate).toLocaleString() : 'Not scheduled'}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Feedback:</label>
+                    <div className="text-sm text-gray-900">
+                      {contentItem.feedbacks && contentItem.feedbacks.length > 0 ? (
+                        <div className="space-y-2">
+                          {contentItem.feedbacks.map((feedback, index) => (
+                            <div key={feedback.id} className="border-l-2 border-blue-200 pl-3">
+                              <p className="font-medium">{feedback.comment}</p>
+                              <p className="text-xs text-gray-500">
+                                By {feedback.createdBy.name || feedback.createdBy.email} on {new Date(feedback.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">No feedback yet</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Current Post Content Display */}
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3">
               <h3 className="text-lg font-semibold text-gray-900">Current Post Content</h3>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Live Editor</span>
-              </div>
             </div>
-            <div className="bg-white border-2 border-gray-200 rounded-xl shadow-sm hover:border-gray-300 transition-colors">
-              <div className="p-1">
-                <ReactQuill
-                  value={content}
-                  onChange={setContent}
-                  placeholder="Your post content will appear here after generation or manual input..."
-                  style={{ 
-                    height: '200px',
-                    border: 'none'
-                  }}
-                  modules={{
-                    toolbar: [
-                      [{ 'header': [1, 2, 3, false] }],
-                      ['bold', 'italic', 'underline', 'strike'],
-                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                      ['link'],
-                      ['clean']
-                    ],
-                  }}
-                  theme="snow"
-                />
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between">
+            <SimpleRichTextEditor
+              content={content}
+              onContentChange={setContent}
+              placeholder="Your post content will appear here after generation or manual input..."
+              className="mb-3"
+            />
+            <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">
-                ✏️ Edit directly here or use AI generation/manual editor below
+                Edit directly here or use AI generation/manual editor below
               </p>
               <div className="text-xs text-gray-400">
                 {content.length} characters
@@ -565,47 +501,36 @@ export default function ContentReviewDetailPage({ params }: { params: { id: stri
             </div>
           </div>
 
-          <div className="mb-6">
-            <ModelSelector
-              selectedModel={selectedModel.id}
-              onModelChange={(modelId) => {
-                const model = AVAILABLE_MODELS.find(m => m.id === modelId)
-                if (model) setSelectedModel(model)
-              }}
-            />
-          </div>
-
-          {/* Reasoning Options */}
-          <div className="mb-6">
-            <ReasoningOptions
-              selectedModel={selectedModel.id}
-              includeReasoning={includeReasoning}
-              reasoningSummary={reasoningSummary}
-              encryptedReasoning={encryptedReasoning}
-              onIncludeReasoningChange={setIncludeReasoning}
-              onReasoningSummaryChange={setReasoningSummary}
-              onEncryptedReasoningChange={setEncryptedReasoning}
-            />
-          </div>
-
+          {/* Additional Context */}
           <div className="mb-6">
             <Textarea
               label="Additional Context & Requirements"
               value={additionalContext}
               onChange={(e) => setAdditionalContext(e.target.value)}
-              placeholder={`Add specific requirements for the AI content generation...
-
-Examples:
-• Tone: "Professional but conversational, targeting business leaders"
-• Length: "Keep it under 200 words for social media"
-• Focus: "Emphasize the benefits of effective naming conventions"
-• Style: "Include actionable tips and examples"
-• Keywords: "Must include: project management, efficiency, governance"
-
-The AI will combine this with the idea context above to generate relevant content.`}
+              placeholder=""
               rows={4}
-              helperText="This additional context will be combined with the original idea to guide the AI content generation."
             />
+          </div>
+
+          {/* AI Model Selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              AI Model
+            </label>
+            <select
+              value={selectedModel.id}
+              onChange={(e) => {
+                const model = AVAILABLE_MODELS.find(m => m.id === e.target.value)
+                if (model) setSelectedModel(model)
+              }}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              {AVAILABLE_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <Button
@@ -614,7 +539,7 @@ The AI will combine this with the idea context above to generate relevant conten
             loading={loading}
             variant="default"
           >
-            {loading ? 'Generating...' : 'Generate with AI'}
+            {loading ? 'Generating...' : 'Generate'}
           </Button>
 
           {error && (
@@ -644,37 +569,6 @@ The AI will combine this with the idea context above to generate relevant conten
                   rows={4}
                 />
               </div>
-              
-              <div>
-                <Input
-                  label="Hashtags"
-                  type="text"
-                  value={generatedContent.hashtags.map(tag => '#' + tag).join(' ')}
-                  onChange={(e) => setGeneratedContent(prev => prev ? { 
-                    ...prev, 
-                    hashtags: e.target.value.split(' ').filter(tag => tag.startsWith('#')).map(tag => tag.substring(1))
-                  } : null)}
-                  placeholder="#hashtag1 #hashtag2 #hashtag3"
-                />
-              </div>
-              
-              <div>
-                <Textarea
-                  label="Call to Action"
-                  value={generatedContent.callToAction}
-                  onChange={(e) => setGeneratedContent(prev => prev ? { ...prev, callToAction: e.target.value } : null)}
-                  rows={2}
-                />
-              </div>
-
-              {/* Reasoning Display */}
-              {generatedContent?.reasoning && (
-                <ReasoningDisplay
-                  reasoning={generatedContent.reasoning}
-                  isVisible={showReasoning}
-                  onToggleVisibility={() => setShowReasoning(!showReasoning)}
-                />
-              )}
             </div>
           )}
         </PageSection>
@@ -701,42 +595,10 @@ The AI will combine this with the idea context above to generate relevant conten
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Post Content
                   </label>
-                  <div className="border border-gray-300 rounded-lg">
-                    <ReactQuill
-                      value={manualContent}
-                      onChange={setManualContent}
-                      placeholder="Write your post content here..."
-                      style={{ height: '200px' }}
-                      modules={{
-                        toolbar: [
-                          [{ 'header': [1, 2, 3, false] }],
-                          ['bold', 'italic', 'underline', 'strike'],
-                          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                          ['link'],
-                          ['clean']
-                        ],
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Input
-                    label="Hashtags"
-                    type="text"
-                    value={manualHashtags}
-                    onChange={(e) => setManualHashtags(e.target.value)}
-                    placeholder="#hashtag1 #hashtag2 #hashtag3"
-                  />
-                </div>
-
-                <div>
-                  <Textarea
-                    label="Call to Action"
-                    value={manualCallToAction}
-                    onChange={(e) => setManualCallToAction(e.target.value)}
-                    rows={2}
-                    placeholder="Add a compelling call to action..."
+                  <SimpleRichTextEditor
+                    content={manualContent}
+                    onContentChange={setManualContent}
+                    placeholder="Write your post content here..."
                   />
                 </div>
 
@@ -746,8 +608,8 @@ The AI will combine this with the idea context above to generate relevant conten
                       setContent(manualContent)
                       setGeneratedContent({
                         postText: manualContent,
-                        hashtags: manualHashtags.split(' ').filter(tag => tag.startsWith('#')).map(tag => tag.substring(1)),
-                        callToAction: manualCallToAction
+                        hashtags: [],
+                        callToAction: ''
                       })
                       setSuccessMessage('Manual content applied successfully!')
                       setTimeout(() => setSuccessMessage(''), 3000)
@@ -761,8 +623,6 @@ The AI will combine this with the idea context above to generate relevant conten
                   <Button
                     onClick={() => {
                       setManualContent('')
-                      setManualHashtags('')
-                      setManualCallToAction('')
                     }}
                     variant="outline"
                   >
