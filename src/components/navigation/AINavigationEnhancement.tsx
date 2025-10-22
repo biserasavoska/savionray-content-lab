@@ -98,13 +98,7 @@ export default function AINavigationEnhancement({ className }: AINavigationEnhan
   const handleSuggestionAction = (suggestion: AISuggestion) => {
     switch (suggestion.type) {
       case 'content':
-        if (suggestion.contentType === 'email') {
-          router.push('/create-content/ai-enhanced?type=email')
-        } else if (suggestion.contentType === 'social') {
-          router.push('/create-content/ai-enhanced?type=social')
-        } else {
-          router.push('/create-content/ai-enhanced')
-        }
+        router.push('/ideas/new')
         break
       case 'idea':
         router.push('/ideas/new')

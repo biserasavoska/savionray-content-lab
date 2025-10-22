@@ -1,8 +1,17 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
+import dynamic from 'next/dynamic'
+
+const ReactQuill = dynamic(() => import('react-quill'), { 
+  ssr: false,
+  loading: () => <div className="border border-gray-300 rounded-md p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">Loading editor...</div>
+})
+
+// Import CSS only on client side
+if (typeof window !== 'undefined') {
+  import('react-quill/dist/quill.snow.css')
+}
 
 interface SimpleRichTextEditorProps {
   content: string
@@ -19,13 +28,6 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
   disabled = false,
   className = ''
 }) => {
-  const [isMounted, setIsMounted] = useState(false)
-  const [hasError, setHasError] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
   // Quill toolbar configuration
   const modules = {
     toolbar: [
@@ -45,29 +47,6 @@ const SimpleRichTextEditor: React.FC<SimpleRichTextEditorProps> = ({
     'list', 'bullet', 'align', 'blockquote', 'code-block',
     'link', 'image', 'color', 'background'
   ]
-
-  if (!isMounted) {
-    return (
-      <div className={`border border-gray-300 rounded-md ${className}`}>
-        <div className="p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">
-          Loading editor...
-        </div>
-      </div>
-    )
-  }
-
-  if (hasError) {
-    return (
-      <div className={`border border-gray-300 rounded-md ${className}`}>
-        <div className="p-4 min-h-[200px] flex items-center justify-center text-gray-500 bg-gray-50">
-          <div className="text-center">
-            <p className="text-red-600 mb-2">Editor failed to load</p>
-            <p className="text-sm">Please refresh the page or try again</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className={`${className}`}>

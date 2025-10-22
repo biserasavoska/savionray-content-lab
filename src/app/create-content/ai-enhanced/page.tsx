@@ -79,7 +79,7 @@ export default function AIEnhancedCreateContentPage() {
       }
 
       const result = await response.json()
-      router.push(`/ready-content/${result.id}/edit`)
+      router.push(`/create-content/${result.id}/edit`)
     } catch (error) {
       console.error('Error creating content:', error)
       alert('Failed to create content. Please try again.')

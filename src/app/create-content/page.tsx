@@ -46,7 +46,7 @@ export default function CreateContentPage() {
 
       const result = await response.json()
       // Navigate to edit the newly created content
-      router.push(`/ready-content/${result.id}/edit`)
+      router.push(`/create-content/${result.id}/edit`)
     } catch (error) {
       console.error('Error creating content:', error)
       alert('Failed to create content. Please try again.')

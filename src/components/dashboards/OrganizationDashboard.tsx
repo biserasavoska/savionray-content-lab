@@ -299,7 +299,7 @@ export default function OrganizationDashboard({ organizationId }: OrganizationDa
               Create New Idea
             </Button>
             <Button 
-              onClick={() => window.location.href = '/create-content'}
+              onClick={() => window.location.href = '/ideas/new'}
               variant="outline"
               className="w-full"
             >

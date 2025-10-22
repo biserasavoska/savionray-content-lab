@@ -4,8 +4,17 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useOrganization } from '@/lib/contexts/OrganizationContext'
-import ReactQuill from 'react-quill'
-import 'react-quill/dist/quill.snow.css'
+import dynamic from 'next/dynamic'
+
+const ReactQuill = dynamic(() => import('react-quill'), { 
+  ssr: false,
+  loading: () => <div className="h-[200px] bg-gray-100 rounded-lg animate-pulse"></div>
+})
+
+// Import CSS only on client side
+if (typeof window !== 'undefined') {
+  import('react-quill/dist/quill.snow.css')
+}
 
 import type { User } from '@/types/content'
 import { AVAILABLE_MODELS } from '@/lib/models'
