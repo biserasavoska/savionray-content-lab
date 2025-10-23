@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     console.log('🔍 Session user:', session?.user?.email || 'no user')
     
     // Test 3: Database connection
-    let dbTest = { status: 'unknown' }
+    let dbTest: { status: string; error?: string } = { status: 'unknown' }
     try {
       await prisma.$queryRaw`SELECT 1`
       dbTest = { status: 'connected' }
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
     
     // Test 4: ChatConversation table
-    let tableTest = { status: 'unknown' }
+    let tableTest: { status: string; count?: number; error?: string } = { status: 'unknown' }
     try {
       const count = await prisma.chatConversation.count()
       tableTest = { status: 'exists', count }
