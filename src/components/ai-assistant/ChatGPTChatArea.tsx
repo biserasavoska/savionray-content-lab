@@ -10,7 +10,7 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline'
 import { chatService } from '@/lib/chat/chat-service'
-import ModelSelector, { getAPIModelId } from './ModelSelector'
+import ModelSelector, { getAPIModelId, getReasoningEffort } from './ModelSelector'
 
 interface ChatGPTChatAreaProps {
   conversationId: string | null
@@ -99,8 +99,17 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
 
       setMessages(prev => [...prev, aiMessage])
 
-      // Stream AI response with API model ID
-      const stream = await chatService.streamResponse(messageContent, conversationId || undefined, getAPIModelId(selectedModel))
+      // Get API model ID and reasoning effort
+      const apiModelId = getAPIModelId(selectedModel)
+      const reasoningEffort = getReasoningEffort(selectedModel)
+
+      // Stream AI response with model configuration
+      const stream = await chatService.streamResponse(
+        messageContent, 
+        conversationId || undefined, 
+        apiModelId,
+        reasoningEffort
+      )
       let fullResponse = ''
 
       await chatService.parseStreamResponse(

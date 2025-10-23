@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { title, model = 'gpt-4o-mini' } = await req.json()
+    const { title, model = 'gpt-5-mini' } = await req.json()
 
     // Get user's organization ID
     const userOrg = await prisma.organizationUser.findFirst({

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    const { message, conversationId, model = 'gpt-4o-mini' } = await req.json()
+    const { message, conversationId, model = 'gpt-5-mini', reasoningEffort } = await req.json()
 
     if (!message) {
       return new Response('Message is required', { status: 400 })
@@ -64,11 +64,32 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Prepare messages for OpenAI
+          // Prepare messages for OpenAI with optimized system prompt for GPT-5
           const messages = [
             {
               role: 'system',
-              content: 'You are Savion Ray AI, a helpful assistant for content creation and marketing. Provide clear, professional, and actionable responses.'
+              content: `You are Savion Ray AI, a helpful assistant for content creation and marketing.
+
+<core_principles>
+- Provide clear, professional, and actionable responses
+- Focus on content strategy, creation, and marketing excellence
+- Be thorough yet concise - provide complete answers without unnecessary elaboration
+- When helping with content, consider audience, tone, and platform best practices
+</core_principles>
+
+<persistence>
+- Keep going until the user's query is completely resolved
+- Don't stop at uncertainty - research or deduce the most reasonable approach
+- Only hand back to the user when the task is truly complete
+</persistence>
+
+<expertise>
+- Content strategy and planning
+- Social media marketing
+- Brand voice and messaging
+- SEO and content optimization
+- Multi-platform content adaptation
+</expertise>`
             },
             ...conversationHistory,
             {
@@ -77,14 +98,22 @@ export async function POST(req: NextRequest) {
             }
           ]
 
-          // Create OpenAI streaming request
-          const openaiStream = await openai.chat.completions.create({
+          // Build OpenAI request configuration
+          const requestConfig: any = {
             model: model,
             messages: messages,
             stream: true,
             temperature: 0.7,
-            max_tokens: 2000
-          })
+            max_tokens: 4000 // Increased for GPT-5's capabilities
+          }
+
+          // Add reasoning_effort for GPT-5 models and reasoning models
+          if (reasoningEffort && ['low', 'medium', 'high'].includes(reasoningEffort)) {
+            requestConfig.reasoning_effort = reasoningEffort
+          }
+
+          // Create OpenAI streaming request
+          const openaiStream = await openai.chat.completions.create(requestConfig)
 
           let fullResponse = ''
 

@@ -77,20 +77,42 @@ const MODEL_OPTIONS: ModelOption[] = [
   }
 ]
 
-// Map model IDs to actual OpenAI API model names
+// Map model IDs to actual OpenAI API model names and reasoning effort
 export const getAPIModelId = (modelId: string): string => {
   const mapping: { [key: string]: string } = {
-    'gpt-5-auto': 'gpt-4o',  // Until GPT-5 is available, use GPT-4o
-    'gpt-5-instant': 'gpt-4o-mini',
-    'gpt-5-thinking-mini': 'gpt-4o',
-    'gpt-5-thinking': 'gpt-4o',
-    'gpt-5-pro': 'gpt-4o',
+    // GPT-5 models - using actual GPT-5 API names
+    'gpt-5-auto': 'gpt-5-chat-latest',
+    'gpt-5-instant': 'gpt-5-nano',
+    'gpt-5-thinking-mini': 'gpt-5-mini',
+    'gpt-5-thinking': 'gpt-5',
+    'gpt-5-pro': 'gpt-5-pro',
+    // Legacy models
     'gpt-4o': 'gpt-4o',
     'gpt-4': 'gpt-4',
-    'o3': 'gpt-4o', // Map reasoning models to GPT-4o for now
-    'o4-mini': 'gpt-4o-mini'
+    // Reasoning models (o-series use Responses API)
+    'o3': 'o3',
+    'o4-mini': 'o4-mini'
   }
-  return mapping[modelId] || 'gpt-4o-mini'
+  return mapping[modelId] || 'gpt-5-mini'
+}
+
+// Get reasoning effort level based on model selection
+export const getReasoningEffort = (modelId: string): 'low' | 'medium' | 'high' | undefined => {
+  const effortMap: { [key: string]: 'low' | 'medium' | 'high' | undefined } = {
+    'gpt-5-auto': 'medium',        // Auto decides but defaults to medium
+    'gpt-5-instant': 'low',        // Fast, minimal reasoning
+    'gpt-5-thinking-mini': 'medium', // Quick thinking
+    'gpt-5-thinking': 'high',      // Deep thinking
+    'gpt-5-pro': 'high',           // Research-grade
+    'o3': 'high',                  // Advanced reasoning
+    'o4-mini': 'medium'            // Fast reasoning
+  }
+  return effortMap[modelId]
+}
+
+// Check if model requires Responses API (for reasoning models)
+export const requiresResponsesAPI = (modelId: string): boolean => {
+  return modelId === 'o3' || modelId === 'o4-mini'
 }
 
 interface ModelSelectorProps {
