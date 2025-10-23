@@ -5,7 +5,9 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
   try {
+    console.log('🔍 DEBUG: Chat conversations API called')
     const session = await getServerSession(authOptions)
+    console.log('🔍 DEBUG: Session check result:', session?.user ? 'authenticated' : 'not authenticated')
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
