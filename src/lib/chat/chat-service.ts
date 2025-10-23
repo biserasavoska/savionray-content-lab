@@ -29,7 +29,9 @@ export class ChatService {
 
   // Get all conversations
   async getConversations(): Promise<Conversation[]> {
-    const response = await fetch(`${this.baseUrl}/conversations`)
+    const response = await fetch(`${this.baseUrl}/conversations`, {
+      credentials: 'include'
+    })
     
     if (!response.ok) {
       throw new Error('Failed to fetch conversations')
@@ -46,6 +48,7 @@ export class ChatService {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({ title, model }),
     })
     
@@ -122,7 +125,9 @@ export class ChatService {
 
   // Get messages for a conversation
   async getMessages(conversationId: string): Promise<Message[]> {
-    const response = await fetch(`${this.baseUrl}/messages?conversationId=${conversationId}`)
+    const response = await fetch(`${this.baseUrl}/messages?conversationId=${conversationId}`, {
+      credentials: 'include'
+    })
     
     if (!response.ok) {
       throw new Error('Failed to fetch messages')
@@ -144,6 +149,7 @@ export class ChatService {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({
         message,
         conversationId,
