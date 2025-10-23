@@ -34,7 +34,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ conversations })
   } catch (error) {
     console.error('Error fetching conversations:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
@@ -82,6 +87,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ conversation })
   } catch (error) {
     console.error('Error creating conversation:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
