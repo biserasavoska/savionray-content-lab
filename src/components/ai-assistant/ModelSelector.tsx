@@ -77,23 +77,24 @@ const MODEL_OPTIONS: ModelOption[] = [
   }
 ]
 
-// Map model IDs to actual OpenAI API model names and reasoning effort
+// Map model IDs to actual OpenAI API model names
+// NOTE: Using currently available models until GPT-5 is released
 export const getAPIModelId = (modelId: string): string => {
   const mapping: { [key: string]: string } = {
-    // GPT-5 models - using actual GPT-5 API names
-    'gpt-5-auto': 'gpt-5-chat-latest',
-    'gpt-5-instant': 'gpt-5-nano',
-    'gpt-5-thinking-mini': 'gpt-5-mini',
-    'gpt-5-thinking': 'gpt-5',
-    'gpt-5-pro': 'gpt-5-pro',
+    // GPT-5 models - mapping to GPT-4 equivalents until GPT-5 is available
+    'gpt-5-auto': 'gpt-4o',           // Auto: balanced performance
+    'gpt-5-instant': 'gpt-4o-mini',   // Instant: fastest responses
+    'gpt-5-thinking-mini': 'gpt-4o-mini', // Thinking mini: quick but good
+    'gpt-5-thinking': 'gpt-4o',       // Thinking: deep reasoning
+    'gpt-5-pro': 'gpt-4o',            // Pro: best quality
     // Legacy models
     'gpt-4o': 'gpt-4o',
-    'gpt-4': 'gpt-4',
-    // Reasoning models (o-series use Responses API)
-    'o3': 'o3',
-    'o4-mini': 'o4-mini'
+    'gpt-4': 'gpt-4-turbo-preview',   // Use gpt-4-turbo-preview for GPT-4
+    // Reasoning models - mapping to GPT-4o until o-series is available
+    'o3': 'gpt-4o',
+    'o4-mini': 'gpt-4o-mini'
   }
-  return mapping[modelId] || 'gpt-5-mini'
+  return mapping[modelId] || 'gpt-4o-mini'
 }
 
 // Get reasoning effort level based on model selection

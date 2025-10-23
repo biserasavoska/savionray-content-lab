@@ -136,7 +136,7 @@ export class ChatService {
   async streamResponse(
     message: string, 
     conversationId?: string, 
-    model: string = 'gpt-5-mini',
+    model: string = 'gpt-4o-mini',
     reasoningEffort?: 'low' | 'medium' | 'high'
   ): Promise<ReadableStream<Uint8Array>> {
     const response = await fetch(`${this.baseUrl}/stream`, {

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    const { message, conversationId, model = 'gpt-5-mini', reasoningEffort } = await req.json()
+    const { message, conversationId, model = 'gpt-4o-mini', reasoningEffort } = await req.json()
 
     if (!message) {
       return new Response('Message is required', { status: 400 })
