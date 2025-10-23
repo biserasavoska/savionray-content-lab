@@ -40,7 +40,7 @@ export class ChatService {
   }
 
   // Create a new conversation
-  async createConversation(title?: string, model: string = 'gpt-5-mini'): Promise<Conversation> {
+  async createConversation(title?: string, model: string = 'gpt-4o-mini'): Promise<Conversation> {
     const response = await fetch(`${this.baseUrl}/conversations`, {
       method: 'POST',
       headers: {
@@ -133,7 +133,12 @@ export class ChatService {
   }
 
   // Stream a response from the AI
-  async streamResponse(message: string, conversationId?: string, model: string = 'gpt-5-mini'): Promise<ReadableStream<Uint8Array>> {
+  async streamResponse(
+    message: string, 
+    conversationId?: string, 
+    model: string = 'gpt-4o-mini',
+    reasoningEffort?: 'low' | 'medium' | 'high'
+  ): Promise<ReadableStream<Uint8Array>> {
     const response = await fetch(`${this.baseUrl}/stream`, {
       method: 'POST',
       headers: {
@@ -143,6 +148,7 @@ export class ChatService {
         message,
         conversationId,
         model,
+        reasoningEffort,
       }),
     })
     

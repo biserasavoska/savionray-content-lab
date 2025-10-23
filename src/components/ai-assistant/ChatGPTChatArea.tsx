@@ -10,6 +10,7 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline'
 import { chatService } from '@/lib/chat/chat-service'
+import ModelSelector, { getAPIModelId, getReasoningEffort } from './ModelSelector'
 
 interface ChatGPTChatAreaProps {
   conversationId: string | null
@@ -28,7 +29,7 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
-  const [selectedModel, setSelectedModel] = useState('ChatGPT 5 Thinking')
+  const [selectedModel, setSelectedModel] = useState('gpt-5-auto')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -98,8 +99,17 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
 
       setMessages(prev => [...prev, aiMessage])
 
-      // Stream AI response
-      const stream = await chatService.streamResponse(messageContent, conversationId || undefined, selectedModel.toLowerCase())
+      // Get API model ID and reasoning effort
+      const apiModelId = getAPIModelId(selectedModel)
+      const reasoningEffort = getReasoningEffort(selectedModel)
+
+      // Stream AI response with model configuration
+      const stream = await chatService.streamResponse(
+        messageContent, 
+        conversationId || undefined, 
+        apiModelId,
+        reasoningEffort
+      )
       let fullResponse = ''
 
       await chatService.parseStreamResponse(
@@ -162,17 +172,10 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
               </div>
               <span className="font-semibold text-gray-900">Savion Ray AI</span>
             </div>
-            <select 
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
-            >
-              <option value="ChatGPT 5 Thinking">ChatGPT 5 Thinking</option>
-              <option value="ChatGPT 5 Mini">ChatGPT 5 Mini</option>
-              <option value="ChatGPT 5 Pro">ChatGPT 5 Pro</option>
-              <option value="GPT-4o">GPT-4o</option>
-              <option value="GPT-4o Mini">GPT-4o Mini</option>
-            </select>
+            <ModelSelector 
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+            />
           </div>
           
           <div className="flex items-center space-x-2">

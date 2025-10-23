@@ -1,7 +1,19 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { generateSocialContent } from '@/lib/openai'
+import { prisma } from '@/lib/prisma'
+
+const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+  }
+  
+  const { OpenAI } = require('openai');
+  return new OpenAI({
+    apiKey: apiKey,
+  });
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,35 +22,138 @@ export async function POST(req: NextRequest) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    const { message, conversationId, model = 'gpt-5-mini' } = await req.json()
+    const { message, conversationId, model = 'gpt-4o-mini', reasoningEffort } = await req.json()
 
     if (!message) {
       return new Response('Message is required', { status: 400 })
+    }
+
+    // Validate message length
+    if (message.length > 4000) {
+      return new Response('Message too long (max 4000 characters)', { status: 400 })
+    }
+
+    // Get OpenAI client
+    const openai = getOpenAIClient()
+
+    // Get conversation history if conversationId is provided
+    let conversationHistory: any[] = []
+    if (conversationId) {
+      const conversation = await prisma.chatConversation.findFirst({
+        where: {
+          id: conversationId,
+          createdById: session.user.id
+        },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+            take: 10 // Last 10 messages for context
+          }
+        }
+      })
+
+      if (conversation) {
+        conversationHistory = conversation.messages.map(msg => ({
+          role: msg.role.toLowerCase(),
+          content: msg.content
+        }))
+      }
     }
 
     // Create a streaming response
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Generate content using existing OpenAI integration
-          const content = await generateSocialContent({
-            title: 'Chat Response',
-            description: message,
-            format: 'chat-response',
-            model
-          })
+          // Prepare messages for OpenAI with optimized system prompt for GPT-5
+          const messages = [
+            {
+              role: 'system',
+              content: `You are Savion Ray AI, a helpful assistant for content creation and marketing.
 
-          // Stream the response
-          const responseText = content.postText || 'I apologize, but I could not generate a response at this time.'
+<core_principles>
+- Provide clear, professional, and actionable responses
+- Focus on content strategy, creation, and marketing excellence
+- Be thorough yet concise - provide complete answers without unnecessary elaboration
+- When helping with content, consider audience, tone, and platform best practices
+</core_principles>
+
+<persistence>
+- Keep going until the user's query is completely resolved
+- Don't stop at uncertainty - research or deduce the most reasonable approach
+- Only hand back to the user when the task is truly complete
+</persistence>
+
+<expertise>
+- Content strategy and planning
+- Social media marketing
+- Brand voice and messaging
+- SEO and content optimization
+- Multi-platform content adaptation
+</expertise>`
+            },
+            ...conversationHistory,
+            {
+              role: 'user',
+              content: message
+            }
+          ]
+
+          // Build OpenAI request configuration
+          const requestConfig: any = {
+            model: model,
+            messages: messages,
+            stream: true,
+            temperature: 0.7,
+            max_tokens: 4000 // Increased for GPT-5's capabilities
+          }
+
+          // NOTE: reasoning_effort parameter will be added when officially supported by OpenAI API
+          // For now, model selection implicitly controls reasoning depth:
+          // - gpt-5-nano: fastest, minimal reasoning
+          // - gpt-5-mini: balanced speed and quality
+          // - gpt-5: deep reasoning and analysis
+          // - gpt-5-pro: maximum reasoning depth
           
-          // Send response in chunks to simulate streaming
-          const words = responseText.split(' ')
-          for (let i = 0; i < words.length; i++) {
-            const chunk = words[i] + (i < words.length - 1 ? ' ' : '')
-            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content: chunk })}\n\n`))
+          // When reasoning_effort becomes available, uncomment:
+          // if (reasoningEffort && ['low', 'medium', 'high'].includes(reasoningEffort)) {
+          //   requestConfig.reasoning_effort = reasoningEffort
+          // }
+
+          // Create OpenAI streaming request
+          const openaiStream = await openai.chat.completions.create(requestConfig)
+
+          let fullResponse = ''
+
+          // Stream the response from OpenAI
+          for await (const chunk of openaiStream) {
+            const content = chunk.choices[0]?.delta?.content
             
-            // Add a small delay to simulate streaming
-            await new Promise(resolve => setTimeout(resolve, 50))
+            if (content) {
+              fullResponse += content
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
+            }
+          }
+
+          // Save the AI response to database if conversationId is provided
+          if (conversationId && fullResponse) {
+            try {
+              await prisma.chatMessage.create({
+                data: {
+                  conversationId,
+                  role: 'ASSISTANT',
+                  content: fullResponse
+                }
+              })
+
+              // Update conversation timestamp
+              await prisma.chatConversation.update({
+                where: { id: conversationId },
+                data: { updatedAt: new Date() }
+              })
+            } catch (dbError) {
+              console.error('Error saving AI response to database:', dbError)
+              // Don't fail the request if database save fails
+            }
           }
 
           // Send completion signal
