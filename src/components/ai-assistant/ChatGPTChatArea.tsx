@@ -10,6 +10,7 @@ import {
   PlusIcon
 } from '@heroicons/react/24/outline'
 import { chatService } from '@/lib/chat/chat-service'
+import ModelSelector, { getAPIModelId } from './ModelSelector'
 
 interface ChatGPTChatAreaProps {
   conversationId: string | null
@@ -28,7 +29,7 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
-  const [selectedModel, setSelectedModel] = useState('GPT-4o Mini')
+  const [selectedModel, setSelectedModel] = useState('gpt-5-auto')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -98,19 +99,8 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
 
       setMessages(prev => [...prev, aiMessage])
 
-      // Map display model names to actual OpenAI model IDs
-      const getModelId = (displayName: string): string => {
-        const modelMap: { [key: string]: string } = {
-          'GPT-4o Mini': 'gpt-4o-mini',
-          'GPT-4o': 'gpt-4o',
-          'GPT-4': 'gpt-4',
-          'GPT-3.5 Turbo': 'gpt-3.5-turbo'
-        }
-        return modelMap[displayName] || 'gpt-4o-mini'
-      }
-
-      // Stream AI response
-      const stream = await chatService.streamResponse(messageContent, conversationId || undefined, getModelId(selectedModel))
+      // Stream AI response with API model ID
+      const stream = await chatService.streamResponse(messageContent, conversationId || undefined, getAPIModelId(selectedModel))
       let fullResponse = ''
 
       await chatService.parseStreamResponse(
@@ -173,16 +163,10 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
               </div>
               <span className="font-semibold text-gray-900">Savion Ray AI</span>
             </div>
-            <select 
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
-            >
-              <option value="GPT-4o Mini">GPT-4o Mini</option>
-              <option value="GPT-4o">GPT-4o</option>
-              <option value="GPT-4">GPT-4</option>
-              <option value="GPT-3.5 Turbo">GPT-3.5 Turbo</option>
-            </select>
+            <ModelSelector 
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+            />
           </div>
           
           <div className="flex items-center space-x-2">
