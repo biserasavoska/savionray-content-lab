@@ -107,10 +107,17 @@ export async function POST(req: NextRequest) {
             max_tokens: 4000 // Increased for GPT-5's capabilities
           }
 
-          // Add reasoning_effort for GPT-5 models and reasoning models
-          if (reasoningEffort && ['low', 'medium', 'high'].includes(reasoningEffort)) {
-            requestConfig.reasoning_effort = reasoningEffort
-          }
+          // NOTE: reasoning_effort parameter will be added when officially supported by OpenAI API
+          // For now, model selection implicitly controls reasoning depth:
+          // - gpt-5-nano: fastest, minimal reasoning
+          // - gpt-5-mini: balanced speed and quality
+          // - gpt-5: deep reasoning and analysis
+          // - gpt-5-pro: maximum reasoning depth
+          
+          // When reasoning_effort becomes available, uncomment:
+          // if (reasoningEffort && ['low', 'medium', 'high'].includes(reasoningEffort)) {
+          //   requestConfig.reasoning_effort = reasoningEffort
+          // }
 
           // Create OpenAI streaming request
           const openaiStream = await openai.chat.completions.create(requestConfig)
