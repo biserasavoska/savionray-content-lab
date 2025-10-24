@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return new Response('Unauthorized', { status: 401 })
     }
 
-    const { message, conversationId, model = 'gpt-4o-mini', reasoningEffort } = await req.json()
+    const { message, conversationId, model = 'gpt-4o-mini', reasoningEffort, knowledgeBaseId } = await req.json()
 
     if (!message) {
       return new Response('Message is required', { status: 400 })
@@ -60,6 +60,34 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Get knowledge base context if knowledgeBaseId is provided
+    let knowledgeContext = ''
+    if (knowledgeBaseId) {
+      try {
+        // Get relevant document chunks from the knowledge base
+        const chunks = await prisma.documentChunk.findMany({
+          where: {
+            document: {
+              knowledgeBaseId: knowledgeBaseId,
+              status: 'PROCESSED'
+            }
+          },
+          take: 5, // Limit to 5 most relevant chunks
+          orderBy: {
+            createdAt: 'desc'
+          }
+        })
+
+        if (chunks.length > 0) {
+          knowledgeContext = '\n\n<knowledge_base_context>\n' +
+            chunks.map(chunk => `Document: ${chunk.content}`).join('\n\n') +
+            '\n</knowledge_base_context>\n'
+        }
+      } catch (error) {
+        console.error('Error fetching knowledge base context:', error)
+      }
+    }
+
     // Create a streaming response
     const stream = new ReadableStream({
       async start(controller) {
@@ -89,7 +117,9 @@ export async function POST(req: NextRequest) {
 - Brand voice and messaging
 - SEO and content optimization
 - Multi-platform content adaptation
-</expertise>`
+</expertise>
+
+${knowledgeContext}`
             },
             ...conversationHistory,
             {

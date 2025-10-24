@@ -48,6 +48,8 @@ export default function KnowledgeBaseSidebar({
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newKnowledgeBaseName, setNewKnowledgeBaseName] = useState('')
   const [newKnowledgeBaseDescription, setNewKnowledgeBaseDescription] = useState('')
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploadingFiles, setUploadingFiles] = useState(false)
 
   // Load knowledge bases on component mount
   useEffect(() => {
@@ -92,6 +94,27 @@ export default function KnowledgeBaseSidebar({
       }
     } catch (error) {
       console.error('Error deleting knowledge base:', error)
+    }
+  }
+
+  const handleFileUpload = async (files: FileList) => {
+    if (!selectedKnowledgeBase) return
+
+    try {
+      setUploadingFiles(true)
+      const uploadPromises = Array.from(files).map(file => 
+        knowledgeBaseService.uploadDocument(selectedKnowledgeBase, file)
+      )
+      
+      await Promise.all(uploadPromises)
+      
+      // Reload knowledge bases to show updated document counts
+      await loadKnowledgeBases()
+      setShowUploadModal(false)
+    } catch (error) {
+      console.error('Error uploading files:', error)
+    } finally {
+      setUploadingFiles(false)
     }
   }
 
@@ -199,10 +222,49 @@ export default function KnowledgeBaseSidebar({
       {/* Upload Button */}
       {selectedKnowledgeBase && (
         <div className="p-4 border-t border-gray-200">
-          <button className="w-full flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={() => setShowUploadModal(true)}
+            className="w-full flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             <ArrowUpTrayIcon className="h-5 w-5" />
             <span>Upload Documents</span>
           </button>
+        </div>
+      )}
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Upload Documents</h3>
+            
+            <div className="mb-4">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.txt,.doc,.docx,.md"
+                onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                disabled={uploadingFiles}
+              />
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={uploadingFiles}
+              >
+                Cancel
+              </button>
+            </div>
+            
+            {uploadingFiles && (
+              <div className="mt-4 text-center text-blue-600">
+                Uploading files...
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

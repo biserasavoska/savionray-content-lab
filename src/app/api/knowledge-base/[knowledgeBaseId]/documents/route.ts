@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { documentProcessor } from '@/lib/knowledge-base/document-processor'
 
 interface RouteParams {
   params: {
@@ -87,11 +88,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       }
     })
 
-    // TODO: Process file content and create chunks
-    // For now, we'll mark it as processing
-    await prisma.knowledgeDocument.update({
-      where: { id: document.id },
-      data: { status: 'PROCESSING' }
+    // Process the document asynchronously
+    documentProcessor.processDocument(document.id).catch(error => {
+      console.error('Error processing document:', error)
     })
 
     return NextResponse.json({ document })

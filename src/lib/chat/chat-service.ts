@@ -142,7 +142,8 @@ export class ChatService {
     message: string, 
     conversationId?: string, 
     model: string = 'gpt-4o-mini',
-    reasoningEffort?: 'low' | 'medium' | 'high'
+    reasoningEffort?: 'low' | 'medium' | 'high',
+    knowledgeBaseId?: string
   ): Promise<ReadableStream<Uint8Array>> {
     const response = await fetch(`${this.baseUrl}/stream`, {
       method: 'POST',
@@ -155,6 +156,7 @@ export class ChatService {
         conversationId,
         model,
         reasoningEffort,
+        knowledgeBaseId,
       }),
     })
     

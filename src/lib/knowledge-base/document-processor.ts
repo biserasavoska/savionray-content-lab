@@ -1,21 +1,13 @@
 import { prisma } from '@/lib/prisma'
 
-interface DocumentChunk {
-  content: string
-  metadata: {
-    page?: number
-    section?: string
-    [key: string]: any
-  }
+export interface DocumentProcessor {
+  processDocument(documentId: string): Promise<void>
 }
 
-export class DocumentProcessor {
-  private static readonly CHUNK_SIZE = 1000
-  private static readonly CHUNK_OVERLAP = 200
-
-  static async processDocument(documentId: string): Promise<void> {
+export class SimpleDocumentProcessor implements DocumentProcessor {
+  async processDocument(documentId: string): Promise<void> {
     try {
-      // Get document
+      // Get the document
       const document = await prisma.knowledgeDocument.findUnique({
         where: { id: documentId }
       })
@@ -30,52 +22,41 @@ export class DocumentProcessor {
         data: { status: 'PROCESSING' }
       })
 
-      // Extract text based on file type
-      let text = ''
-      switch (document.contentType) {
-        case 'text/plain':
-          text = await this.extractTextFromTxt(document.filename)
-          break
-        case 'text/markdown':
-          text = await this.extractTextFromMarkdown(document.filename)
-          break
-        case 'application/pdf':
-          text = await this.extractTextFromPdf(document.filename)
-          break
-        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-          text = await this.extractTextFromDocx(document.filename)
-          break
-        default:
-          throw new Error(`Unsupported file type: ${document.contentType}`)
-      }
+      // For now, create a simple chunk with the filename as content
+      // In a real implementation, you would:
+      // 1. Extract text from the file (PDF, DOCX, etc.)
+      // 2. Split into chunks
+      // 3. Generate embeddings
+      // 4. Store chunks in database
 
-      // Create chunks
-      const chunks = this.createChunks(text)
-      
-      // Save chunks to database
-      for (const [index, chunk] of chunks.entries()) {
-        await prisma.documentChunk.create({
-          data: {
-            content: chunk.content,
-            metadata: chunk.metadata,
-            chunkIndex: index,
-            documentId
+      const chunkContent = `Document: ${document.originalName}\nFilename: ${document.filename}\nSize: ${document.size} bytes\nContent Type: ${document.contentType}`
+
+      await prisma.documentChunk.create({
+        data: {
+          documentId: documentId,
+          content: chunkContent,
+          chunkIndex: 0,
+          embedding: new Array(1536).fill(0), // Placeholder embedding
+          metadata: {
+            filename: document.filename,
+            originalName: document.originalName,
+            contentType: document.contentType,
+            size: document.size
           }
-        })
-      }
-
-      // Update document status to completed
-      await prisma.knowledgeDocument.update({
-        where: { id: documentId },
-        data: { 
-          status: 'PROCESSED'
         }
       })
 
+      // Update status to processed
+      await prisma.knowledgeDocument.update({
+        where: { id: documentId },
+        data: { status: 'PROCESSED' }
+      })
+
+      console.log(`✅ Document ${documentId} processed successfully`)
     } catch (error) {
-      console.error('Error processing document:', error)
+      console.error(`❌ Error processing document ${documentId}:`, error)
       
-      // Update document status to failed
+      // Update status to failed
       await prisma.knowledgeDocument.update({
         where: { id: documentId },
         data: { status: 'FAILED' }
@@ -84,75 +65,6 @@ export class DocumentProcessor {
       throw error
     }
   }
-
-  private static createChunks(text: string): DocumentChunk[] {
-    const chunks: DocumentChunk[] = []
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    
-    let currentChunk = ''
-    let chunkIndex = 0
-    
-    for (const sentence of sentences) {
-      const trimmedSentence = sentence.trim()
-      
-      if (currentChunk.length + trimmedSentence.length > this.CHUNK_SIZE) {
-        // Save current chunk
-        chunks.push({
-          content: currentChunk.trim(),
-          metadata: {
-            chunkIndex,
-            wordCount: currentChunk.split(' ').length
-          }
-        })
-        
-        // Start new chunk with overlap
-        const overlap = this.getOverlapText(currentChunk)
-        currentChunk = overlap + ' ' + trimmedSentence
-        chunkIndex++
-      } else {
-        currentChunk += (currentChunk ? '. ' : '') + trimmedSentence
-      }
-    }
-    
-    // Add the last chunk
-    if (currentChunk.trim()) {
-      chunks.push({
-        content: currentChunk.trim(),
-        metadata: {
-          chunkIndex,
-          wordCount: currentChunk.split(' ').length
-        }
-      })
-    }
-    
-    return chunks
-  }
-
-  private static getOverlapText(text: string): string {
-    const words = text.split(' ')
-    const overlapWords = Math.min(this.CHUNK_OVERLAP, words.length)
-    return words.slice(-overlapWords).join(' ')
-  }
-
-  // Placeholder methods for text extraction
-  // In a real implementation, you would use libraries like pdf-parse, mammoth, etc.
-  private static async extractTextFromTxt(fileName: string): Promise<string> {
-    // TODO: Implement actual text extraction
-    return `Sample text content from ${fileName}. This is a placeholder implementation.`
-  }
-
-  private static async extractTextFromMarkdown(fileName: string): Promise<string> {
-    // TODO: Implement actual markdown text extraction
-    return `Sample markdown content from ${fileName}. This is a placeholder implementation.`
-  }
-
-  private static async extractTextFromPdf(fileName: string): Promise<string> {
-    // TODO: Implement actual PDF text extraction using pdf-parse
-    return `Sample PDF content from ${fileName}. This is a placeholder implementation.`
-  }
-
-  private static async extractTextFromDocx(fileName: string): Promise<string> {
-    // TODO: Implement actual DOCX text extraction using mammoth
-    return `Sample DOCX content from ${fileName}. This is a placeholder implementation.`
-  }
 }
+
+export const documentProcessor = new SimpleDocumentProcessor()

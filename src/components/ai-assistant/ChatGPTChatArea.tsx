@@ -108,7 +108,8 @@ export default function ChatGPTChatArea({ conversationId, knowledgeBaseId }: Cha
         messageContent, 
         conversationId || undefined, 
         apiModelId,
-        reasoningEffort
+        reasoningEffort,
+        knowledgeBaseId || undefined
       )
       let fullResponse = ''
 

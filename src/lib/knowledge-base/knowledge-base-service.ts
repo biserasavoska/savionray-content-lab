@@ -41,7 +41,9 @@ export class KnowledgeBaseService {
 
   // Get all knowledge bases
   async getKnowledgeBases(): Promise<KnowledgeBase[]> {
-    const response = await fetch(`${this.baseUrl}`)
+    const response = await fetch(`${this.baseUrl}`, {
+      credentials: 'include'
+    })
     
     if (!response.ok) {
       throw new Error('Failed to fetch knowledge bases')
@@ -58,6 +60,7 @@ export class KnowledgeBaseService {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({ name, description, isPublic }),
     })
     
@@ -71,7 +74,9 @@ export class KnowledgeBaseService {
 
   // Get a specific knowledge base
   async getKnowledgeBase(id: string): Promise<KnowledgeBase> {
-    const response = await fetch(`${this.baseUrl}/${id}`)
+    const response = await fetch(`${this.baseUrl}/${id}`, {
+      credentials: 'include'
+    })
     
     if (!response.ok) {
       throw new Error('Failed to fetch knowledge base')
@@ -88,6 +93,7 @@ export class KnowledgeBaseService {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify(updates),
     })
     
@@ -103,6 +109,7 @@ export class KnowledgeBaseService {
   async deleteKnowledgeBase(id: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/${id}`, {
       method: 'DELETE',
+      credentials: 'include'
     })
     
     if (!response.ok) {
@@ -112,7 +119,9 @@ export class KnowledgeBaseService {
 
   // Get documents for a knowledge base
   async getDocuments(knowledgeBaseId: string): Promise<KnowledgeDocument[]> {
-    const response = await fetch(`${this.baseUrl}/${knowledgeBaseId}/documents`)
+    const response = await fetch(`${this.baseUrl}/${knowledgeBaseId}/documents`, {
+      credentials: 'include'
+    })
     
     if (!response.ok) {
       throw new Error('Failed to fetch documents')
@@ -132,6 +141,7 @@ export class KnowledgeBaseService {
 
     const response = await fetch(`${this.baseUrl}/${knowledgeBaseId}/documents`, {
       method: 'POST',
+      credentials: 'include',
       body: formData,
     })
     
@@ -150,6 +160,7 @@ export class KnowledgeBaseService {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({ query, limit }),
     })
     
