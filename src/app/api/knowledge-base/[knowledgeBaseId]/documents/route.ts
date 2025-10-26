@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { documentProcessor } from '@/lib/knowledge-base/document-processor'
+import { openAIFileService } from '@/lib/openai-file-service'
 
 interface RouteParams {
   params: {
@@ -76,6 +77,22 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Knowledge base not found' }, { status: 404 })
     }
 
+    // Get file buffer
+    const arrayBuffer = await file.arrayBuffer()
+    const fileBuffer = Buffer.from(arrayBuffer)
+
+    // Upload to OpenAI Files API
+    let openaiFileId: string | null = null
+    try {
+      console.log('📤 Uploading file to OpenAI...')
+      const openaiFile = await openAIFileService.uploadFile(fileBuffer, file.name)
+      openaiFileId = openaiFile.id
+      console.log('✅ File uploaded to OpenAI:', openaiFileId)
+    } catch (error) {
+      console.error('❌ Failed to upload to OpenAI:', error)
+      // Continue without OpenAI upload for now
+    }
+
     // Create document record
     const document = await prisma.knowledgeDocument.create({
       data: {
@@ -84,6 +101,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         contentType: file.type,
         size: file.size,
         status: 'UPLOADED',
+        openaiFileId,
         knowledgeBaseId
       }
     })

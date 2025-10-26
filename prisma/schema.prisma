@@ -515,6 +515,7 @@ model KnowledgeDocument {
   contentType    String
   size           Int
   url            String?           
+  openaiFileId   String?           // OpenAI File ID for File Search
   status         DocumentStatus    @default(UPLOADED)
   metadata       Json?             
   createdAt      DateTime          @default(now())
@@ -525,6 +526,7 @@ model KnowledgeDocument {
   
   @@index([knowledgeBaseId])
   @@index([status])
+  @@index([openaiFileId])
 }
 
 model DocumentChunk {

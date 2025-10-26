@@ -9,6 +9,21 @@ This document contains all OpenAI-related resources, documentation, and implemen
 - **[OpenAI Cookbook](https://cookbook.openai.com/)** - Official examples and best practices  
 - **[OpenAI Platform Overview](https://platform.openai.com/docs/overview)** - Platform features and capabilities
 
+### **Latest Model Guide**
+- **[Latest Model Guide](https://platform.openai.com/docs/guides/latest-model)** - Using the latest models and capabilities
+- **[Migrate to Responses API](https://platform.openai.com/docs/guides/migrate-to-responses)** - Migration guide for the new Responses API
+- **[OpenAI Libraries](https://platform.openai.com/docs/libraries)** - Official SDKs and libraries
+
+### **Advanced Features & Guides**
+- **[Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)** - Getting structured data from models
+- **[Function Calling](https://platform.openai.com/docs/guides/function-calling)** - Using function calling capabilities
+- **[Web Search Tool](https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses)** - Adding web search capabilities
+- **[File Search Tool](https://platform.openai.com/docs/guides/tools-file-search)** - Searching through uploaded files
+- **[Retrieval Guide](https://platform.openai.com/docs/guides/retrieval)** - Implementing document retrieval
+- **[Conversation State](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)** - Managing conversation state
+- **[PDF Files Handling](https://platform.openai.com/docs/guides/pdf-files?api-mode=responses)** - Working with PDF files
+- **[Prompting Guide](https://platform.openai.com/docs/guides/prompting)** - Best practices for prompting
+
 ### **Reasoning Models & Advanced APIs**
 - **[Responses API - Reasoning Items](https://cookbook.openai.com/examples/responses_api/reasoning_items)** - Official guide for reasoning models (o1, o3, o4-mini)
 - **[OpenAI Reasoning Guide](https://platform.openai.com/docs/guides/reasoning)** - Comprehensive reasoning documentation
