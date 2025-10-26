@@ -116,21 +116,23 @@ export async function POST(req: NextRequest) {
       async start(controller) {
         try {
           // Use Assistants API with File Search if OpenAI files are available
-          if (openaiFileIds.length > 0) {
+          if (openaiFileIds.length > 0 && openaiFileIds.every(id => id !== null && id !== undefined)) {
             console.log(`🎯 Using Assistants API with File Search for knowledge base (${openaiFileIds.length} files)`)
+            console.log('📁 OpenAI File IDs:', openaiFileIds)
             
-            // Create a vector store and add files
-            const vectorStore = await openai.beta.vectorStores.create({
-              name: `Knowledge Base ${knowledgeBaseId}`,
-              file_ids: openaiFileIds
-            })
+            try {
+              // Create a vector store and add files
+              const vectorStore = await openai.beta.vectorStores.create({
+                name: `Knowledge Base ${knowledgeBaseId}`,
+                file_ids: openaiFileIds
+              })
 
-            console.log('✅ Created vector store with files')
+              console.log('✅ Created vector store with files')
 
-            // Create an Assistant with file_search tool
-            const assistant = await openai.beta.assistants.create({
-              name: 'Savion Ray AI Assistant',
-              instructions: `You are Savion Ray AI, a helpful assistant for content creation and marketing.
+              // Create an Assistant with file_search tool
+              const assistant = await openai.beta.assistants.create({
+                name: 'Savion Ray AI Assistant',
+                instructions: `You are Savion Ray AI, a helpful assistant for content creation and marketing.
 You have access to uploaded documents through file search.
 When asked about documents, search through them and provide detailed, accurate information based on the actual content.
 
@@ -139,64 +141,77 @@ Core principles:
 - Focus on content strategy, creation, and marketing excellence
 - Be thorough yet concise - provide complete answers without unnecessary elaboration
 - When helping with content, consider audience, tone, and platform best practices`,
-              model: model,
-              tools: [{ type: 'file_search' }],
-              tool_resources: {
-                file_search: {
-                  vector_store_ids: [vectorStore.id]
-                }
-              }
-            })
-
-            console.log('✅ Created assistant with file search')
-
-            // Create a thread
-            const thread = await openai.beta.threads.create({
-              messages: [
-                ...conversationHistory,
-                {
-                  role: 'user',
-                  content: message
-                }
-              ]
-            })
-
-            console.log('✅ Created thread and starting stream')
-
-            // Stream the response
-            const runStream = await openai.beta.threads.runs.stream(thread.id, {
-              assistant_id: assistant.id
-            })
-
-            let fullResponse = ''
-            for await (const event of runStream) {
-              if (event.event === 'thread.message.delta') {
-                const content = event.data.delta.content?.[0]?.text?.value
-                if (content) {
-                  fullResponse += content
-                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
-                }
-              }
-            }
-
-            // Save the AI response to database if conversationId is provided
-            if (conversationId && fullResponse) {
-              try {
-                await prisma.chatMessage.create({
-                  data: {
-                    conversationId,
-                    role: 'ASSISTANT',
-                    content: fullResponse
+                model: model,
+                tools: [{ type: 'file_search' }],
+                tool_resources: {
+                  file_search: {
+                    vector_store_ids: [vectorStore.id]
                   }
-                })
-              } catch (dbError) {
-                console.error('Error saving message to database:', dbError)
-              }
-            }
+                }
+              })
 
-            controller.close()
-            return
+              console.log('✅ Created assistant with file search')
+
+              // Create a thread
+              const thread = await openai.beta.threads.create({
+                messages: [
+                  ...conversationHistory,
+                  {
+                    role: 'user',
+                    content: message
+                  }
+                ]
+              })
+
+              console.log('✅ Created thread and starting stream')
+
+              // Stream the response
+              const runStream = await openai.beta.threads.runs.stream(thread.id, {
+                assistant_id: assistant.id
+              })
+
+              let fullResponse = ''
+              for await (const event of runStream) {
+                if (event.event === 'thread.message.delta') {
+                  const content = event.data.delta.content?.[0]?.text?.value
+                  if (content) {
+                    fullResponse += content
+                    // Encode with 'data: ' prefix for consistency with chat API
+                    controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
+                  }
+                } else if (event.event === 'thread.run.completed' || event.event === 'thread.run.failed') {
+                  // Signal completion
+                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ done: true })}\n\n`))
+                  break
+                }
+              }
+
+              // Save the AI response to database if conversationId is provided
+              if (conversationId && fullResponse) {
+                try {
+                  await prisma.chatMessage.create({
+                    data: {
+                      conversationId,
+                      role: 'ASSISTANT',
+                      content: fullResponse
+                    }
+                  })
+                } catch (dbError) {
+                  console.error('Error saving message to database:', dbError)
+                }
+              }
+
+              controller.close()
+              return
+            } catch (assistantError) {
+              console.error('❌ Error in Assistants API:', assistantError)
+              // Fall through to regular chat API
+              console.log('📝 Falling back to regular Chat API')
+            }
           }
+
+          // Fallback to regular Chat API if Assistants API failed or no OpenAI files
+          console.log('📝 Using regular Chat API')
 
           // Fallback to regular Chat API if no OpenAI files
           // Prepare messages for OpenAI with optimized system prompt for GPT-5
