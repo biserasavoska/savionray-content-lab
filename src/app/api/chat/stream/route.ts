@@ -62,9 +62,32 @@ export async function POST(req: NextRequest) {
 
     // Get knowledge base context if knowledgeBaseId is provided
     let knowledgeContext = ''
+    let openaiFileIds: string[] = []
+    
     if (knowledgeBaseId) {
       try {
-        // Get relevant document chunks from the knowledge base
+        // Get OpenAI file IDs from the knowledge base
+        const documents = await prisma.knowledgeDocument.findMany({
+          where: {
+            knowledgeBaseId: knowledgeBaseId,
+            status: 'PROCESSED',
+            openaiFileId: {
+              not: null
+            }
+          },
+          select: {
+            openaiFileId: true
+          }
+        })
+
+        // Extract OpenAI file IDs
+        openaiFileIds = documents
+          .map(doc => doc.openaiFileId)
+          .filter((id): id is string => id !== null)
+
+        console.log(`📚 Knowledge base files: ${openaiFileIds.length} files with OpenAI IDs`)
+
+        // Also get document chunks for context (fallback)
         const chunks = await prisma.documentChunk.findMany({
           where: {
             document: {
@@ -72,7 +95,7 @@ export async function POST(req: NextRequest) {
               status: 'PROCESSED'
             }
           },
-          take: 5, // Limit to 5 most relevant chunks
+          take: 5,
           orderBy: {
             createdAt: 'desc'
           }
@@ -92,6 +115,90 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // Use Assistants API with File Search if OpenAI files are available
+          if (openaiFileIds.length > 0) {
+            console.log(`🎯 Using Assistants API with File Search for knowledge base (${openaiFileIds.length} files)`)
+            
+            // Create a vector store and add files
+            const vectorStore = await openai.beta.vectorStores.create({
+              name: `Knowledge Base ${knowledgeBaseId}`,
+              file_ids: openaiFileIds
+            })
+
+            console.log('✅ Created vector store with files')
+
+            // Create an Assistant with file_search tool
+            const assistant = await openai.beta.assistants.create({
+              name: 'Savion Ray AI Assistant',
+              instructions: `You are Savion Ray AI, a helpful assistant for content creation and marketing.
+You have access to uploaded documents through file search.
+When asked about documents, search through them and provide detailed, accurate information based on the actual content.
+
+Core principles:
+- Provide clear, professional, and actionable responses
+- Focus on content strategy, creation, and marketing excellence
+- Be thorough yet concise - provide complete answers without unnecessary elaboration
+- When helping with content, consider audience, tone, and platform best practices`,
+              model: model,
+              tools: [{ type: 'file_search' }],
+              tool_resources: {
+                file_search: {
+                  vector_store_ids: [vectorStore.id]
+                }
+              }
+            })
+
+            console.log('✅ Created assistant with file search')
+
+            // Create a thread
+            const thread = await openai.beta.threads.create({
+              messages: [
+                ...conversationHistory,
+                {
+                  role: 'user',
+                  content: message
+                }
+              ]
+            })
+
+            console.log('✅ Created thread and starting stream')
+
+            // Stream the response
+            const runStream = await openai.beta.threads.runs.stream(thread.id, {
+              assistant_id: assistant.id
+            })
+
+            let fullResponse = ''
+            for await (const event of runStream) {
+              if (event.event === 'thread.message.delta') {
+                const content = event.data.delta.content?.[0]?.text?.value
+                if (content) {
+                  fullResponse += content
+                  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
+                }
+              }
+            }
+
+            // Save the AI response to database if conversationId is provided
+            if (conversationId && fullResponse) {
+              try {
+                await prisma.chatMessage.create({
+                  data: {
+                    conversationId,
+                    role: 'ASSISTANT',
+                    content: fullResponse
+                  }
+                })
+              } catch (dbError) {
+                console.error('Error saving message to database:', dbError)
+              }
+            }
+
+            controller.close()
+            return
+          }
+
+          // Fallback to regular Chat API if no OpenAI files
           // Prepare messages for OpenAI with optimized system prompt for GPT-5
           const messages = [
             {

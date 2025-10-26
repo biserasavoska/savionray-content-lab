@@ -21,9 +21,9 @@ export class OpenAIFileService {
     try {
       console.log(`📤 Uploading file to OpenAI: ${filename}`)
       
-      // Create a blob from buffer
-      const blob = new Blob([fileBuffer])
-      const file = new File([blob], filename)
+      // Convert buffer to Uint8Array which File constructor accepts
+      const uint8Array = new Uint8Array(fileBuffer)
+      const file = new File([uint8Array], filename)
 
       // Upload to OpenAI
       const openaiFile = await this.openai.files.create({
