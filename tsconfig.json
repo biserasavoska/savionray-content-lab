@@ -37,6 +37,9 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/components/ui/lovable",
+    "src/hooks/use-toast-lovable.ts",
+    "src/lib/utils-lovable.ts"
   ]
 }

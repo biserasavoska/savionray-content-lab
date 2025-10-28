@@ -2,6 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Lovable Design System Tokens (HSL-based for shadcn/ui compatibility) */
+@layer base {
+  :root {
+    /* HSL-based design tokens for Lovable components */
+    --lovable-background: 0 0% 100%;
+    --lovable-foreground: 222.2 84% 4.9%;
+    
+    --lovable-card: 0 0% 100%;
+    --lovable-card-foreground: 222.2 84% 4.9%;
+    
+    --lovable-popover: 0 0% 100%;
+    --lovable-popover-foreground: 222.2 84% 4.9%;
+    
+    --lovable-primary: 222.2 47.4% 11.2%;
+    --lovable-primary-foreground: 210 40% 98%;
+    
+    --lovable-secondary: 210 40% 96.1%;
+    --lovable-secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --lovable-muted: 210 40% 96.1%;
+    --lovable-muted-foreground: 215.4 16.3% 46.9%;
+    
+    --lovable-accent: 210 40% 96.1%;
+    --lovable-accent-foreground: 222.2 47.4% 11.2%;
+    
+    --lovable-destructive: 0 84.2% 60.2%;
+    --lovable-destructive-foreground: 210 40% 98%;
+    
+    --lovable-success: 142 76% 36%;
+    --lovable-success-foreground: 210 40% 98%;
+    
+    --lovable-warning: 38 92% 50%;
+    --lovable-warning-foreground: 222.2 47.4% 11.2%;
+    
+    --lovable-info: 199 89% 48%;
+    --lovable-info-foreground: 210 40% 98%;
+    
+    --lovable-border: 214.3 31.8% 91.4%;
+    --lovable-input: 214.3 31.8% 91.4%;
+    --lovable-ring: 222.2 84% 4.9%;
+    
+    --lovable-radius: 0.5rem;
+    
+    /* Sidebar tokens */
+    --lovable-sidebar-background: 0 0% 98%;
+    --lovable-sidebar-foreground: 240 5.3% 26.1%;
+    --lovable-sidebar-primary: 240 5.9% 10%;
+    --lovable-sidebar-primary-foreground: 0 0% 98%;
+    --lovable-sidebar-accent: 240 4.8% 95.9%;
+    --lovable-sidebar-accent-foreground: 240 5.9% 10%;
+    --lovable-sidebar-border: 220 13% 91%;
+    --lovable-sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  
+  .dark {
+    --lovable-background: 222.2 84% 4.9%;
+    --lovable-foreground: 210 40% 98%;
+    
+    --lovable-card: 222.2 84% 4.9%;
+    --lovable-card-foreground: 210 40% 98%;
+    
+    --lovable-popover: 222.2 84% 4.9%;
+    --lovable-popover-foreground: 210 40% 98%;
+    
+    --lovable-primary: 210 40% 98%;
+    --lovable-primary-foreground: 222.2 47.4% 11.2%;
+    
+    --lovable-secondary: 217.2 32.6% 17.5%;
+    --lovable-secondary-foreground: 210 40% 98%;
+    
+    --lovable-muted: 217.2 32.6% 17.5%;
+    --lovable-muted-foreground: 215 20.2% 65.1%;
+    
+    --lovable-accent: 217.2 32.6% 17.5%;
+    --lovable-accent-foreground: 210 40% 98%;
+    
+    --lovable-destructive: 0 62.8% 30.6%;
+    --lovable-destructive-foreground: 210 40% 98%;
+    
+    --lovable-success: 142 70% 45%;
+    --lovable-success-foreground: 210 40% 98%;
+    
+    --lovable-warning: 38 92% 50%;
+    --lovable-warning-foreground: 222.2 47.4% 11.2%;
+    
+    --lovable-info: 199 89% 48%;
+    --lovable-info-foreground: 210 40% 98%;
+    
+    --lovable-border: 217.2 32.6% 17.5%;
+    --lovable-input: 217.2 32.6% 17.5%;
+    --lovable-ring: 212.7 26.8% 83.9%;
+    
+    --lovable-sidebar-background: 240 5.9% 10%;
+    --lovable-sidebar-foreground: 240 4.8% 95.9%;
+    --lovable-sidebar-primary: 224.3 76.3% 48%;
+    --lovable-sidebar-primary-foreground: 0 0% 100%;
+    --lovable-sidebar-accent: 240 3.7% 15.9%;
+    --lovable-sidebar-accent-foreground: 240 4.8% 95.9%;
+    --lovable-sidebar-border: 240 3.7% 15.9%;
+    --lovable-sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
 /* Custom ReactQuill Styles */
 .ql-editor {
   padding: 0 !important;
