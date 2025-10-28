@@ -17,7 +17,7 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // Existing CSS variables as Tailwind colors
+        // Existing CSS variables as Tailwind colors (for backward compatibility)
         bg: 'var(--bg)',
         fg: 'var(--fg)',
         surface: 'var(--surface)',
@@ -27,71 +27,68 @@ const config: Config = {
         border: 'var(--border)',
         input: 'var(--input)',
         'input-border': 'var(--input-border)',
-        // Legacy compatibility
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
         
-        // Lovable Design System Colors (HSL-based)
-        'lovable-border': 'hsl(var(--lovable-border))',
-        'lovable-input': 'hsl(var(--lovable-input))',
-        'lovable-ring': 'hsl(var(--lovable-ring))',
-        'lovable-background': 'hsl(var(--lovable-background))',
-        'lovable-foreground': 'hsl(var(--lovable-foreground))',
-        'lovable-primary': {
-          DEFAULT: 'hsl(var(--lovable-primary))',
-          foreground: 'hsl(var(--lovable-primary-foreground))',
+        // Lovable Design System Colors (HSL-based) - primary system
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
-        'lovable-secondary': {
-          DEFAULT: 'hsl(var(--lovable-secondary))',
-          foreground: 'hsl(var(--lovable-secondary-foreground))',
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
         },
-        'lovable-destructive': {
-          DEFAULT: 'hsl(var(--lovable-destructive))',
-          foreground: 'hsl(var(--lovable-destructive-foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
-        'lovable-success': {
-          DEFAULT: 'hsl(var(--lovable-success))',
-          foreground: 'hsl(var(--lovable-success-foreground))',
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
         },
-        'lovable-warning': {
-          DEFAULT: 'hsl(var(--lovable-warning))',
-          foreground: 'hsl(var(--lovable-warning-foreground))',
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
         },
-        'lovable-info': {
-          DEFAULT: 'hsl(var(--lovable-info))',
-          foreground: 'hsl(var(--lovable-info-foreground))',
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
-        'lovable-muted': {
-          DEFAULT: 'hsl(var(--lovable-muted))',
-          foreground: 'hsl(var(--lovable-muted-foreground))',
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
         },
-        'lovable-accent': {
-          DEFAULT: 'hsl(var(--lovable-accent))',
-          foreground: 'hsl(var(--lovable-accent-foreground))',
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          foreground: 'hsl(var(--success-foreground))',
         },
-        'lovable-popover': {
-          DEFAULT: 'hsl(var(--lovable-popover))',
-          foreground: 'hsl(var(--lovable-popover-foreground))',
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          foreground: 'hsl(var(--warning-foreground))',
         },
-        'lovable-card': {
-          DEFAULT: 'hsl(var(--lovable-card))',
-          foreground: 'hsl(var(--lovable-card-foreground))',
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          foreground: 'hsl(var(--info-foreground))',
         },
-        'lovable-sidebar': {
-          DEFAULT: 'hsl(var(--lovable-sidebar-background))',
-          foreground: 'hsl(var(--lovable-sidebar-foreground))',
-          primary: 'hsl(var(--lovable-sidebar-primary))',
-          'primary-foreground': 'hsl(var(--lovable-sidebar-primary-foreground))',
-          accent: 'hsl(var(--lovable-sidebar-accent))',
-          'accent-foreground': 'hsl(var(--lovable-sidebar-accent-foreground))',
-          border: 'hsl(var(--lovable-sidebar-border))',
-          ring: 'hsl(var(--lovable-sidebar-ring))',
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        sidebar: {
+          DEFAULT: 'hsl(var(--sidebar-background))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          primary: 'hsl(var(--sidebar-primary))',
+          'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
+          accent: 'hsl(var(--sidebar-accent))',
+          'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
+          border: 'hsl(var(--sidebar-border))',
+          ring: 'hsl(var(--sidebar-ring))',
         },
       },
       borderRadius: {
-        'lovable-lg': 'var(--lovable-radius)',
-        'lovable-md': 'calc(var(--lovable-radius) - 2px)',
-        'lovable-sm': 'calc(var(--lovable-radius) - 4px)',
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
         'accordion-down': {
