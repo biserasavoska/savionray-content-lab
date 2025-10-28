@@ -81,6 +81,7 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "hubspot": "^2.3.14",
     "lodash": "^4.17.21",
@@ -94,6 +95,7 @@
     "pdf-parse": "^2.4.5",
     "quill": "^2.0.3",
     "react": "^18",
+    "react-day-picker": "^9.11.1",
     "react-dom": "^18",
     "react-dropzone": "^14.3.8",
     "react-quill": "^2.0.0",
@@ -104,7 +106,8 @@
     "stripe": "^14.17.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "unsplash-js": "^7.0.19"
+    "unsplash-js": "^7.0.19",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.10",
