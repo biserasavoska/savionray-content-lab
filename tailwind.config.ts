@@ -22,10 +22,7 @@ const config: Config = {
         fg: 'var(--fg)',
         surface: 'var(--surface)',
         'surface-elevated': 'var(--surface-elevated)',
-        muted: 'var(--muted)',
         'muted-fg': 'var(--muted-fg)',
-        border: 'var(--border)',
-        input: 'var(--input)',
         'input-border': 'var(--input-border)',
         
         // Lovable Design System Colors (HSL-based) - primary system
