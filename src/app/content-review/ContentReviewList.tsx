@@ -131,11 +131,6 @@ export default function ContentReviewList({ isCreativeUser, isClientUser }: Cont
       if (response.ok) {
         const data = await response.json()
         setAvailablePeriods(data.periods || [])
-        
-        // Set default period to the most recent one
-        if (data.periods && data.periods.length > 0 && selectedPeriod === 'ALL') {
-          setSelectedPeriod(data.periods[0])
-        }
       }
     } catch (err) {
       console.error('Failed to fetch periods:', err)

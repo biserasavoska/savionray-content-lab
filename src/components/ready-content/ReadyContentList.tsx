@@ -59,52 +59,53 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   })
   const [loadingMore, setLoadingMore] = useState(false)
 
-  // Fetch ready content data (initial load only)
-  useEffect(() => {
-    const fetchContent = async () => {
-      if (!currentOrganization) {
-        console.log('No current organization, skipping fetch')
-        setLoading(false)
-        return
-      }
-
-      console.log('Fetching content for organization:', currentOrganization.id)
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const params = new URLSearchParams()
-        params.append('page', '1')
-        params.append('limit', '4')
-        if (selectedPeriod !== 'ALL') {
-          params.append('period', selectedPeriod)
-        }
-        
-        const response = await fetch(`/api/ready-content?${params.toString()}`, {
-          headers: {
-            'x-selected-organization': currentOrganization.id
-          }
-        })
-        
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error('API Error:', response.status, errorText)
-          throw new Error(`Failed to fetch ready content: ${response.status} ${errorText}`)
-        }
-        
-        const data = await response.json()
-        console.log('Initial load - pagination data:', data.pagination)
-        console.log('Initial load - content length:', data.content?.length)
-        setContent(data.content || [])
-        setPagination(data.pagination || pagination)
-      } catch (err) {
-        console.error('Error fetching ready content:', err)
-        setError('Failed to load ready content')
-      } finally {
-        setLoading(false)
-      }
+  // Reusable function to fetch content
+  const fetchContent = async () => {
+    if (!currentOrganization) {
+      console.log('No current organization, skipping fetch')
+      setLoading(false)
+      return
     }
 
+    console.log('Fetching content for organization:', currentOrganization.id)
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const params = new URLSearchParams()
+      params.append('page', '1')
+      params.append('limit', '4')
+      if (selectedPeriod !== 'ALL') {
+        params.append('period', selectedPeriod)
+      }
+      
+      const response = await fetch(`/api/ready-content?${params.toString()}`, {
+        headers: {
+          'x-selected-organization': currentOrganization.id
+        }
+      })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error:', response.status, errorText)
+        throw new Error(`Failed to fetch ready content: ${response.status} ${errorText}`)
+      }
+      
+      const data = await response.json()
+      console.log('Initial load - pagination data:', data.pagination)
+      console.log('Initial load - content length:', data.content?.length)
+      setContent(data.content || [])
+      setPagination(data.pagination || pagination)
+    } catch (err) {
+      console.error('Error fetching ready content:', err)
+      setError('Failed to load ready content')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch ready content data (initial load only)
+  useEffect(() => {
     fetchContent()
     fetchPeriods()
   }, [currentOrganization])
@@ -122,11 +123,6 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
       if (response.ok) {
         const data = await response.json()
         setAvailablePeriods(data.periods || [])
-        
-        // Set default period to the most recent one
-        if (data.periods && data.periods.length > 0 && selectedPeriod === 'ALL') {
-          setSelectedPeriod(data.periods[0])
-        }
       }
     } catch (err) {
       console.error('Failed to fetch periods:', err)
@@ -136,41 +132,6 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   // Refetch content when period changes
   useEffect(() => {
     if (currentOrganization) {
-      const fetchContent = async () => {
-        try {
-          setLoading(true)
-          setError(null)
-          
-          const params = new URLSearchParams()
-          params.append('page', '1')
-          params.append('limit', '4')
-          if (selectedPeriod !== 'ALL') {
-            params.append('period', selectedPeriod)
-          }
-          
-          const response = await fetch(`/api/ready-content?${params.toString()}`, {
-            headers: {
-              'x-selected-organization': currentOrganization.id
-            }
-          })
-          
-          if (!response.ok) {
-            const errorText = await response.text()
-            console.error('API Error:', response.status, errorText)
-            throw new Error(`Failed to fetch ready content: ${response.status} ${errorText}`)
-          }
-          
-          const data = await response.json()
-          setContent(data.content || [])
-          setPagination(data.pagination || pagination)
-        } catch (err) {
-          console.error('Error fetching ready content:', err)
-          setError('Failed to load ready content')
-        } finally {
-          setLoading(false)
-        }
-      }
-
       fetchContent()
     }
   }, [selectedPeriod, currentOrganization])
@@ -272,8 +233,8 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         
         // Refresh the data instead of reloading the page
         setTimeout(async () => {
-          // Reload the page to show updated data
-          window.location.reload()
+          // Refresh data to show updated content
+          await fetchContent()
         }, 1500)
       } else {
         console.error('Failed to update status')
@@ -399,7 +360,11 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
         </div>
         <h3 className="mt-2 text-lg font-medium text-red-900">Error loading content</h3>
         <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>Try Again</Button>
+        <Button onClick={() => {
+          setError(null)
+          setLoading(true)
+          fetchContent()
+        }}>Try Again</Button>
       </div>
     )
   }
