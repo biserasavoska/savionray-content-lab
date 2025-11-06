@@ -205,29 +205,29 @@ export const NavigationPatterns = () => {
               <div className="text-xs font-semibold text-muted-foreground px-3 py-2">
                 CONTENT
               </div>
-              <a
-                href="#"
-                className="flex items-center justify-between px-3 py-2 rounded-md bg-primary/10 text-primary"
+              <button
+                type="button"
+                className="flex items-center justify-between px-3 py-2 rounded-md bg-primary/10 text-primary w-full text-left"
               >
                 <span className="flex items-center gap-2 text-sm font-medium">
                   <FileText className="h-4 w-4" />
                   All Content
                 </span>
                 <Badge variant="secondary">24</Badge>
-              </a>
-              <a
-                href="#"
-                className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted text-sm"
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted text-sm w-full text-left"
               >
                 <span className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Drafts
                 </span>
                 <Badge variant="outline">8</Badge>
-              </a>
-              <a
-                href="#"
-                className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted text-sm"
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted text-sm w-full text-left"
               >
                 <span className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -236,10 +236,10 @@ export const NavigationPatterns = () => {
                 <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
                   5
                 </Badge>
-              </a>
-              <a
-                href="#"
-                className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted text-sm"
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted text-sm w-full text-left"
               >
                 <span className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -248,25 +248,25 @@ export const NavigationPatterns = () => {
                 <Badge variant="outline" className="bg-success/10 text-success border-success/20">
                   11
                 </Badge>
-              </a>
+              </button>
 
               <div className="text-xs font-semibold text-muted-foreground px-3 py-2 mt-4">
                 ORGANIZATION
               </div>
-              <a
-                href="#"
-                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm"
+              <button
+                type="button"
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm w-full text-left"
               >
                 <Folder className="h-4 w-4" />
                 Categories
-              </a>
-              <a
-                href="#"
-                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm"
+              </button>
+              <button
+                type="button"
+                className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted text-sm w-full text-left"
               >
                 <Folder className="h-4 w-4" />
                 Tags
-              </a>
+              </button>
             </nav>
           </div>
         </CardContent>

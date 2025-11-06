@@ -251,7 +251,6 @@ export const ComplexInteractions = () => {
                         value={editValue}
                         onChange={(e) => setEditValue(e.target.value)}
                         className="flex-1"
-                        autoFocus
                       />
                       <Button size="sm" variant="ghost" onClick={saveEdit}>
                         <Save className="h-4 w-4" />

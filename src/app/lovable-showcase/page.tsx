@@ -21,7 +21,7 @@ import ModalDialogPatterns from "@/components/design-system/ModalDialogPatterns"
 import AdvancedTablePatterns from "@/components/design-system/AdvancedTablePatterns";
 import AnimationTransitions from "@/components/design-system/AnimationTransitions";
 import DateTimePickers from "@/components/design-system/DateTimePickers";
-import { Palette, Layout, FileText, Bell, Navigation, Layers, Database, MousePointerClick, BarChart3, Search, Image, Shield, History, Sparkles, AlertCircle, Square, Table as TableIcon, CalendarDays } from "lucide-react";
+import { Palette, Layout, FileText, Bell, Navigation, Layers, Database, MousePointerClick, BarChart3, Search, Image as ImageIcon, Shield, History, Sparkles, AlertCircle, Square, Table as TableIcon, CalendarDays } from "lucide-react";
 
 const Index = () => {
   return (
@@ -87,7 +87,7 @@ const Index = () => {
               <span className="hidden sm:inline">Search</span>
             </TabsTrigger>
             <TabsTrigger value="media" className="flex items-center gap-2">
-              <Image className="h-4 w-4" />
+              <ImageIcon className="h-4 w-4" />
               <span className="hidden sm:inline">Media</span>
             </TabsTrigger>
             <TabsTrigger value="permissions" className="flex items-center gap-2">
@@ -745,7 +745,7 @@ const Index = () => {
                 <div className="space-y-2">
                   <p className="font-medium">Color System Updates Needed:</p>
                   <div className="bg-background rounded-md p-4 font-mono text-xs space-y-1">
-                    <p className="text-muted-foreground">// Add to your globals.css or tailwind config:</p>
+                    {/* Add to your globals.css or tailwind config: */}
                     <p>--success: 142 76% 36%;</p>
                     <p>--success-foreground: 210 40% 98%;</p>
                     <p>--warning: 38 92% 50%;</p>

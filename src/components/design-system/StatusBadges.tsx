@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/lovable/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/lovable/card";
-import { CheckCircle2, XCircle, Clock, AlertCircle, Eye, Archive, Trash2, FileText, Video, Image, Music, File } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, AlertCircle, Eye, Archive, Trash2, FileText, Video, Image as ImageIcon, Music, File } from "lucide-react";
 
 export const StatusBadges = () => {
   return (
@@ -81,7 +81,7 @@ export const StatusBadges = () => {
               Video
             </Badge>
             <Badge variant="outline" className="border-primary text-primary">
-              <Image className="mr-1 h-3 w-3" />
+              <ImageIcon className="mr-1 h-3 w-3" />
               Image
             </Badge>
             <Badge variant="outline" className="border-primary text-primary">

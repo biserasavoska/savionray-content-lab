@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/lovable/label";
 import { Textarea } from "@/components/ui/lovable/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/lovable/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/lovable/select";
-import { Upload, Image, File, Video, Music, FolderOpen, Grid3x3, List, Search, Filter, MoreVertical, Download, Trash2, Edit, Copy, Eye, ChevronLeft, ChevronRight, X, Folder, Tag } from "lucide-react";
+import { Upload, Image as ImageIcon, File as FileIcon, Video, Music, FolderOpen, Grid3x3, List, Search, Filter, MoreVertical, Download, Trash2, Edit, Copy, Eye, ChevronLeft, ChevronRight, X, Folder, Tag } from "lucide-react";
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/lovable/checkbox";
 
@@ -36,10 +36,10 @@ export const MediaManagement = () => {
 
   const getFileIcon = (type: string) => {
     switch (type) {
-      case 'image': return Image;
+      case 'image': return ImageIcon;
       case 'video': return Video;
       case 'audio': return Music;
-      default: return File;
+      default: return FileIcon;
     }
   };
 
@@ -83,7 +83,7 @@ export const MediaManagement = () => {
               ].map((file, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
                   <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
-                    <File className="h-5 w-5 text-muted-foreground" />
+                    <FileIcon className="h-5 w-5 text-muted-foreground" />
                   </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
@@ -305,7 +305,7 @@ export const MediaManagement = () => {
                   </div>
                   
                   <div className="flex-1 bg-muted rounded-lg flex items-center justify-center">
-                    <Image className="h-24 w-24 text-muted-foreground" />
+                    <ImageIcon className="h-24 w-24 text-muted-foreground" />
                   </div>
                   
                   <div className="flex gap-2 mt-4">
