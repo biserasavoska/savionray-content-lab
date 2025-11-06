@@ -77,12 +77,33 @@ export async function GET(request: NextRequest) {
       const startDate = new Date(year, new Date(`${monthName} 1, ${year}`).getMonth(), 1);
       const endDate = new Date(year, new Date(`${monthName} 1, ${year}`).getMonth() + 1, 0, 23, 59, 59);
       
-      where.Idea = {
-        publishingDateTime: {
-          gte: startDate,
-          lte: endDate
+      // Filter by either Idea's publishingDateTime OR draft's createdAt (fallback)
+      where.OR = [
+        {
+          Idea: {
+            publishingDateTime: {
+              gte: startDate,
+              lte: endDate
+            }
+          }
+        },
+        {
+          AND: [
+            {
+              OR: [
+                { Idea: null },
+                { Idea: { publishingDateTime: null } }
+              ]
+            },
+            {
+              createdAt: {
+                gte: startDate,
+                lte: endDate
+              }
+            }
+          ]
         }
-      };
+      ];
     }
     
     const [drafts, total] = await Promise.all([

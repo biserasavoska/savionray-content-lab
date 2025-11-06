@@ -55,18 +55,27 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Extract unique months from publishing dates
+    // Extract unique months from publishing dates (or fallback to draft dates)
     const periods = new Set<string>();
     const currentYear = new Date().getFullYear();
     
     drafts.forEach(draft => {
+      // Try to use Idea's publishingDateTime first, otherwise use draft's createdAt
+      let dateToUse: Date | null = null;
+      
       if (draft.Idea?.publishingDateTime) {
-        const date = new Date(draft.Idea.publishingDateTime);
-        const year = date.getFullYear();
-        const month = date.getMonth();
+        dateToUse = new Date(draft.Idea.publishingDateTime);
+      } else if (draft.createdAt) {
+        // Fallback to draft creation date if no Idea publishing date
+        dateToUse = new Date(draft.createdAt);
+      }
+      
+      if (dateToUse) {
+        const year = dateToUse.getFullYear();
+        const month = dateToUse.getMonth();
         
         // Format as "October" for current year, "October 2024" for other years
-        const monthName = date.toLocaleDateString('en-US', { month: 'long' });
+        const monthName = dateToUse.toLocaleDateString('en-US', { month: 'long' });
         const periodKey = year === currentYear ? monthName : `${monthName} ${year}`;
         
         periods.add(periodKey);
