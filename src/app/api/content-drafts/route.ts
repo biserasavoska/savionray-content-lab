@@ -90,10 +90,9 @@ export async function GET(request: NextRequest) {
         {
           AND: [
             {
-              OR: [
-                { Idea: null },
-                { Idea: { publishingDateTime: null } }
-              ]
+              Idea: {
+                publishingDateTime: null
+              }
             },
             {
               createdAt: {
