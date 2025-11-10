@@ -197,17 +197,26 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
     try {
       let endpoint: string
       let method: string
-      
+      let payload: Record<string, any>
+
       if (newStatus === 'APPROVED') {
         endpoint = `/api/drafts/${draftId}/approve`
         method = 'POST'
-      } else if (newStatus === 'REJECTED') {
+        payload = {}
+      } else if (newStatus === DRAFT_STATUS.AWAITING_REVISION) {
+        const feedback = window.prompt('Please provide feedback for this revision request:')
+        if (!feedback || feedback.trim().length === 0) {
+          setIsSubmitting(null)
+          return
+        }
         endpoint = `/api/drafts/${draftId}/reject`
         method = 'POST'
+        payload = { feedback }
       } else {
         // For other status updates, use the status endpoint
         endpoint = `/api/drafts/${draftId}/status`
         method = 'PATCH'
+        payload = { status: newStatus }
       }
 
       const response = await fetch(endpoint, {
@@ -217,12 +226,12 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
           ...(currentOrganization?.id && { 'x-selected-organization': currentOrganization.id }),
         },
         credentials: 'include',
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {
         // Show success message
-        const statusText = newStatus === 'APPROVED' ? 'approved' : 'revision requested'
+        const statusText = newStatus === 'APPROVED' ? 'approved' : newStatus === DRAFT_STATUS.AWAITING_REVISION ? 'revision requested' : 'updated'
         setSuccessMessage(`Content ${statusText} successfully!`)
         
         // Mark item as updated
@@ -237,7 +246,8 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
           await fetchContent()
         }, 1500)
       } else {
-        console.error('Failed to update status')
+        const errorText = await response.text()
+        console.error('Failed to update status', errorText)
         alert('Failed to update status. Please try again.')
       }
     } catch (error) {
