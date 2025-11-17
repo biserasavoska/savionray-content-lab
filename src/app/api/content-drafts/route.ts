@@ -108,21 +108,6 @@ export async function GET(request: NextRequest) {
     const [drafts, total] = await Promise.all([
       prisma.contentDraft.findMany({
         where,
-        orderBy: [
-          {
-            Idea: {
-              publishingDateTime: 'asc'
-            }
-          },
-          {
-            Idea: {
-              createdAt: 'asc'
-            }
-          },
-          {
-            createdAt: 'asc'
-          }
-        ],
         skip,
         take: limit,
         include: {
@@ -166,6 +151,25 @@ export async function GET(request: NextRequest) {
       }),
       prisma.contentDraft.count({ where }),
     ]);
+    
+    // Sort chronologically by publishing date (handle nulls properly)
+    drafts.sort((a, b) => {
+      // Get publishing date (or fallback to idea createdAt, or draft createdAt)
+      const getDate = (draft: typeof drafts[0]) => {
+        if (draft.Idea?.publishingDateTime) {
+          return new Date(draft.Idea.publishingDateTime).getTime();
+        }
+        if (draft.Idea?.createdAt) {
+          return new Date(draft.Idea.createdAt).getTime();
+        }
+        return new Date(draft.createdAt).getTime();
+      };
+      
+      const dateA = getDate(a);
+      const dateB = getDate(b);
+      
+      return dateA - dateB; // Ascending order (oldest first)
+    });
     
     const totalPages = Math.ceil(total / limit);
     

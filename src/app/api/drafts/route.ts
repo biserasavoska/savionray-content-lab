@@ -121,26 +121,30 @@ export async function GET(req: NextRequest) {
             },
           },
         },
-        orderBy: [
-          {
-            Idea: {
-              publishingDateTime: 'asc'
-            }
-          },
-          {
-            Idea: {
-              createdAt: 'asc'
-            }
-          },
-          {
-            createdAt: 'asc'
-          }
-        ],
         skip,
         take: limit,
       }),
       prisma.contentDraft.count({ where }),
     ])
+    
+    // Sort chronologically by publishing date (handle nulls properly)
+    drafts.sort((a, b) => {
+      // Get publishing date (or fallback to idea createdAt, or draft createdAt)
+      const getDate = (draft: typeof drafts[0]) => {
+        if (draft.Idea?.publishingDateTime) {
+          return new Date(draft.Idea.publishingDateTime).getTime();
+        }
+        if (draft.Idea?.createdAt) {
+          return new Date(draft.Idea.createdAt).getTime();
+        }
+        return new Date(draft.createdAt).getTime();
+      };
+      
+      const dateA = getDate(a);
+      const dateB = getDate(b);
+      
+      return dateA - dateB; // Ascending order (oldest first)
+    });
 
     return NextResponse.json({
       drafts,
