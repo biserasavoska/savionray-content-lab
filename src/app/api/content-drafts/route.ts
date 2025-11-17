@@ -108,9 +108,21 @@ export async function GET(request: NextRequest) {
     const [drafts, total] = await Promise.all([
       prisma.contentDraft.findMany({
         where,
-        orderBy: {
-          updatedAt: 'desc'
-        },
+        orderBy: [
+          {
+            Idea: {
+              publishingDateTime: 'asc'
+            }
+          },
+          {
+            Idea: {
+              createdAt: 'asc'
+            }
+          },
+          {
+            createdAt: 'asc'
+          }
+        ],
         skip,
         take: limit,
         include: {

@@ -116,12 +116,26 @@ export async function GET(req: NextRequest) {
             select: {
               title: true,
               status: true,
+              publishingDateTime: true,
+              createdAt: true,
             },
           },
         },
-        orderBy: {
-          updatedAt: 'desc',
-        },
+        orderBy: [
+          {
+            Idea: {
+              publishingDateTime: 'asc'
+            }
+          },
+          {
+            Idea: {
+              createdAt: 'asc'
+            }
+          },
+          {
+            createdAt: 'asc'
+          }
+        ],
         skip,
         take: limit,
       }),
