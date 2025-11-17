@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     // Get query parameters
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '100')
     const page = parseInt(searchParams.get('page') || '1')
     const period = searchParams.get('period') // Format: "October" or "October 2024"
     const skip = (page - 1) * limit

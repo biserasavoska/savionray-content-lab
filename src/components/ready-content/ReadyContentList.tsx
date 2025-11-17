@@ -53,11 +53,21 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
   // Pagination state
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 4, // Show 4 items initially
+    limit: 100, // Load all items by default
     total: 0,
     totalPages: 0
   })
   const [loadingMore, setLoadingMore] = useState(false)
+
+  const stripHtmlTags = (html: string | null | undefined) => {
+    if (!html) return ''
+    if (typeof window === 'undefined') {
+      return html.replace(/<[^>]*>/g, '')
+    }
+    const tmp = document.createElement('div')
+    tmp.innerHTML = html
+    return tmp.textContent || tmp.innerText || ''
+  }
 
   // Reusable function to fetch content
   const fetchContent = async () => {
@@ -74,7 +84,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
       
       const params = new URLSearchParams()
       params.append('page', '1')
-      params.append('limit', '4')
+      params.append('limit', '100') // Load all items by default
       if (selectedPeriod !== 'ALL') {
         params.append('period', selectedPeriod)
       }
@@ -524,7 +534,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                     <div className="bg-blue-50 rounded-md p-4 mb-4">
                       <h4 className="text-sm font-semibold text-blue-700 mb-2">Description:</h4>
                       <div className="text-sm text-gray-800 whitespace-pre-wrap">
-                        {item.Idea?.description || 'No description available'}
+                        {stripHtmlTags(item.Idea?.description) || 'No description available'}
                       </div>
                     </div>
                     

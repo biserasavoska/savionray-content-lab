@@ -75,6 +75,7 @@ export default function UnifiedContentReviewPage() {
       setError('')
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
+        limit: '100', // Load all items by default
         ...filters
       })
 
