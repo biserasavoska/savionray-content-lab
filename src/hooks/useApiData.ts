@@ -130,16 +130,10 @@ export function useApiData<T>(
   // ============================================================================
 
   useEffect(() => {
-    if (immediate && url) {
+    if (url && (immediate || refetchOnMount)) {
       fetchData()
     }
-  }, [url, immediate, fetchData])
-
-  useEffect(() => {
-    if (refetchOnMount && url) {
-      fetchData()
-    }
-  }, [refetchOnMount, url, fetchData])
+  }, [url, immediate, refetchOnMount, fetchData])
 
   useEffect(() => {
     if (!refetchOnWindowFocus) return
