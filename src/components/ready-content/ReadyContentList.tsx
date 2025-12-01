@@ -543,7 +543,7 @@ export default function ReadyContentList({ isCreativeUser, isClientUser }: Ready
                       <h4 className="text-sm font-semibold text-green-700 mb-2">Content:</h4>
                       <div 
                         className="text-sm text-gray-800 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: item.body }}
+                        dangerouslySetInnerHTML={{ __html: item.body || '<p class="text-gray-400 italic">No content yet. Click "Edit Content" to add content.</p>' }}
                       />
                     </div>
 

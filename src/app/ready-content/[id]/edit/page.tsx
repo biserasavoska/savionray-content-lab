@@ -86,7 +86,8 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
       if (response.ok) {
         const data = await response.json()
         setContent(data)
-        setBody(data.body)
+        // Ensure body is always a string (handle null/undefined)
+        setBody(data.body || '')
       } else if (response.status === 404) {
         setError('Content not found. It may have been deleted or you may not have permission to view it.')
       } else {
@@ -119,14 +120,17 @@ export default function ReadyContentEditPage({ params }: { params: { id: string 
       })
 
       if (response.ok) {
-        // Update local state
-        setContent(prev => prev ? { ...prev, body } : null)
+        const savedData = await response.json()
+        // Update local state with server response to ensure consistency
+        setContent(prev => prev ? { ...prev, body: savedData.body || body } : null)
+        setBody(savedData.body || body)
         setSuccessMessage('Content saved successfully!')
         
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(''), 3000)
       } else {
-        alert('Failed to save content. Please try again.')
+        const errorData = await response.json().catch(() => ({}))
+        alert(errorData.error || 'Failed to save content. Please try again.')
       }
     } catch (error) {
       console.error('Error saving content:', error)

@@ -119,17 +119,28 @@ export async function PUT(
     const body = await request.json()
     const { status, body: contentBody } = body
 
+    // Build update data object
+    const updateData: any = {
+      updatedAt: new Date()
+    }
+    
+    // Always update body if it's provided (even if empty string)
+    if ('body' in body) {
+      updateData.body = contentBody || ''
+    }
+    
+    // Update status if provided
+    if (status) {
+      updateData.status = status
+    }
+
     // Update the content draft
     const updatedDraft = await prisma.contentDraft.update({
       where: {
         id: params.id,
         organizationId: orgContext.organizationId
       },
-      data: {
-        ...(status && { status }),
-        ...(contentBody && { body: contentBody }),
-        updatedAt: new Date()
-      }
+      data: updateData
     })
 
     return NextResponse.json(updatedDraft)
