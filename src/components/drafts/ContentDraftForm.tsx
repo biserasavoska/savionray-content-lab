@@ -107,23 +107,62 @@ export default function ContentDraftForm({ idea, draft, onSuccess }: ContentDraf
     // Wait for any pending auto-saves to complete
     await autoSave.flush()
 
-    const response = await fetch(draftId ? `/api/drafts/${draftId}/submit` : '/api/drafts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...formData,
-        ideaId: idea.id,
-      }),
-    })
+    try {
+      let finalDraftId = draftId
 
-    if (!response.ok) {
-      throw new Error('Failed to submit for review')
+      // If no draft exists yet, create it first
+      if (!finalDraftId) {
+        const createResponse = await fetch('/api/drafts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            body: formData.body,
+            contentType: formData.contentType,
+            ideaId: idea.id,
+            metadata: {
+              contentType: formData.contentType,
+            },
+          }),
+        })
+
+        if (!createResponse.ok) {
+          throw new Error('Failed to create draft')
+        }
+
+        const newDraft = await createResponse.json()
+        finalDraftId = newDraft.id
+        setDraftId(finalDraftId)
+      }
+
+      // Now submit the draft for review with the latest content
+      const submitResponse = await fetch(`/api/drafts/${finalDraftId}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          body: formData.body,
+          contentType: formData.contentType,
+          metadata: {
+            contentType: formData.contentType,
+          },
+        }),
+      })
+
+      if (!submitResponse.ok) {
+        const errorText = await submitResponse.text()
+        console.error('Submit error:', errorText)
+        throw new Error('Failed to submit for review')
+      }
+
+      onSuccess?.()
+      router.push(`/ideas/${idea.id}/drafts`)
+    } catch (error) {
+      console.error('Error submitting for review:', error)
+      throw error
     }
-
-    onSuccess?.()
-    router.push(`/ideas/${idea.id}/drafts`)
   }
 
   // Auto-save function

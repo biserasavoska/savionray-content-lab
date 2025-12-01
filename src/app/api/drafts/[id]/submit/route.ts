@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 
 import { prisma } from '@/lib/prisma'
 import { authOptions , isCreative, isAdmin } from '@/lib/auth'
+import { getOrganizationContext } from '@/lib/utils/organization-context'
 
 export async function POST(
   req: NextRequest,
@@ -19,8 +20,22 @@ export async function POST(
   }
 
   try {
+    // Get organization context
+    const orgContext = await getOrganizationContext(undefined, req)
+    
+    if (!orgContext) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+    }
+
+    // Parse request body to get content updates
+    const requestBody = await req.json()
+    const { body: contentBody, contentType, metadata } = requestBody
+
     const draft = await prisma.contentDraft.findUnique({
-      where: { id: params.id },
+      where: { 
+        id: params.id,
+        organizationId: orgContext.organizationId
+      },
       include: {
         Idea: true,
       },
@@ -35,12 +50,37 @@ export async function POST(
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 })
     }
 
-    // Update draft status to await feedback
+    // Prepare update data - include body content if provided
+    const updateData: any = {
+      status: 'AWAITING_FEEDBACK',
+      updatedAt: new Date(),
+    }
+
+    // Update body content if provided
+    if (contentBody !== undefined) {
+      updateData.body = contentBody
+    }
+
+    // Update contentType if provided
+    if (contentType) {
+      updateData.contentType = contentType
+    }
+
+    // Update metadata if provided
+    if (metadata) {
+      updateData.metadata = {
+        ...(draft.metadata as any || {}),
+        ...metadata,
+      }
+    }
+
+    // Update draft status and content to await feedback
     const updatedDraft = await prisma.contentDraft.update({
-      where: { id: params.id },
-      data: {
-        status: 'AWAITING_FEEDBACK',
+      where: { 
+        id: params.id,
+        organizationId: orgContext.organizationId
       },
+      data: updateData,
       include: {
         User: {
           select: {
