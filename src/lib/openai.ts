@@ -1,15 +1,17 @@
 import { AVAILABLE_MODELS } from './models';
+import { OpenAI } from 'openai';
 
-const getOpenAIClient = () => {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+let openaiClient: OpenAI | null = null;
+
+const getOpenAIClient = (): OpenAI => {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.');
+    }
+    openaiClient = new OpenAI({ apiKey });
   }
-  
-  const { OpenAI } = require('openai');
-  return new OpenAI({
-    apiKey: apiKey,
-  });
+  return openaiClient;
 };
 
 const isApiKeyAvailable = () => {
@@ -700,4 +702,4 @@ Call to Action:
 }
 
 // Export the function instead of an instance to avoid client-side execution
-export { getOpenAIClient }; 
+export { getOpenAIClient };
