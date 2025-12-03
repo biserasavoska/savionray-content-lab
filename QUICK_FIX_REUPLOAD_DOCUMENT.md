@@ -26,3 +26,7 @@ The new upload will:
 - ✅ Enable the AI to read actual PDF content via File Search
 
 **This is the final step to make it work!** 🚀
+
+
+
+
