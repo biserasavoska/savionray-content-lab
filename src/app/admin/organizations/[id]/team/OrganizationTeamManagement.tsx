@@ -10,7 +10,13 @@ import {
   PageContent,
   PageSection,
   Select,
-  ErrorDisplay
+  ErrorDisplay,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
 } from '@/components/ui/common'
 
 interface User {
@@ -48,6 +54,21 @@ export default function OrganizationTeamManagement({ organizationId, organizatio
   const [isUpdating, setIsUpdating] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('success')
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [inviteFormData, setInviteFormData] = useState({
+    email: '',
+    name: '',
+    role: 'MEMBER',
+    message: ''
+  })
+  const [isInviting, setIsInviting] = useState(false)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
+  const [inviteMode, setInviteMode] = useState<'email' | 'search'>('email')
+  const [userSearchQuery, setUserSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<any | null>(null)
 
   useEffect(() => {
     fetchOrganizationData()
@@ -210,6 +231,102 @@ export default function OrganizationTeamManagement({ organizationId, organizatio
     }
   }
 
+  const handleInviteInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setInviteFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleUserSearch = async (query: string) => {
+    setUserSearchQuery(query)
+    
+    if (query.length < 2) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      const response = await fetch(`/api/admin/users?search=${encodeURIComponent(query)}&limit=10`)
+      if (response.ok) {
+        const data = await response.json()
+        // Filter out users already in this organization
+        const existingUserIds = organization?.OrganizationUser.map(ou => ou.userId) || []
+        const filteredUsers = data.users.filter((user: any) => !existingUserIds.includes(user.id))
+        setSearchResults(filteredUsers)
+      }
+    } catch (error) {
+      console.error('Error searching users:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleSelectUser = (user: any) => {
+    setSelectedUser(user)
+    setInviteFormData(prev => ({
+      ...prev,
+      email: user.email,
+      name: user.name || ''
+    }))
+    setUserSearchQuery('')
+    setSearchResults([])
+  }
+
+  const handleInviteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsInviting(true)
+    setInviteError(null)
+    setInviteSuccess(null)
+
+    try {
+      const response = await fetch('/api/organization/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-selected-organization': organizationId,
+        },
+        body: JSON.stringify({
+          email: inviteFormData.email,
+          role: inviteFormData.role,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send invitation')
+      }
+
+      setInviteSuccess('Invitation sent successfully!')
+      setInviteFormData({
+        email: '',
+        name: '',
+        role: 'MEMBER',
+        message: ''
+      })
+      setSelectedUser(null)
+      setUserSearchQuery('')
+      setSearchResults([])
+      
+      // Refresh the organization data to show the new invitation
+      await fetchOrganizationData()
+      
+      // Close dialog after a short delay
+      setTimeout(() => {
+        setShowInviteDialog(false)
+        setInviteSuccess(null)
+      }, 1500)
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : 'Failed to send invitation')
+    } finally {
+      setIsInviting(false)
+    }
+  }
+
   const roleOptions = [
     { value: 'OWNER', label: 'Owner' },
     { value: 'ADMIN', label: 'Admin' },
@@ -254,7 +371,11 @@ export default function OrganizationTeamManagement({ organizationId, organizatio
               <h3 className="text-lg font-medium text-gray-900">Team Members ({organization.OrganizationUser.length})</h3>
               <p className="text-sm text-gray-600">Manage roles and permissions for your team</p>
             </div>
-            <Button variant="default" size="sm">
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => setShowInviteDialog(true)}
+            >
               Invite Member
             </Button>
           </div>
@@ -369,6 +490,258 @@ export default function OrganizationTeamManagement({ organizationId, organizatio
           )}
         </PageSection>
       </PageContent>
+
+      {/* Invite Member Dialog */}
+      <Dialog open={showInviteDialog} onOpenChange={(open) => {
+        setShowInviteDialog(open)
+        if (!open) {
+          // Reset form when closing
+          setInviteFormData({
+            email: '',
+            name: '',
+            role: 'MEMBER',
+            message: ''
+          })
+          setSelectedUser(null)
+          setUserSearchQuery('')
+          setSearchResults([])
+          setInviteError(null)
+          setInviteSuccess(null)
+          setInviteMode('email')
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogDescription>
+              Send an invitation to join {organizationName}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleInviteSubmit} className="px-6 py-4 space-y-4">
+            {/* Mode Toggle */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setInviteMode('email')
+                  setSelectedUser(null)
+                  setUserSearchQuery('')
+                  setSearchResults([])
+                }}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md ${
+                  inviteMode === 'email'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Invite by Email
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setInviteMode('search')
+                  setInviteFormData(prev => ({ ...prev, email: '', name: '' }))
+                }}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md ${
+                  inviteMode === 'search'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Search Existing User
+              </button>
+            </div>
+
+            {inviteMode === 'search' ? (
+              <div className="space-y-2">
+                <label htmlFor="user-search" className="block text-sm font-medium text-gray-700 mb-1">
+                  Search Users *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="user-search"
+                    value={userSearchQuery}
+                    onChange={(e) => handleUserSearch(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Search by name or email..."
+                    required={!selectedUser}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3 top-2.5">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Search Results */}
+                {userSearchQuery.length >= 2 && searchResults.length > 0 && !selectedUser && (
+                  <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto bg-white">
+                    {searchResults.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => handleSelectUser(user)}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{user.name || 'No name'}</p>
+                            <p className="text-xs text-gray-500">{user.email}</p>
+                          </div>
+                          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                            {user.role}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {userSearchQuery.length >= 2 && searchResults.length === 0 && !isSearching && (
+                  <p className="text-sm text-gray-500">No users found</p>
+                )}
+
+                {/* Selected User Display */}
+                {selectedUser && (
+                  <div className="border border-blue-200 bg-blue-50 rounded-md p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{selectedUser.name || 'No name'}</p>
+                        <p className="text-xs text-gray-600">{selectedUser.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedUser(null)
+                          setInviteFormData(prev => ({ ...prev, email: '', name: '' }))
+                        }}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hidden email input for form validation */}
+                <input
+                  type="hidden"
+                  name="email"
+                  value={inviteFormData.email}
+                  required
+                />
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="invite-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  id="invite-email"
+                  name="email"
+                  required
+                  value={inviteFormData.email}
+                  onChange={handleInviteInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="user@example.com"
+                />
+              </div>
+            )}
+
+            {inviteMode === 'email' && (
+              <div>
+                <label htmlFor="invite-name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  id="invite-name"
+                  name="name"
+                  value={inviteFormData.name}
+                  onChange={handleInviteInputChange}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Full Name"
+                />
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="invite-role" className="block text-sm font-medium text-gray-700 mb-1">
+                Role
+              </label>
+              <select
+                id="invite-role"
+                name="role"
+                value={inviteFormData.role}
+                onChange={handleInviteInputChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="MEMBER">Member</option>
+                <option value="MANAGER">Manager</option>
+                <option value="ADMIN">Admin</option>
+                <option value="VIEWER">Viewer</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="invite-message" className="block text-sm font-medium text-gray-700 mb-1">
+                Personal Message (Optional)
+              </label>
+              <textarea
+                id="invite-message"
+                name="message"
+                rows={3}
+                value={inviteFormData.message}
+                onChange={handleInviteInputChange}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Add a personal message to the invitation..."
+              />
+            </div>
+
+            {inviteError && (
+              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+                {inviteError}
+              </div>
+            )}
+
+            {inviteSuccess && (
+              <div className="text-green-600 text-sm bg-green-50 p-3 rounded-md">
+                {inviteSuccess}
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setShowInviteDialog(false)
+                  setInviteError(null)
+                  setInviteSuccess(null)
+                  setInviteFormData({
+                    email: '',
+                    name: '',
+                    role: 'MEMBER',
+                    message: ''
+                  })
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isInviting}
+                variant="default"
+              >
+                {isInviting ? 'Sending...' : 'Send Invitation'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageLayout>
   )
 }
